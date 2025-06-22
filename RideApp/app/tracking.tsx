@@ -1,27 +1,16 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, Alert, Dimensions } from 'react-native';
-import MapView, { Marker, Polyline as MapPolyline } from 'react-native-maps';
+import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { useLocalSearchParams } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons'; // for icons like clock, rupee, location
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, Dimensions, StyleSheet, Text, View } from 'react-native';
+import { MapViewWrapper as Map, PolylineWrapper as MapPolyline, MarkerWrapper as Marker } from '../components/MapView';
+import { haversineDistance } from '../utils/distance';
 
 const { height } = Dimensions.get('window');
 
 function getFirstParam(param: string | string[] | undefined): string {
   if (!param) return '';
   return Array.isArray(param) ? param[0] : param;
-}
-
-function haversineDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
-  const toRad = (x: number) => (x * Math.PI) / 180;
-  const R = 6371e3;
-  const φ1 = toRad(lat1);
-  const φ2 = toRad(lat2);
-  const Δφ = toRad(lat2 - lat1);
-  const Δλ = toRad(lon2 - lon1);
-  const a = Math.sin(Δφ / 2) ** 2 + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) ** 2;
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
 }
 
 export default function TrackingScreen() {
@@ -117,14 +106,13 @@ export default function TrackingScreen() {
   const estimatedFare = Math.ceil(distanceKm * farePerKm);
 
   return (
-    <View style={styles.container}>
-      <MapView style={styles.map} region={riderLocation}>
+    <View style={styles.container}>      <Map style={styles.map} region={riderLocation}>
         <Marker coordinate={riderLocation} pinColor="blue" title="Ambulance" />
         <Marker coordinate={{ latitude: latitudeNum, longitude: longitudeNum }} pinColor="red" title="Hospital" />
         {routeCoords.length > 0 && (
           <MapPolyline coordinates={routeCoords} strokeColor="#1E90FF" strokeWidth={5} />
         )}
-      </MapView>
+      </Map>
 
       <View style={styles.bottomPanel}>
         <Text style={styles.panelHeader}>🚑 Trip Summary</Text>

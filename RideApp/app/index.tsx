@@ -1,22 +1,23 @@
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  Button,
-  StyleSheet,
-  Alert,
-  TouchableOpacity,
-  ActivityIndicator,
-} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import { ActivityIndicator, Alert, Button, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function AuthScreen() {
   const router = useRouter();
-  const [phone, setPhone] = useState('');
-  const [role, setRole] = useState<'customer' | 'rider'>('customer');
-  const [loading, setLoading] = useState(false);
+  const [phone, setPhone] = useState('');  const [role, setRole] = useState<'customer' | 'rider'>('customer');
+  const [loading, setLoading] = useState(false);  const getServerUrl = () => {
+    if (Platform.OS === 'web') {
+      return 'http://localhost:3000';
+    } 
+    else if (Platform.OS === 'android' || Platform.OS === 'ios') {
+      return 'http://192.168.31.49:3000'; 
+    } 
+    else {
+      return 'http://localhost:3000';
+    }
+  };
+  const [serverUrl] = useState(getServerUrl());
 
   const handleSubmit = async () => {
     if (!phone || !role) {
@@ -27,14 +28,23 @@ export default function AuthScreen() {
     setLoading(true);
 
     try {
-      const response = await fetch('http://192.168.0.113:3000/auth/signin', {
+      console.log(`Attempting to connect to: ${serverUrl}`);
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); 
+      
+      const response = await fetch(`${serverUrl}/auth/signin`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone, role }),
+        signal: controller.signal,
       });
-
+      
+      clearTimeout(timeoutId);
+      
+      console.log('Response status:', response.status);
       const data = await response.json();
-      console.log('Login response:', data); // Debug log
+      console.log('Login response:', data);
 
       if (response.ok) {
         const userRole = data.user?.role;
@@ -47,12 +57,10 @@ export default function AuthScreen() {
 
         await AsyncStorage.setItem('access_token', data.access_token);
         await AsyncStorage.setItem('refresh_token', data.refresh_token);
-        await AsyncStorage.setItem('role', userRole);
-
-        if (userRole === 'customer') {
+        await AsyncStorage.setItem('role', userRole);        if (userRole === 'customer') {
           router.push('/home');
         } else if (userRole === 'rider') {
-          router.push('/homerider');
+          router.push('/dashboard');
         } else {
           Alert.alert('Unknown role', 'Could not determine user role.');
         }
@@ -60,8 +68,29 @@ export default function AuthScreen() {
         Alert.alert('Login Failed', data.message || 'Something went wrong.');
       }
     } catch (error) {
-      console.error(error);
-      Alert.alert('Error', 'Network request failed.');
+      console.error('Connection error:', error);
+      
+      let errorMessage = 'Connection failed. ';
+      
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          errorMessage += 'Request timed out (15 seconds). ';
+        } else if (error.message.includes('Network request failed')) {
+          errorMessage += 'Network request failed. ';
+        } else {
+          errorMessage += `Error: ${error.message}. `;
+        }
+      }
+      
+      if (Platform.OS !== 'web') {
+        errorMessage += `\n\nTroubleshooting for mobile:\n`;
+        errorMessage += `1. Make sure your phone and computer are on the same WiFi network\n`;
+        errorMessage += `2. Check if your computer's IP is correct: ${serverUrl}\n`;
+        errorMessage += `3. Try disabling your computer's firewall temporarily\n`;
+        errorMessage += `4. Make sure your server is running and accessible\n`;
+        errorMessage += `5. Your computer's IP might have changed`;
+      }
+        Alert.alert('Connection Error', errorMessage);
     } finally {
       setLoading(false);
     }
@@ -69,7 +98,12 @@ export default function AuthScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Login</Text>
+      <Text style={styles.title}>Sign In</Text>
+        <View style={styles.serverIndicator}>        <Text style={styles.serverText}>
+          📡 Server: {Platform.OS === 'web' ? 'Desktop (localhost)' : 'Mobile Device (192.168)'}
+        </Text>
+        <Text style={styles.serverUrl}>{serverUrl}</Text>
+      </View>
 
       <TextInput
         placeholder="Phone Number"
@@ -89,24 +123,41 @@ export default function AuthScreen() {
 
         <TouchableOpacity
           onPress={() => setRole('rider')}
-          style={[styles.roleButton, role === 'rider' && styles.selectedRole]}
-        >
+          style={[styles.roleButton, role === 'rider' && styles.selectedRole]}        >
           <Text style={styles.roleText}>Rider</Text>
         </TouchableOpacity>
-      </View>
-
-      {loading ? (
+      </View>      {loading ? (
         <ActivityIndicator size="large" color="#0000ff" />
       ) : (
-        <Button title="Continue" onPress={handleSubmit} />
+        <Button 
+          title="Sign In" 
+          onPress={handleSubmit} 
+        />
       )}
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, justifyContent: 'center' },
+const styles = StyleSheet.create({  container: { flex: 1, padding: 20, justifyContent: 'center' },
   title: { fontSize: 24, fontWeight: 'bold', textAlign: 'center', marginBottom: 20 },
+  serverIndicator: {
+    backgroundColor: '#f0f8ff',
+    padding: 10,
+    borderRadius: 8,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#4CAF50',
+    alignItems: 'center',
+  },  serverText: {
+    fontSize: 12,
+    color: '#2E7D32',
+    fontWeight: '500',
+  },
+  serverUrl: {
+    fontSize: 10,
+    color: '#666',
+    marginTop: 2,
+  },
   input: {
     borderWidth: 1,
     borderColor: '#ccc',
@@ -122,7 +173,6 @@ const styles = StyleSheet.create({
     borderColor: '#888',
     width: '40%',
     alignItems: 'center',
-  },
-  selectedRole: { backgroundColor: 'lightblue' },
+  },  selectedRole: { backgroundColor: 'lightblue' },
   roleText: { fontWeight: 'bold' },
 });

@@ -1,0 +1,153 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Constants from 'expo-constants';
+import { useEffect, useState } from 'react';
+import { Alert, Platform } from 'react-native';
+import { Ride, RideStatus } from '../types/rider';
+
+export const useRiderLogic = () => {
+  const [routeCoords, setRouteCoords] = useState([]);
+  const [destination, setDestination] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [tripStarted, setTripStarted] = useState(false);
+  const [online, setOnline] = useState(false);
+  const [availableRides, setAvailableRides] = useState<Ride[]>([]);
+  const [acceptedRide, setAcceptedRide] = useState<Ride | null>(null);
+
+  const getServerUrl = () => {
+    if (Platform.OS === 'web') {
+      return 'http://localhost:3000';
+    } else if (Constants.appOwnership === 'expo') {
+      return 'http://192.168.31.49:3000';
+    } else {
+      return 'http://localhost:3000';
+    }
+  };
+
+  useEffect(() => {
+    if (!online) return;
+    fetchAvailableRides();
+  }, [online]);
+
+  const fetchAvailableRides = async () => {
+    try {
+      const token = await AsyncStorage.getItem("access_token");
+      const res = await fetch(`${getServerUrl()}/ride/driverrides`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      const searchingRides = data.rides.filter((ride: Ride) => ride.status === RideStatus.SEARCHING);
+      setAvailableRides(searchingRides);
+    } catch (error) {
+      console.error("Error fetching rides:", error);
+    }
+  };
+
+  const fetchRoute = async (
+    origin: { latitude: number; longitude: number },
+    destination: { latitude: number; longitude: number }
+  ) => {
+    try {
+      const url = `https://router.project-osrm.org/route/v1/driving/${origin.longitude},${origin.latitude};${destination.longitude},${destination.latitude}?overview=full&geometries=geojson`;
+      const res = await fetch(url);
+      const json = await res.json();
+      if (json.routes?.[0]?.geometry?.coordinates) {
+        const coords = json.routes[0].geometry.coordinates.map(([lng, lat]: [number, number]) => ({
+          latitude: lat,
+          longitude: lng
+        }));
+        setRouteCoords(coords);
+      }
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Error', 'Could not fetch route.');
+    }
+  };
+
+  const handleAcceptRide = async (rideId: string, driverLocation: any) => {
+    try {
+      const token = await AsyncStorage.getItem("access_token");
+      const res = await fetch(`${getServerUrl()}/ride/accept/${rideId}`, {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      const data = await res.json();
+      const ride = data.ride;
+      Alert.alert("Ride accepted!");
+
+      setAcceptedRide(ride);
+      setAvailableRides([]);
+      setTripStarted(false);
+      const dropLocation = {
+        latitude: ride.drop.latitude,
+        longitude: ride.drop.longitude,
+      };
+      setDestination(dropLocation);
+      if (driverLocation) {
+        fetchRoute(driverLocation, dropLocation);
+      }
+    } catch (error) {
+      Alert.alert("Failed to accept ride");
+      console.error(error);
+    }
+  };
+
+  const updateRideStatus = async (rideId: string, status: RideStatus) => {
+    try {
+      const token = await AsyncStorage.getItem("access_token");
+      const res = await fetch(`${getServerUrl()}/ride/update/${rideId}`, {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to update ride status");
+      }
+
+      Alert.alert("Success", `Ride status updated to ${status}`);
+      setAcceptedRide(data.ride);
+
+      if (status === RideStatus.COMPLETED) {
+        setAcceptedRide(null);
+        setDestination(null);
+        setRouteCoords([]);
+        setTripStarted(false);
+        fetchAvailableRides();
+      } else if (status === RideStatus.STARTED) {
+        setTripStarted(true);
+      }
+    } catch (error) {
+      console.error("Error updating ride status:", error);
+      Alert.alert("Error", "Could not update ride status");
+    }
+  };
+
+  const handleRejectRide = (rideId: string) => {
+    setAvailableRides(prev => prev.filter(r => r._id !== rideId));
+    fetchAvailableRides();
+  };
+
+  const toggleOnline = () => {
+    setOnline(!online);
+  };
+
+  return {
+    routeCoords,
+    destination,
+    tripStarted,
+    online,
+    availableRides,
+    acceptedRide,
+    handleAcceptRide,
+    updateRideStatus,
+    handleRejectRide,
+    toggleOnline,
+  };
+};

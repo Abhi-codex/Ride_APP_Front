@@ -4,17 +4,18 @@ import {
   Text,
   StyleSheet,
   Dimensions,
-  TextInput,
   ScrollView,
   Image,
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  Platform,
 } from 'react-native';
-import MapView, { Marker, Polyline } from 'react-native-maps';
+import { MapViewWrapper as Map, MarkerWrapper as Marker, PolylineWrapper as Polyline } from '../components/MapView';
 import * as Location from 'expo-location';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Constants from 'expo-constants';
 
 type Hospital = {
   id: string;
@@ -32,12 +33,21 @@ export default function RideScreen() {
   const [selectedHospital, setSelectedHospital] = useState<Hospital | null>(null);
   const [rideType, setRideType] = useState('Emergency');
   const [loading, setLoading] = useState(true);
-  const [booking, setBooking] = useState(false);
-  const [hospitals, setHospitals] = useState<Hospital[]>([]);
+  const [booking, setBooking] = useState(false);  const [hospitals, setHospitals] = useState<Hospital[]>([]);
   const [routeCoords, setRouteCoords] = useState<any[]>([]);
 
-  // Replace with your actual backend URL
-  const BACKEND_URL = 'http://192.168.0.113:3000/ride/create';
+  // Get server URL based on platform
+  const getServerUrl = () => {
+    if (Platform.OS === 'web') {
+      return 'http://localhost:3000';
+    } else if (Constants.appOwnership === 'expo') {
+      return 'http://192.168.31.49:3000';
+    } else {
+      return 'http://localhost:3000';
+    }
+  };
+
+  const BACKEND_URL = `${getServerUrl()}/ride/create`;
 
   // Replace with your Google API key
   const GOOGLE_API_KEY = 'AIzaSyAxMrcHw-SUkg1aFwG56qnSPQwlpfE2bX0';
@@ -221,7 +231,7 @@ export default function RideScreen() {
 
   return (
     <View style={styles.container}>
-      <MapView style={styles.map} region={currentLocation} showsUserLocation>
+      <Map style={styles.map} region={currentLocation} showsUserLocation>
         {selectedHospital && (
           <>
             <Marker
@@ -237,7 +247,7 @@ export default function RideScreen() {
             )}
           </>
         )}
-      </MapView>
+      </Map>
 
       <ScrollView style={styles.hospitalList} horizontal showsHorizontalScrollIndicator={false}>
         {hospitals.map((hospital) => (

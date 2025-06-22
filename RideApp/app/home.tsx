@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -28,7 +28,6 @@ export default function HomeScreen() {
   if (!tokenLoaded) {
     return null;
   }
-
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Select a Service</Text>
@@ -36,6 +35,11 @@ export default function HomeScreen() {
       <TouchableOpacity style={styles.card} onPress={() => router.push('/ride')}>
         <Text style={styles.emoji}>🚑</Text>
         <Text style={styles.label}>Ride</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.card} onPress={() => router.push('/dashboard')}>
+        <Text style={styles.emoji}>🚗</Text>
+        <Text style={styles.label}>Driver</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.card} onPress={() => router.push('/medicine')}>
