@@ -1,5 +1,4 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Constants from 'expo-constants';
 import { useEffect, useState } from 'react';
 import { Alert, Platform } from 'react-native';
 import { Ride, RideStatus } from '../types/rider';
@@ -10,15 +9,15 @@ export const useRiderLogic = () => {
   const [tripStarted, setTripStarted] = useState(false);
   const [online, setOnline] = useState(false);
   const [availableRides, setAvailableRides] = useState<Ride[]>([]);
-  const [acceptedRide, setAcceptedRide] = useState<Ride | null>(null);
-
-  const getServerUrl = () => {
+  const [acceptedRide, setAcceptedRide] = useState<Ride | null>(null);  const getServerUrl = () => {
     if (Platform.OS === 'web') {
       return 'http://localhost:3000';
-    } else if (Constants.appOwnership === 'expo') {
+    } else if (Platform.OS === 'android') {
       return 'http://192.168.31.49:3000';
-    } else {
+    } else if (Platform.OS === 'ios') {
       return 'http://localhost:3000';
+    } else {
+      return 'http://192.168.31.49:3000';
     }
   };
 
@@ -26,18 +25,55 @@ export const useRiderLogic = () => {
     if (!online) return;
     fetchAvailableRides();
   }, [online]);
-
   const fetchAvailableRides = async () => {
     try {
+      console.log('Fetching rides from:', getServerUrl());
       const token = await AsyncStorage.getItem("access_token");
-      const res = await fetch(`${getServerUrl()}/ride/driverrides`, {
-        headers: { Authorization: `Bearer ${token}` },
+      console.log('Token found:', !!token);
+      
+      if (!token) {
+        console.error('No access token found');
+        Alert.alert('Authentication Error', 'Please login first');
+        return;
+      }
+
+      const url = `${getServerUrl()}/ride/driverrides`;
+      console.log('Making request to:', url);
+        const res = await fetch(url, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
       });
+
+      console.log('Response status:', res.status);
+      
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      }
+
       const data = await res.json();
-      const searchingRides = data.rides.filter((ride: Ride) => ride.status === RideStatus.SEARCHING);
-      setAvailableRides(searchingRides);
+      console.log('Fetched rides data:', data);
+      
+      if (data.rides && Array.isArray(data.rides)) {
+        const searchingRides = data.rides.filter((ride: Ride) => ride.status === RideStatus.SEARCHING);
+        console.log('Available rides found:', searchingRides.length);
+        setAvailableRides(searchingRides);
+      } else {
+        console.log('No rides array in response');
+        setAvailableRides([]);
+      }
     } catch (error) {
       console.error("Error fetching rides:", error);
+      
+      if (error instanceof TypeError && error.message.includes('Network request failed')) {
+        Alert.alert(
+          'Connection Error', 
+          'Cannot connect to server. Make sure:\n• Backend server is running\n• Using correct IP address\n• No firewall blocking connection'
+        );
+      } else {
+        Alert.alert('Error', 'Failed to fetch available rides');
+      }
     }
   };
 
@@ -133,11 +169,42 @@ export const useRiderLogic = () => {
     setAvailableRides(prev => prev.filter(r => r._id !== rideId));
     fetchAvailableRides();
   };
-
   const toggleOnline = () => {
     setOnline(!online);
+    if (!online) {
+      checkAuthState();
+    }
   };
 
+  const checkAuthState = async () => {
+    try {
+      const token = await AsyncStorage.getItem("access_token");
+      console.log('🔐 Auth Debug:');
+      console.log('- Token exists:', !!token);
+      console.log('- Token length:', token ? token.length : 0);
+      console.log('- Server URL:', getServerUrl());
+      
+      if (token) {
+        // Test token validity
+        const res = await fetch(`${getServerUrl()}/ride/driverrides`, {
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+        console.log('- Token test status:', res.status);
+        
+        if (res.status === 401) {
+          console.log('⚠️  Token expired or invalid');
+          Alert.alert('Authentication Error', 'Please login again');
+        }
+      } else {
+        Alert.alert('Not Logged In', 'Please login first to see available rides');
+      }
+    } catch (error) {
+      console.error('Auth check error:', error);
+    }
+  };
   return {
     routeCoords,
     destination,
@@ -149,5 +216,6 @@ export const useRiderLogic = () => {
     updateRideStatus,
     handleRejectRide,
     toggleOnline,
+    checkAuthState, // Export for debugging
   };
 };

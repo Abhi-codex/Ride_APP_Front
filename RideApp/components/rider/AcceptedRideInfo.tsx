@@ -17,14 +17,16 @@ export default function AcceptedRideInfo({
   return (
     <View
       style={[
-        styles.absolute,
-        styles.top10,
-        styles.right25,
         styles.bgWhite,
         styles.roundedXl,
         styles.shadowLg,
         styles.p4,
-        { maxWidth: 250 },
+        styles.borderL,
+        styles.borderL,
+        styles.borderL,
+        styles.borderL,
+        styles.borderPrimary500,
+        { borderLeftWidth: 4 },
       ]}
     >
       <View
@@ -34,11 +36,11 @@ export default function AcceptedRideInfo({
           styles.mb3,
           styles.pb2,
           styles.borderB,
-          styles.borderPrimary500,
+          styles.borderGray200,
         ]}
       >
         <Text style={[styles.textLg, styles.fontBold, styles.textPrimary600]}>
-          🚑 Active Trip
+          Active Trip
         </Text>
       </View>
 
@@ -116,7 +118,7 @@ export default function AcceptedRideInfo({
             styles.textCenter,
           ]}
         >
-          🏥 EMERGENCY MEDICAL TRANSPORT
+          EMERGENCY MEDICAL TRANSPORT
         </Text>
       </View>
     </View>
