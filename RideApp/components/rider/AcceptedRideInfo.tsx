@@ -22,9 +22,6 @@ export default function AcceptedRideInfo({
         styles.shadowLg,
         styles.p4,
         styles.borderL,
-        styles.borderL,
-        styles.borderL,
-        styles.borderL,
         styles.borderPrimary500,
         { borderLeftWidth: 4 },
       ]}

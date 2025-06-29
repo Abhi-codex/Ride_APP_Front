@@ -1,6 +1,6 @@
 export enum RideStatus {
   SEARCHING = "SEARCHING_FOR_RIDER",
-  STARTED = "START",
+  STARTED = "STARTED",
   COMPLETED = "COMPLETED"
 }
 
@@ -9,5 +9,5 @@ export type Ride = {
   pickup: { address: string; latitude: number; longitude: number };
   drop: { address: string; latitude: number; longitude: number };
   fare: number;
-  status: string;
+  status: RideStatus;
 };
