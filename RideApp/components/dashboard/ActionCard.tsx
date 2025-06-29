@@ -5,10 +5,7 @@ import { Text, TouchableOpacity, View, ViewStyle } from 'react-native';
 interface ActionCardProps {
   title: string;
   subtitle: string;
-  icon: string;
   onPress: () => void;
-  backgroundColor: string;
-  textColor?: string;
   style?: ViewStyle;
   disabled?: boolean;
 }
@@ -16,10 +13,7 @@ interface ActionCardProps {
 export const ActionCard: React.FC<ActionCardProps> = ({
   title,
   subtitle,
-  icon,
   onPress,
-  backgroundColor,
-  textColor = colors.white,
   style,
   disabled = false,
 }) => {
@@ -27,16 +21,18 @@ export const ActionCard: React.FC<ActionCardProps> = ({
     <TouchableOpacity
       style={[
         {
-          backgroundColor: disabled ? colors.gray[300] : backgroundColor,
+          backgroundColor: colors.white,
           borderRadius: 16,
           padding: 20,
-          marginBottom: 16,
+          marginBottom: 12,
           shadowColor: colors.black,
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.15,
-          shadowRadius: 12,
-          elevation: 6,
-          transform: [{ scale: disabled ? 0.98 : 1 }],
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 8,
+          elevation: 4,
+          borderWidth: 1,
+          borderColor: colors.gray[200],
+          opacity: disabled ? 0.7 : 1,
         },
         style,
       ]}
@@ -44,40 +40,28 @@ export const ActionCard: React.FC<ActionCardProps> = ({
       disabled={disabled}
       activeOpacity={0.8}
     >
-      <View style={[styles.flexRow, styles.alignCenter]}>
-        <View style={[
-          {
-            width: 56,
-            height: 56,
-            borderRadius: 28,
-            backgroundColor: 'rgba(255, 255, 255, 0.2)',
-            justifyContent: 'center',
-            alignItems: 'center',
-            marginRight: 16,
-          }
-        ]}>
-          <Text style={[{ fontSize: 28 }]}>{icon}</Text>
-        </View>
-        
-        <View style={[styles.flex1]}>
-          <Text style={[
-            styles.textLg,
-            styles.fontBold,
-            styles.mb1,
-            {
-              color: disabled ? colors.gray[500] : textColor,
-            }
-          ]}>
+      <View style={[styles.flexRow, styles.alignCenter, styles.justifyBetween]}>
+        <View style={[styles.flex1, styles.mr3]}>
+          <Text
+            style={[
+              {
+                fontSize: 16,
+                fontWeight: '600',
+                color: colors.gray[900],
+                marginBottom: 4,
+              },
+            ]}
+          >
             {title}
           </Text>
-          <Text style={[
-            styles.textSm,
-            {
-              color: disabled ? colors.gray[400] : textColor,
-              opacity: 0.9,
-              lineHeight: 20,
-            }
-          ]}>
+          <Text
+            style={[
+              {
+                fontSize: 14,
+                color: colors.gray[600],
+              },
+            ]}
+          >
             {subtitle}
           </Text>
         </View>
@@ -87,12 +71,12 @@ export const ActionCard: React.FC<ActionCardProps> = ({
             width: 32,
             height: 32,
             borderRadius: 16,
-            backgroundColor: 'rgba(255, 255, 255, 0.2)',
+            backgroundColor: colors.gray[100],
             justifyContent: 'center',
             alignItems: 'center',
           }
         ]}>
-          <Text style={[{ fontSize: 16, color: textColor }]}>→</Text>
+          <Text style={[{ fontSize: 16, color: colors.gray[600] }]}>→</Text>
         </View>
       </View>
     </TouchableOpacity>

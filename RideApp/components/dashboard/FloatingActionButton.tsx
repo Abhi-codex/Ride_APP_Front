@@ -22,19 +22,21 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
       <TouchableOpacity
         style={[
           {
-            backgroundColor: isOnline ? colors.emergency[500] : colors.medical[600],
-            borderRadius: 28,
-            paddingVertical: 20,
+            backgroundColor: isOnline ? colors.gray[800] : colors.gray[900],
+            borderRadius: 16,
+            paddingVertical: 18,
             paddingHorizontal: 24,
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'center',
             shadowColor: colors.black,
-            shadowOffset: { width: 0, height: 8 },
+            shadowOffset: { width: 0, height: 4 },
             shadowOpacity: 0.3,
-            shadowRadius: 16,
-            elevation: 12,
+            shadowRadius: 12,
+            elevation: 8,
             opacity: disabled ? 0.7 : 1,
+            borderWidth: 1,
+            borderColor: colors.gray[700],
           }
         ]}
         onPress={onPress}
@@ -43,42 +45,38 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
       >
         <View style={[
           {
-            width: 48,
-            height: 48,
-            borderRadius: 24,
-            backgroundColor: 'rgba(255, 255, 255, 0.2)',
-            justifyContent: 'center',
-            alignItems: 'center',
-            marginRight: 16,
+            width: 12,
+            height: 12,
+            borderRadius: 6,
+            backgroundColor: isOnline ? colors.gray[400] : colors.white,
+            marginRight: 12,
           }
-        ]}>
-          <Text style={[{ fontSize: 24 }]}>
-            {isOnline ? '🛑' : '🚑'}
-          </Text>
-        </View>
+        ]} />
         
         <View style={[styles.flex1]}>
-          <Text style={[styles.textLg, styles.fontBold, styles.textWhite, styles.mb1]}>
+          <Text style={[styles.textLg, styles.fontBold, styles.textWhite]}>
             {isOnline ? 'Go Offline' : 'Go Online'}
-          </Text>
-          <Text style={[styles.textSm, styles.textWhite, { opacity: 0.9 }]}>
-            {isOnline ? 'Stop accepting emergency calls' : 'Start accepting emergency calls'}
           </Text>
         </View>
         
         <View style={[
           {
-            width: 32,
-            height: 32,
-            borderRadius: 16,
-            backgroundColor: 'rgba(255, 255, 255, 0.2)',
+            width: 24,
+            height: 24,
+            borderRadius: 12,
+            backgroundColor: colors.gray[700],
             justifyContent: 'center',
             alignItems: 'center',
           }
         ]}>
-          <Text style={[{ fontSize: 16, color: colors.white }]}>
-            {isOnline ? '⏹️' : '▶️'}
-          </Text>
+          <View style={[
+            {
+              width: 8,
+              height: 8,
+              backgroundColor: colors.white,
+              borderRadius: isOnline ? 2 : 4,
+            }
+          ]} />
         </View>
       </TouchableOpacity>
     </View>

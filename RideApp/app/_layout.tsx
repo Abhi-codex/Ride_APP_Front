@@ -12,6 +12,10 @@ export default function RootLayout() {
           name="dashboard"
           options={{ headerShown: false, title: "Driver Dashboard" }}
         />
+        <Stack.Screen 
+          name="rider" 
+          options={{ headerShown: false, title: "Rider Mode" }} 
+        />
         <Stack.Screen name="tracking" options={{ headerShown: false }} />
         <Stack.Screen name="medicine" options={{ headerShown: false }} />
         <Stack.Screen name="ai" options={{ headerShown: false }} />

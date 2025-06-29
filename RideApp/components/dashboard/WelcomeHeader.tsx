@@ -28,14 +28,22 @@ export const WelcomeHeader: React.FC<WelcomeHeaderProps> = ({
       styles.rounded2xl,
       styles.p6,
       styles.mb4,
-      styles.shadowLg,
+      {
+        shadowColor: colors.black,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        elevation: 4,
+        borderWidth: 1,
+        borderColor: colors.gray[200],
+      }
     ]}>
       <View style={[styles.flexRow, styles.justifyBetween, styles.alignCenter]}>
         <View style={[styles.flex1]}>
-          <Text style={[styles.textBase, styles.textGray600, styles.mb1]}>
+          <Text style={[styles.textSm, styles.textGray500, styles.mb1]}>
             {greeting}
           </Text>
-          <Text style={[styles.text2xl, styles.fontBold, styles.textGray900, styles.mb3]}>
+          <Text style={[styles.textXl, styles.fontBold, styles.textGray900, styles.mb3]}>
             {driverName}
           </Text>
           <View style={[styles.flexRow, styles.alignCenter]}>
@@ -44,12 +52,12 @@ export const WelcomeHeader: React.FC<WelcomeHeaderProps> = ({
                 width: 8,
                 height: 8,
                 borderRadius: 4,
-                backgroundColor: isOnline ? colors.medical[500] : colors.gray[400],
+                backgroundColor: isOnline ? colors.gray[900] : colors.gray[400],
                 marginRight: 8,
               }
             ]} />
             <Text style={[styles.textSm, styles.textGray600, styles.fontMedium]}>
-              {isOnline ? "Online & Ready for Emergency Calls" : "Currently Offline"}
+              {isOnline ? "Online & Available" : "Currently Offline"}
             </Text>
           </View>
         </View>
@@ -57,19 +65,26 @@ export const WelcomeHeader: React.FC<WelcomeHeaderProps> = ({
         <TouchableOpacity
           style={[
             {
-              width: 56,
-              height: 56,
-              borderRadius: 28,
-              backgroundColor: colors.medical[50],
+              width: 48,
+              height: 48,
+              borderRadius: 24,
+              backgroundColor: colors.gray[100],
               justifyContent: 'center',
               alignItems: 'center',
-              borderWidth: 2,
-              borderColor: colors.medical[100],
+              borderWidth: 1,
+              borderColor: colors.gray[200],
             }
           ]}
           onPress={onProfilePress}
         >
-          <Text style={[{ fontSize: 24 }]}>�‍⚕️</Text>
+          <View style={[
+            {
+              width: 24,
+              height: 24,
+              borderRadius: 12,
+              backgroundColor: colors.gray[600],
+            }
+          ]} />
         </TouchableOpacity>
       </View>
     </View>

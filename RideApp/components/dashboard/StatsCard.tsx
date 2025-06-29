@@ -1,4 +1,4 @@
-import { colors, styles } from '@/constants/TailwindStyles';
+import { colors } from '@/constants/TailwindStyles';
 import React from 'react';
 import { Text, View, ViewStyle } from 'react-native';
 
@@ -6,9 +6,6 @@ interface StatsCardProps {
   title: string;
   value: string | number;
   subtitle?: string;
-  icon: string;
-  color: string;
-  gradient?: boolean;
   style?: ViewStyle;
 }
 
@@ -16,81 +13,64 @@ export const StatsCard: React.FC<StatsCardProps> = ({
   title,
   value,
   subtitle,
-  icon,
-  color,
-  gradient = false,
   style,
 }) => {
   return (
     <View
       style={[
         {
-          backgroundColor: gradient ? color : colors.white,
+          backgroundColor: colors.white,
           borderRadius: 16,
           padding: 20,
           shadowColor: colors.black,
-          shadowOffset: { width: 0, height: 4 },
+          shadowOffset: { width: 0, height: 2 },
           shadowOpacity: 0.1,
           shadowRadius: 8,
           elevation: 4,
-          borderLeftWidth: 4,
-          borderLeftColor: color,
+          borderWidth: 1,
+          borderColor: colors.gray[200],
         },
         style,
       ]}
     >
-      <View style={[styles.flexRow, styles.justifyBetween, styles.alignCenter, { marginBottom: 8 }]}>
+      <View style={{ alignItems: 'flex-start', marginBottom: 12 }}>
         <Text
           style={[
             {
-              fontSize: 32,
-              opacity: 0.8,
+              fontSize: 28,
+              fontWeight: '700',
+              color: colors.gray[900],
+              marginBottom: 4,
             },
           ]}
         >
-          {icon}
+          {value}
         </Text>
-        <View style={{ alignItems: 'flex-end' }}>
+        <Text
+          style={[
+            {
+              fontSize: 14,
+              fontWeight: '500',
+              color: colors.gray[600],
+              marginBottom: 2,
+            },
+          ]}
+        >
+          {title}
+        </Text>
+        {subtitle && (
           <Text
             style={[
               {
-                fontSize: 24,
-                fontWeight: '700',
-                color: gradient ? colors.white : colors.gray[800],
+                fontSize: 12,
+                color: colors.gray[500],
               },
             ]}
           >
-            {value}
+            {subtitle}
           </Text>
-        </View>
+        )}
       </View>
-      
-      <Text
-        style={[
-          {
-            fontSize: 14,
-            fontWeight: '500',
-            color: gradient ? colors.white : colors.gray[600],
-            marginBottom: 4,
-          },
-        ]}
-      >
-        {title}
-      </Text>
-      
-      {subtitle && (
-        <Text
-          style={[
-            {
-              fontSize: 12,
-              color: gradient ? colors.white : colors.gray[500],
-              opacity: 0.8,
-            },
-          ]}
-        >
-          {subtitle}
-        </Text>
-      )}
     </View>
   );
 };
