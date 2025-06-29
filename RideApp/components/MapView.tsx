@@ -7,16 +7,17 @@ let Marker: any;
 let Polyline: any;
 let PROVIDER_GOOGLE: any;
 
-try {
-  if (Platform.OS !== 'web') {
+// Only import react-native-maps on native platforms
+if (Platform.OS !== 'web') {
+  try {
     const RNMaps = require('react-native-maps');
     MapView = RNMaps.default;
     Marker = RNMaps.Marker;
     Polyline = RNMaps.Polyline;
     PROVIDER_GOOGLE = RNMaps.PROVIDER_GOOGLE;
+  } catch (error) {
+    console.log('react-native-maps not available:', error);
   }
-} catch (error) {
-  console.log('react-native-maps not available:', error);
 }
 
 interface MapViewWrapperProps {
@@ -67,12 +68,12 @@ const WebMapFallback: React.FC<MapViewWrapperProps> = ({ style, region, children
       tailwindStyles.fontMedium
     ]}>
       🗺️ Map View (Web Preview)
-      {region && (
-        <Text style={[tailwindStyles.textSm, tailwindStyles.textGray500]}>
-          {'\n'}Location: {region.latitude.toFixed(4)}, {region.longitude.toFixed(4)}
-        </Text>
-      )}
     </Text>
+    {region && (
+      <Text style={[tailwindStyles.textSm, tailwindStyles.textGray500, tailwindStyles.textCenter]}>
+        Location: {region.latitude.toFixed(4)}, {region.longitude.toFixed(4)}
+      </Text>
+    )}
     {children}
   </View>
 );
@@ -92,7 +93,13 @@ const WebMarkerFallback: React.FC<MarkerProps> = ({ coordinate, title, pinColor 
       tailwindStyles.textCenter
     ]}>
       📍 {title || 'Marker'}
-      {'\n'}({coordinate.latitude.toFixed(4)}, {coordinate.longitude.toFixed(4)})
+    </Text>
+    <Text style={[
+      tailwindStyles.textWhite,
+      tailwindStyles.textXs,
+      tailwindStyles.textCenter
+    ]}>
+      ({coordinate.latitude.toFixed(4)}, {coordinate.longitude.toFixed(4)})
     </Text>
   </View>
 );
@@ -123,7 +130,6 @@ const WebPolylineFallback: React.FC<PolylineProps> = ({ coordinates, strokeColor
 
 export const MapViewWrapper: React.FC<MapViewWrapperProps> = (props) => {
   console.log('MapViewWrapper - Platform.OS:', Platform.OS);
-  console.log('MapViewWrapper - MapView available:', !!MapView);
   
   if (Platform.OS === 'web' || !MapView) {
     console.log('MapViewWrapper - Using fallback');

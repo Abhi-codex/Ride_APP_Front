@@ -2,21 +2,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { ActivityIndicator, Alert, Button, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { getServerUrl, makeRequest } from '../utils/network';
 
 export default function AuthScreen() {
   const router = useRouter();
-  const [phone, setPhone] = useState('');  const [role, setRole] = useState<'customer' | 'rider'>('customer');
-  const [loading, setLoading] = useState(false);  const getServerUrl = () => {
-    if (Platform.OS === 'web') {
-      return 'http://localhost:3000';
-    } 
-    else if (Platform.OS === 'android' || Platform.OS === 'ios') {
-      return 'http://192.168.31.49:3000'; 
-    } 
-    else {
-      return 'http://localhost:3000';
-    }
-  };
+  const [phone, setPhone] = useState('');
+  const [role, setRole] = useState<'customer' | 'rider'>('customer');
+  const [loading, setLoading] = useState(false);
   const [serverUrl] = useState(getServerUrl());
 
   const handleSubmit = async () => {
@@ -30,21 +22,10 @@ export default function AuthScreen() {
     try {
       console.log(`Attempting to connect to: ${serverUrl}`);
       
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000); 
-      
-      const response = await fetch(`${serverUrl}/auth/signin`, {
+      const { response, data } = await makeRequest(`${serverUrl}/auth/signin`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone, role }),
-        signal: controller.signal,
       });
-      
-      clearTimeout(timeoutId);
-      
-      console.log('Response status:', response.status);
-      const data = await response.json();
-      console.log('Login response:', data);
 
       if (response.ok) {
         const userRole = data.user?.role;
@@ -57,7 +38,9 @@ export default function AuthScreen() {
 
         await AsyncStorage.setItem('access_token', data.access_token);
         await AsyncStorage.setItem('refresh_token', data.refresh_token);
-        await AsyncStorage.setItem('role', userRole);        if (userRole === 'customer') {
+        await AsyncStorage.setItem('role', userRole);
+
+        if (userRole === 'customer') {
           router.push('/home');
         } else if (userRole === 'rider') {
           router.push('/dashboard');
@@ -73,13 +56,7 @@ export default function AuthScreen() {
       let errorMessage = 'Connection failed. ';
       
       if (error instanceof Error) {
-        if (error.name === 'AbortError') {
-          errorMessage += 'Request timed out (15 seconds). ';
-        } else if (error.message.includes('Network request failed')) {
-          errorMessage += 'Network request failed. ';
-        } else {
-          errorMessage += `Error: ${error.message}. `;
-        }
+        errorMessage += error.message;
       }
       
       if (Platform.OS !== 'web') {
@@ -90,7 +67,8 @@ export default function AuthScreen() {
         errorMessage += `4. Make sure your server is running and accessible\n`;
         errorMessage += `5. Your computer's IP might have changed`;
       }
-        Alert.alert('Connection Error', errorMessage);
+      
+      Alert.alert('Connection Error', errorMessage);
     } finally {
       setLoading(false);
     }
@@ -99,12 +77,6 @@ export default function AuthScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Sign In</Text>
-        <View style={styles.serverIndicator}>        <Text style={styles.serverText}>
-          📡 Server: {Platform.OS === 'web' ? 'Desktop (localhost)' : 'Mobile Device (192.168)'}
-        </Text>
-        <Text style={styles.serverUrl}>{serverUrl}</Text>
-      </View>
-
       <TextInput
         placeholder="Phone Number"
         style={styles.input}

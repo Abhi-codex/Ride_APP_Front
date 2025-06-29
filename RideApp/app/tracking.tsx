@@ -119,25 +119,37 @@ export default function TrackingScreen() {
         <View style={styles.infoRow}>
           <Ionicons name="checkmark-circle" size={20} color="#4CAF50" />
           <Text style={styles.infoText}>
-            Status: <Text style={{ fontWeight: 'bold' }}>{accepted ? 'Accepted' : 'Waiting...'}</Text>
+            Status: 
+          </Text>
+          <Text style={[styles.infoText, { fontWeight: 'bold' }]}>
+            {accepted ? 'Accepted' : 'Waiting...'}
           </Text>
         </View>
         <View style={styles.infoRow}>
           <Ionicons name="time-outline" size={20} color="#000" />
           <Text style={styles.infoText}>
-            ETA: <Text style={styles.bold}>{etaMinutes} min</Text>
+            ETA: 
+          </Text>
+          <Text style={[styles.infoText, styles.bold]}>
+            {etaMinutes} min
           </Text>
         </View>
         <View style={styles.infoRow}>
           <Ionicons name="map-outline" size={20} color="#000" />
           <Text style={styles.infoText}>
-            Distance: <Text style={styles.bold}>{distanceKm.toFixed(2)} km</Text>
+            Distance: 
+          </Text>
+          <Text style={[styles.infoText, styles.bold]}>
+            {distanceKm.toFixed(2)} km
           </Text>
         </View>
         <View style={styles.infoRow}>
           <Ionicons name="cash-outline" size={20} color="#000" />
           <Text style={styles.infoText}>
-            Estimated Fare: <Text style={styles.bold}>₹{estimatedFare}</Text>
+            Estimated Fare: 
+          </Text>
+          <Text style={[styles.infoText, styles.bold]}>
+            ₹{estimatedFare}
           </Text>
         </View>
       </View>

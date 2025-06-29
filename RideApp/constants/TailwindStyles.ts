@@ -63,6 +63,32 @@ export const colors = {
   },
   white: '#ffffff',
   black: '#000000',
+
+  // Medical/Emergency service colors
+  medical: {
+    50: '#f0f9ff',
+    100: '#e0f2fe',
+    200: '#bae6fd',
+    300: '#7dd3fc',
+    400: '#38bdf8',
+    500: '#0ea5e9',
+    600: '#0284c7',
+    700: '#0369a1',
+    800: '#075985',
+    900: '#0c4a6e',
+  },
+  emergency: {
+    50: '#fef2f2',
+    100: '#fee2e2',
+    200: '#fecaca',
+    300: '#fca5a5',
+    400: '#f87171',
+    500: '#ef4444',
+    600: '#dc2626',
+    700: '#b91c1c',
+    800: '#991b1b',
+    900: '#7f1d1d',
+  },
 };
 
 export const styles = StyleSheet.create({
@@ -137,6 +163,12 @@ export const styles = StyleSheet.create({
   bgSecondary900: { backgroundColor: colors.secondary[900] },
   bgDanger500: { backgroundColor: colors.danger[500] },
   bgWarning500: { backgroundColor: colors.warning[500] },
+  bgMedical500: { backgroundColor: colors.medical[500] },
+  bgMedical600: { backgroundColor: colors.medical[600] },
+  bgMedical50: { backgroundColor: colors.medical[50] },
+  bgMedical100: { backgroundColor: colors.medical[100] },
+  bgEmergency500: { backgroundColor: colors.emergency[500] },
+  bgEmergency600: { backgroundColor: colors.emergency[600] },
 
   // Text colors
   textWhite: { color: colors.white },
@@ -156,6 +188,11 @@ export const styles = StyleSheet.create({
   textDanger500: { color: colors.danger[500] },
   textWarning500: { color: colors.warning[500] },
   textWarning700: { color: colors.warning[700] },
+  textMedical500: { color: colors.medical[500] },
+  textMedical600: { color: colors.medical[600] },
+  textMedical700: { color: colors.medical[700] },
+  textEmergency500: { color: colors.emergency[500] },
+  textEmergency600: { color: colors.emergency[600] },
 
   // Text styles
   textXs: { fontSize: 12 },
@@ -199,7 +236,7 @@ export const styles = StyleSheet.create({
   py3: { paddingVertical: 12 },
   py4: { paddingVertical: 16 },
   py5: { paddingVertical: 20 },
-  py3Point5: { paddingVertical: 14 },
+  py6: { paddingVertical: 24 },
   pt1: { paddingTop: 4 },
   pt2: { paddingTop: 8 },
   pt3: { paddingTop: 12 },
@@ -222,6 +259,7 @@ export const styles = StyleSheet.create({
   m3: { margin: 12 },
   m4: { margin: 16 },
   m5: { margin: 20 },
+  m6: { margin: 24 },
   mx1: { marginHorizontal: 4 },
   mx2: { marginHorizontal: 8 },
   mx3: { marginHorizontal: 12 },
@@ -270,6 +308,8 @@ export const styles = StyleSheet.create({
   borderSecondary200: { borderColor: colors.secondary[200] },
   borderDanger500: { borderColor: colors.danger[500] },
   borderWarning500: { borderColor: colors.warning[500] },
+  borderMedical500: { borderColor: colors.medical[500] },
+  borderEmergency500: { borderColor: colors.emergency[500] },
   rounded: { borderRadius: 6 },
   roundedSm: { borderRadius: 4 },
   roundedMd: { borderRadius: 6 },
