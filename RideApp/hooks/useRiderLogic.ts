@@ -1,7 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useState } from 'react';
-import { Alert, Platform } from 'react-native';
+import { Alert } from 'react-native';
 import { Ride, RideStatus } from '../types/rider';
+import { getServerUrl } from '../utils/network';
 
 export const useRiderLogic = () => {
   const [routeCoords, setRouteCoords] = useState([]);
@@ -9,17 +10,7 @@ export const useRiderLogic = () => {
   const [tripStarted, setTripStarted] = useState(false);
   const [online, setOnline] = useState(false);
   const [availableRides, setAvailableRides] = useState<Ride[]>([]);
-  const [acceptedRide, setAcceptedRide] = useState<Ride | null>(null);  const getServerUrl = () => {
-    if (Platform.OS === 'web') {
-      return 'http://localhost:3000';
-    } else if (Platform.OS === 'android') {
-      return 'http://192.168.31.49:3000';
-    } else if (Platform.OS === 'ios') {
-      return 'http://localhost:3000';
-    } else {
-      return 'http://192.168.31.49:3000';
-    }
-  };
+  const [acceptedRide, setAcceptedRide] = useState<Ride | null>(null);
 
   useEffect(() => {
     if (!online) return;

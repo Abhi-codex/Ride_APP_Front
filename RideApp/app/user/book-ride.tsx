@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import { MapViewWrapper as Map, MarkerWrapper as Marker, PolylineWrapper as Polyline } from '../../components/MapView';
 import { colors, styles } from '../../constants/TailwindStyles';
+import { getServerUrl } from '../../utils/network';
 
 type Hospital = {
   id: string;
@@ -36,17 +37,6 @@ export default function RideScreen() {
   const [booking, setBooking] = useState(false);
   const [hospitals, setHospitals] = useState<Hospital[]>([]);
   const [routeCoords, setRouteCoords] = useState<any[]>([]);
-
-  // Get server URL based on platform
-  const getServerUrl = () => {
-    if (Platform.OS === 'web') {
-      return 'http://localhost:3000';
-    } else if (Constants.appOwnership === 'expo') {
-      return 'http://192.168.31.49:3000';
-    } else {
-      return 'http://localhost:3000';
-    }
-  };
 
   const BACKEND_URL = `${getServerUrl()}/ride/create`;
 
