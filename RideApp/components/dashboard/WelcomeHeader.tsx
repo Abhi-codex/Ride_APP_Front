@@ -1,4 +1,4 @@
-import { colors, styles } from '@/constants/TailwindStyles';
+import { styles } from '@/constants/TailwindStyles';
 import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 
@@ -28,19 +28,13 @@ export const WelcomeHeader: React.FC<WelcomeHeaderProps> = ({
       styles.rounded2xl,
       styles.p6,
       styles.mb4,
-      {
-        shadowColor: colors.black,
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-        elevation: 4,
-        borderWidth: 1,
-        borderColor: colors.gray[200],
-      }
+      styles.shadowLg,
+      styles.border,
+      styles.borderGray200,
     ]}>
       <View style={[styles.flexRow, styles.justifyBetween, styles.alignCenter]}>
         <View style={[styles.flex1]}>
-          <Text style={[styles.textSm, styles.textGray500, styles.mb1]}>
+          <Text style={[styles.textSm, styles.textMedical600, styles.mb1]}>
             {greeting}
           </Text>
           <Text style={[styles.textXl, styles.fontBold, styles.textGray900, styles.mb3]}>
@@ -48,15 +42,17 @@ export const WelcomeHeader: React.FC<WelcomeHeaderProps> = ({
           </Text>
           <View style={[styles.flexRow, styles.alignCenter]}>
             <View style={[
-              {
-                width: 8,
-                height: 8,
-                borderRadius: 4,
-                backgroundColor: isOnline ? colors.gray[900] : colors.gray[400],
-                marginRight: 8,
-              }
+              styles.w0Point5,
+              styles.h2,
+              styles.roundedFull,
+              isOnline ? styles.bgMedical600 : styles.bgGray400,
+              styles.mr2,
             ]} />
-            <Text style={[styles.textSm, styles.textGray600, styles.fontMedium]}>
+            <Text style={[
+              styles.textSm, 
+              styles.fontMedium,
+              isOnline ? styles.textMedical700 : styles.textGray600
+            ]}>
               {isOnline ? "Online & Available" : "Currently Offline"}
             </Text>
           </View>
@@ -64,26 +60,20 @@ export const WelcomeHeader: React.FC<WelcomeHeaderProps> = ({
         
         <TouchableOpacity
           style={[
-            {
-              width: 48,
-              height: 48,
-              borderRadius: 24,
-              backgroundColor: colors.gray[100],
-              justifyContent: 'center',
-              alignItems: 'center',
-              borderWidth: 1,
-              borderColor: colors.gray[200],
-            }
+            styles.square12,
+            styles.roundedFull,
+            styles.bgWarning50,
+            styles.justifyCenter,
+            styles.alignCenter,
+            styles.border,
+            styles.borderWarning200,
           ]}
           onPress={onProfilePress}
         >
           <View style={[
-            {
-              width: 24,
-              height: 24,
-              borderRadius: 12,
-              backgroundColor: colors.gray[600],
-            }
+            styles.square6,
+            styles.roundedFull,
+            styles.bgWarning600,
           ]} />
         </TouchableOpacity>
       </View>

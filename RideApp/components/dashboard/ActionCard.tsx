@@ -1,4 +1,4 @@
-import { colors, styles } from '@/constants/TailwindStyles';
+import { styles } from '@/constants/TailwindStyles';
 import React from 'react';
 import { Text, TouchableOpacity, View, ViewStyle } from 'react-native';
 
@@ -20,20 +20,14 @@ export const ActionCard: React.FC<ActionCardProps> = ({
   return (
     <TouchableOpacity
       style={[
-        {
-          backgroundColor: colors.white,
-          borderRadius: 16,
-          padding: 20,
-          marginBottom: 12,
-          shadowColor: colors.black,
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 8,
-          elevation: 4,
-          borderWidth: 1,
-          borderColor: colors.gray[200],
-          opacity: disabled ? 0.7 : 1,
-        },
+        styles.bgWhite,
+        styles.rounded2xl,
+        styles.p5,
+        styles.mb3,
+        styles.shadowMd,
+        styles.border,
+        styles.borderSecondary200,
+        disabled ? styles.opacity75 : styles.opacity100,
         style,
       ]}
       onPress={onPress}
@@ -42,41 +36,31 @@ export const ActionCard: React.FC<ActionCardProps> = ({
     >
       <View style={[styles.flexRow, styles.alignCenter, styles.justifyBetween]}>
         <View style={[styles.flex1, styles.mr3]}>
-          <Text
-            style={[
-              {
-                fontSize: 16,
-                fontWeight: '600',
-                color: colors.gray[900],
-                marginBottom: 4,
-              },
-            ]}
-          >
+          <Text style={[
+            styles.textBase,
+            styles.fontSemibold,
+            styles.textGray900,
+            styles.mb1,
+          ]}>
             {title}
           </Text>
-          <Text
-            style={[
-              {
-                fontSize: 14,
-                color: colors.gray[600],
-              },
-            ]}
-          >
+          <Text style={[
+            styles.textSm,
+            styles.textSecondary600,
+          ]}>
             {subtitle}
           </Text>
         </View>
         
         <View style={[
-          {
-            width: 32,
-            height: 32,
-            borderRadius: 16,
-            backgroundColor: colors.gray[100],
-            justifyContent: 'center',
-            alignItems: 'center',
-          }
+          styles.w8,
+          styles.h8,
+          styles.roundedFull,
+          styles.bgSecondary100,
+          styles.justifyCenter,
+          styles.alignCenter,
         ]}>
-          <Text style={[{ fontSize: 16, color: colors.gray[600] }]}>→</Text>
+          <Text style={[styles.textBase, styles.textSecondary600]}>→</Text>
         </View>
       </View>
     </TouchableOpacity>

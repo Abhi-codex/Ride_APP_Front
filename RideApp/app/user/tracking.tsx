@@ -2,9 +2,10 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Dimensions, StyleSheet, Text, View } from 'react-native';
-import { MapViewWrapper as Map, PolylineWrapper as MapPolyline, MarkerWrapper as Marker } from '../components/MapView';
-import { haversineDistance } from '../utils/distance';
+import { ActivityIndicator, Alert, Dimensions, Text, View } from 'react-native';
+import { MapViewWrapper as Map, PolylineWrapper as MapPolyline, MarkerWrapper as Marker } from '../../components/MapView';
+import { colors, styles } from '../../constants/TailwindStyles';
+import { haversineDistance } from '../../utils/distance';
 
 const { height } = Dimensions.get('window');
 
@@ -84,9 +85,11 @@ export default function TrackingScreen() {
 
   if (loading || !riderLocation) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#1E90FF" />
-        <Text style={{ marginTop: 10 }}>Getting rider location...</Text>
+      <View style={[styles.flex1, styles.justifyCenter, styles.alignCenter, styles.bgGray50]}>
+        <ActivityIndicator size="large" color={colors.primary[600]} />
+        <Text style={[styles.mt3, styles.textBase, styles.textGray600]}>
+          Getting rider location...
+        </Text>
       </View>
     );
   }
@@ -106,49 +109,65 @@ export default function TrackingScreen() {
   const estimatedFare = Math.ceil(distanceKm * farePerKm);
 
   return (
-    <View style={styles.container}>      <Map style={styles.map} region={riderLocation}>
+    <View style={[styles.flex1]}>
+      <Map style={[styles.flex1]}>
         <Marker coordinate={riderLocation} pinColor="blue" title="Ambulance" />
         <Marker coordinate={{ latitude: latitudeNum, longitude: longitudeNum }} pinColor="red" title="Hospital" />
         {routeCoords.length > 0 && (
-          <MapPolyline coordinates={routeCoords} strokeColor="#1E90FF" strokeWidth={5} />
+          <MapPolyline coordinates={routeCoords} strokeColor={colors.primary[600]} strokeWidth={5} />
         )}
       </Map>
 
-      <View style={styles.bottomPanel}>
-        <Text style={styles.panelHeader}>🚑 Trip Summary</Text>
-        <View style={styles.infoRow}>
-          <Ionicons name="checkmark-circle" size={20} color="#4CAF50" />
-          <Text style={styles.infoText}>
+      <View style={[
+        styles.absolute,
+        styles.bottom0,
+        styles.wFull,
+        styles.p5,
+        styles.bgWhite,
+        styles.roundedTl3xl,
+        styles.roundedTr3xl,
+        styles.shadowXl,
+      ]}>
+        <Text style={[styles.textLg, styles.fontBold, styles.mb3, styles.textCenter, styles.textGray800]}>
+          🚑 Trip Summary
+        </Text>
+        
+        <View style={[styles.flexRow, styles.alignCenter, styles.my2]}>
+          <Ionicons name="checkmark-circle" size={20} color={colors.medical[500]} />
+          <Text style={[styles.ml3, styles.textBase, styles.textGray700]}>
             Status: 
           </Text>
-          <Text style={[styles.infoText, { fontWeight: 'bold' }]}>
+          <Text style={[styles.textBase, styles.fontBold, styles.textGray800]}>
             {accepted ? 'Accepted' : 'Waiting...'}
           </Text>
         </View>
-        <View style={styles.infoRow}>
-          <Ionicons name="time-outline" size={20} color="#000" />
-          <Text style={styles.infoText}>
+        
+        <View style={[styles.flexRow, styles.alignCenter, styles.my2]}>
+          <Ionicons name="time-outline" size={20} color={colors.gray[600]} />
+          <Text style={[styles.ml3, styles.textBase, styles.textGray700]}>
             ETA: 
           </Text>
-          <Text style={[styles.infoText, styles.bold]}>
+          <Text style={[styles.textBase, styles.fontBold, styles.textPrimary600]}>
             {etaMinutes} min
           </Text>
         </View>
-        <View style={styles.infoRow}>
-          <Ionicons name="map-outline" size={20} color="#000" />
-          <Text style={styles.infoText}>
+        
+        <View style={[styles.flexRow, styles.alignCenter, styles.my2]}>
+          <Ionicons name="map-outline" size={20} color={colors.gray[600]} />
+          <Text style={[styles.ml3, styles.textBase, styles.textGray700]}>
             Distance: 
           </Text>
-          <Text style={[styles.infoText, styles.bold]}>
+          <Text style={[styles.textBase, styles.fontBold, styles.textPrimary600]}>
             {distanceKm.toFixed(2)} km
           </Text>
         </View>
-        <View style={styles.infoRow}>
-          <Ionicons name="cash-outline" size={20} color="#000" />
-          <Text style={styles.infoText}>
+        
+        <View style={[styles.flexRow, styles.alignCenter, styles.my2]}>
+          <Ionicons name="cash-outline" size={20} color={colors.gray[600]} />
+          <Text style={[styles.ml3, styles.textBase, styles.textGray700]}>
             Estimated Fare: 
           </Text>
-          <Text style={[styles.infoText, styles.bold]}>
+          <Text style={[styles.textBase, styles.fontBold, styles.textPrimary600]}>
             ₹{estimatedFare}
           </Text>
         </View>
@@ -156,46 +175,3 @@ export default function TrackingScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  map: { flex: 1 },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  bottomPanel: {
-    position: 'absolute',
-    bottom: 0,
-    width: '100%',
-    padding: 20,
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    elevation: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -3 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-  },
-  panelHeader: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 6,
-  },
-  infoText: {
-    marginLeft: 10,
-    fontSize: 16,
-  },
-  bold: {
-    fontWeight: 'bold',
-    color: '#1E90FF',
-  },
-});

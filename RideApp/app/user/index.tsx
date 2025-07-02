@@ -32,22 +32,22 @@ export default function HomeScreen() {
     <View style={styles.container}>
       <Text style={styles.title}>Select a Service</Text>
 
-      <TouchableOpacity style={styles.card} onPress={() => router.push('/ride')}>
+      <TouchableOpacity style={styles.card} onPress={() => router.push('/user/book-ride')}>
         <Text style={styles.emoji}>🚑</Text>
         <Text style={styles.label}>Ride</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.card} onPress={() => router.push('/dashboard')}>
+      <TouchableOpacity style={styles.card} onPress={() => router.push('/rider/dashboard')}>
         <Text style={styles.emoji}>🚗</Text>
-        <Text style={styles.label}>Driver</Text>
+        <Text style={styles.label}>Driver Dashboard</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.card} onPress={() => router.push('/medicine')}>
+      <TouchableOpacity style={styles.card} onPress={() => router.push('/user/medicine')}>
         <Text style={styles.emoji}>💊</Text>
         <Text style={styles.label}>Medicine</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.card} onPress={() => router.push('/ai')}>
+      <TouchableOpacity style={styles.card} onPress={() => router.push('/user/ai')}>
         <Text style={styles.emoji}>🤖</Text>
         <Text style={styles.label}>AI Assistant</Text>
       </TouchableOpacity>

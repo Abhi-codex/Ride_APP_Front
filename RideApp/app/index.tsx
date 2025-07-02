@@ -58,9 +58,9 @@ export default function AuthScreen() {
         }
 
         if (userRole === "customer") {
-          router.push("/home");
+          router.push("/user");
         } else if (userRole === "rider") {
-          router.push("/dashboard");
+          router.push("/rider/dashboard");
         } else {
           Alert.alert("Unknown role", "Could not determine user role.");
         }
