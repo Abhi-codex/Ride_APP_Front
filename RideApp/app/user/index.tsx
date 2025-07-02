@@ -37,11 +37,6 @@ export default function HomeScreen() {
         <Text style={styles.label}>Ride</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.card} onPress={() => router.push('/rider/dashboard')}>
-        <Text style={styles.emoji}>🚗</Text>
-        <Text style={styles.label}>Driver Dashboard</Text>
-      </TouchableOpacity>
-
       <TouchableOpacity style={styles.card} onPress={() => router.push('/user/medicine')}>
         <Text style={styles.emoji}>💊</Text>
         <Text style={styles.label}>Medicine</Text>

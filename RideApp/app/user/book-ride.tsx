@@ -1,5 +1,4 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Constants from 'expo-constants';
 import * as Location from 'expo-location';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -8,7 +7,6 @@ import {
   Alert,
   Dimensions,
   Image,
-  Platform,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -17,6 +15,7 @@ import {
 import { MapViewWrapper as Map, MarkerWrapper as Marker, PolylineWrapper as Polyline } from '../../components/MapView';
 import { colors, styles } from '../../constants/TailwindStyles';
 import { getServerUrl } from '../../utils/network';
+import { config } from '../../config';
 
 type Hospital = {
   id: string;
@@ -46,18 +45,21 @@ export default function RideScreen() {
         const { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== 'granted') {
           Alert.alert('Permission denied', 'Location permission is required.');
+          setLoading(false);
           return;
         }
 
         const location = await Location.getCurrentPositionAsync({});
+        const { latitude, longitude } = location.coords;
+        
         const region = {
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01,
+          latitude,
+          longitude,
+          latitudeDelta: 0.05,
+          longitudeDelta: 0.05,
         };
         setCurrentLocation(region);
-        await fetchNearbyHospitals(location.coords.latitude, location.coords.longitude);
+        await fetchHospitals(latitude, longitude);
       } catch (error) {
         console.error('Error getting location:', error);
         Alert.alert('Error', 'Unable to get current location.');
@@ -69,38 +71,50 @@ export default function RideScreen() {
     getCurrentLocation();
   }, []);
 
-  const fetchNearbyHospitals = async (lat: number, lng: number) => {
-    const mockHospitals: Hospital[] = [
-      {
-        id: '1',
-        name: 'Apollo Hospital',
-        latitude: lat + 0.005,
-        longitude: lng + 0.005,
-        distance: 0.8,
-        rating: 4.8,
-        photoUrl: 'https://via.placeholder.com/80x80?text=H1',
-      },
-      {
-        id: '2',
-        name: 'Max Hospital',
-        latitude: lat - 0.007,
-        longitude: lng + 0.008,
-        distance: 1.2,
-        rating: 4.6,
-        photoUrl: 'https://via.placeholder.com/80x80?text=H2',
-      },
-      {
-        id: '3',
-        name: 'AIIMS',
-        latitude: lat + 0.010,
-        longitude: lng - 0.005,
-        distance: 1.5,
-        rating: 4.9,
-        photoUrl: 'https://via.placeholder.com/80x80?text=H3',
-      },
-    ];
+  const fetchHospitals = async (lat: number, lon: number) => {
+    const radius = config.PLACES_API.RADIUS;
+    const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lon}&radius=${radius}&type=hospital&key=${config.GOOGLE_API_KEY}`;
 
-    setHospitals(mockHospitals);
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (data.status !== 'OK') {
+        Alert.alert('Error', 'Unable to fetch hospitals');
+        return;
+      }
+
+      const fetchedHospitals = data.results.slice(0, config.PLACES_API.MAX_RESULTS).map((place: any) => {
+        const distance = getDistance(lat, lon, place.geometry.location.lat, place.geometry.location.lng);
+        const photoRef = place.photos?.[0]?.photo_reference;
+        return {
+          id: place.place_id,
+          name: place.name,
+          latitude: place.geometry.location.lat,
+          longitude: place.geometry.location.lng,
+          distance: Math.round(distance * 10) / 10, // Round to 1 decimal place
+          rating: place.rating,
+          photoUrl: photoRef
+            ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${photoRef}&key=${config.GOOGLE_API_KEY}`
+            : 'https://via.placeholder.com/80x80?text=H',
+        };
+      });
+
+      setHospitals(fetchedHospitals);
+    } catch (err) {
+      console.error('Failed to fetch hospital data:', err);
+      Alert.alert('Error', 'Failed to fetch hospital data.');
+    }
+  };
+
+  const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+    const R = 6371; // Radius of Earth in kilometers
+    const dLat = (lat2 - lat1) * (Math.PI / 180);
+    const dLon = (lon2 - lon1) * (Math.PI / 180);
+    const a =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   };
 
   const handleBookRide = async () => {
@@ -112,7 +126,7 @@ export default function RideScreen() {
     setBooking(true);
 
     const rideData = {
-      rideType,
+      vehicle: "cabEconomy",
       pickup: {
         latitude: currentLocation.latitude,
         longitude: currentLocation.longitude,
@@ -133,6 +147,9 @@ export default function RideScreen() {
         return;
       }
 
+      console.log('Booking ride with data:', rideData);
+      console.log('Using token:', token);
+
       const response = await fetch(BACKEND_URL, {
         method: 'POST',
         headers: {
@@ -143,6 +160,7 @@ export default function RideScreen() {
       });
 
       const data = await response.json();
+      console.log('Response data:', data);
 
       if (response.ok) {
         Alert.alert('Success', 'Ambulance booked successfully!');
@@ -170,14 +188,54 @@ export default function RideScreen() {
     }
   };
 
+  const decodePolyline = (t: string) => {
+    let points = [], index = 0, lat = 0, lng = 0;
+    while (index < t.length) {
+      let b, shift = 0, result = 0;
+      do { b = t.charCodeAt(index++) - 63; result |= (b & 0x1f) << shift; shift += 5; }
+      while (b >= 0x20);
+      const dlat = ((result & 1) ? ~(result >> 1) : (result >> 1));
+      lat += dlat;
+      shift = result = 0;
+      do { b = t.charCodeAt(index++) - 63; result |= (b & 0x1f) << shift; shift += 5; }
+      while (b >= 0x20);
+      const dlng = ((result & 1) ? ~(result >> 1) : (result >> 1));
+      lng += dlng;
+      points.push({ latitude: lat / 1e5, longitude: lng / 1e5 });
+    }
+    return points;
+  };
+
   const handleSelectHospital = async (hospital: Hospital) => {
     setSelectedHospital(hospital);
     if (currentLocation) {
-      const route = [
-        { latitude: currentLocation.latitude, longitude: currentLocation.longitude },
-        { latitude: hospital.latitude, longitude: hospital.longitude },
-      ];
-      setRouteCoords(route);
+      // Fetch route using Google Directions API
+      const directionsUrl = `https://maps.googleapis.com/maps/api/directions/json?origin=${currentLocation.latitude},${currentLocation.longitude}&destination=${hospital.latitude},${hospital.longitude}&key=${config.GOOGLE_API_KEY}`;
+      
+      try {
+        const response = await fetch(directionsUrl);
+        const data = await response.json();
+        
+        if (data.routes.length > 0) {
+          const points = decodePolyline(data.routes[0].overview_polyline.points);
+          setRouteCoords(points);
+        } else {
+          // Fallback to simple straight line route
+          const route = [
+            { latitude: currentLocation.latitude, longitude: currentLocation.longitude },
+            { latitude: hospital.latitude, longitude: hospital.longitude },
+          ];
+          setRouteCoords(route);
+        }
+      } catch (error) {
+        console.error('Error fetching route:', error);
+        // Fallback to simple straight line route
+        const route = [
+          { latitude: currentLocation.latitude, longitude: currentLocation.longitude },
+          { latitude: hospital.latitude, longitude: hospital.longitude },
+        ];
+        setRouteCoords(route);
+      }
     }
   };
 
@@ -210,11 +268,20 @@ export default function RideScreen() {
                 title={hospital.name}
               />
             ))}
+            {selectedHospital && (
+              <Marker
+                coordinate={{
+                  latitude: selectedHospital.latitude,
+                  longitude: selectedHospital.longitude,
+                }}
+                title={selectedHospital.name}
+              />
+            )}
             {routeCoords.length > 0 && (
               <Polyline
                 coordinates={routeCoords}
                 strokeColor={colors.emergency[500]}
-                strokeWidth={3}
+                strokeWidth={4}
               />
             )}
           </Map>
@@ -262,7 +329,7 @@ export default function RideScreen() {
                 </Text>
                 {hospital.rating && (
                   <Text style={[styles.textSm, styles.textWarning500, styles.mt1]}>
-                    ⭐ {hospital.rating}
+                    🌟 {hospital.rating}
                   </Text>
                 )}
               </View>
