@@ -4,10 +4,13 @@ import { styles } from "../../constants/TailwindStyles";
 
 interface DriverMinimizedInfoProps {
   availableRidesCount: number;
+  online: boolean;
+  todaysEarnings: string;
 }
 
 export default function DriverMinimizedInfo({
   availableRidesCount,
+
 }: DriverMinimizedInfoProps) {
   return (
     <View style={[styles.px4, styles.py2]}>

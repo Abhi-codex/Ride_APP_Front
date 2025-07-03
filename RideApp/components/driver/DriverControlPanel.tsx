@@ -5,6 +5,9 @@ import { Ride, RideStatus } from "../../types/rider";
 
 interface DriverControlPanelProps {
   online: boolean;
+  distanceKm: string;
+  etaMinutes: number;
+  fare: number;
   acceptedRide: Ride | null;
   tripStarted: boolean;
   onToggleOnline: () => void;
@@ -13,6 +16,9 @@ interface DriverControlPanelProps {
 
 export default function DriverControlPanel({
   online,
+  distanceKm,
+  etaMinutes,
+  fare,
   acceptedRide,
   tripStarted,
   onToggleOnline,
@@ -42,7 +48,7 @@ export default function DriverControlPanel({
       [
         { text: "Cancel", style: "cancel" },
         {
-          text: "Confirm",
+          text: actionText,
           onPress: () => onUpdateRideStatus(acceptedRide._id, nextStatus),
           style: "default",
         },
@@ -50,53 +56,95 @@ export default function DriverControlPanel({
     );
   };
 
-  return (
-    <View style={[styles.bgWhite, styles.roundedXl, styles.shadowLg, styles.p4]}>
-      <Text style={[styles.textLg, styles.fontBold, styles.textGray900, styles.mb3]}>
-        Driver Controls
-      </Text>
+  if (!acceptedRide) {
+    return null;
+  }
 
-      <TouchableOpacity
-        onPress={onToggleOnline}
+  return (
+    <View style={[styles.mt4]}>
+      <View
         style={[
-          styles.py3,
-          styles.px4,
-          styles.roundedLg,
-          styles.alignCenter,
-          styles.mb3,
-          online ? styles.bgSecondary500 : styles.bgGray300,
+          styles.bgWhite,
+          styles.roundedXl,
+          styles.p4,
+          styles.border,
+          styles.borderGray200,
+          styles.shadowMd,
         ]}
       >
         <Text
           style={[
-            styles.fontMedium,
-            online ? styles.textWhite : styles.textGray700,
+            styles.textLg,
+            styles.fontBold,
+            styles.textGray900,
+            styles.mb4,
+            styles.textCenter,
           ]}
         >
-          {online ? "Go Offline" : "Go Online"}
+          🚑 Active Emergency Trip
         </Text>
-      </TouchableOpacity>
 
-      {acceptedRide && (
-        <TouchableOpacity
-          onPress={handleRideAction}
+        <View style={[styles.flexRow, styles.justifyBetween, styles.mb4]}>
+          <View style={[styles.alignCenter, styles.flex1]}>
+            <Text style={[styles.textSm, styles.textGray500]}>Distance</Text>
+            <Text style={[styles.textLg, styles.fontBold, styles.textPrimary600]}>
+              {distanceKm} km
+            </Text>
+          </View>
+          <View style={[styles.alignCenter, styles.flex1]}>
+            <Text style={[styles.textSm, styles.textGray500]}>ETA</Text>
+            <Text style={[styles.textLg, styles.fontBold, styles.textSecondary600]}>
+              {etaMinutes} min
+            </Text>
+          </View>
+          <View style={[styles.alignCenter, styles.flex1]}>
+            <Text style={[styles.textSm, styles.textGray500]}>Fare</Text>
+            <Text style={[styles.textLg, styles.fontBold, styles.textGray900]}>
+              ₹{fare}
+            </Text>
+          </View>
+        </View>
+
+        <View
           style={[
-            styles.py3,
-            styles.px4,
+            styles.bgGray50,
             styles.roundedLg,
+            styles.p3,
+            styles.mb4,
             styles.alignCenter,
-            styles.bgPrimary500,
           ]}
         >
-          <Text style={[styles.fontMedium, styles.textWhite]}>
-            {acceptedRide.status === RideStatus.START || (!tripStarted && acceptedRide.status === RideStatus.SEARCHING)
-              ? "Mark as Arrived"
-              : acceptedRide.status === RideStatus.ARRIVED
-              ? "Complete Trip"
+          <Text style={[styles.textSm, styles.fontMedium, styles.textGray600]}>
+            {acceptedRide.status === RideStatus.START 
+              ? "En Route to Patient" 
+              : acceptedRide.status === RideStatus.ARRIVED 
+              ? "Arrived at Pickup Location" 
+              : "Ready to Start"}
+          </Text>
+        </View>
+
+        <TouchableOpacity
+          style={[
+            acceptedRide.status === RideStatus.ARRIVED 
+              ? styles.bgSecondary500 
+              : styles.bgPrimary500,
+            styles.py4,
+            styles.roundedXl,
+            styles.alignCenter,
+            styles.shadowMd,
+          ]}
+          onPress={handleRideAction}
+          activeOpacity={0.8}
+        >
+          <Text style={[styles.textWhite, styles.fontBold, styles.textBase]}>
+            {acceptedRide.status === RideStatus.START 
+              ? "Mark as Arrived" 
+              : acceptedRide.status === RideStatus.ARRIVED 
+              ? "Complete Trip" 
               : "Start Trip"}
           </Text>
         </TouchableOpacity>
-      )}
+      </View>
     </View>
   );
 }

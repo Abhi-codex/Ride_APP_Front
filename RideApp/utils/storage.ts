@@ -1,7 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 
-// Web-compatible storage wrapper
 export const storage = {
   async setItem(key: string, value: string): Promise<void> {
     try {

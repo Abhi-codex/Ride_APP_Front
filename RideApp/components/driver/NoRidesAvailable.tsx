@@ -1,6 +1,5 @@
 import React from "react";
 import { Text, View } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import { styles } from "../../constants/TailwindStyles";
 
 export default function NoRidesAvailable() {
@@ -25,7 +24,7 @@ export default function NoRidesAvailable() {
           styles.mb4,
         ]}
       >
-        <Ionicons name="alert-circle-outline" size={48} color="#6B7280" />
+        <Text style={[styles.text2xl]}>🚗</Text>
       </View>
       <Text
         style={[
@@ -34,7 +33,7 @@ export default function NoRidesAvailable() {
           styles.mb2,
         ]}
       >
-        No emergency calls available
+        No rides available
       </Text>
       <Text
         style={[
@@ -43,7 +42,7 @@ export default function NoRidesAvailable() {
           styles.textCenter,
         ]}
       >
-        Stay online and you will be notified when emergency calls come in
+        Stay online and we'll notify you when new ride requests come in
       </Text>
     </View>
   );

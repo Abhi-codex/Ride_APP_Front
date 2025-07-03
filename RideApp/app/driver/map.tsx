@@ -173,10 +173,6 @@ export default function DriverMapScreen() {
       </View>
     );
   }
-  
-  // Calculate the acceptedRideId from acceptedRide
-  const acceptedRideId = acceptedRide ? acceptedRide._id : null;
-
   return (
     <View style={[styles.flex1, styles.bgGray50, styles.pt8]}>
       <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent/>
@@ -201,9 +197,19 @@ export default function DriverMapScreen() {
         translateY={translateY}
         currentSnapPoint={currentSnapPoint}
         gestureHandler={gestureHandler}
-        acceptedRideId={acceptedRideId}
+        acceptedRide={acceptedRide}
+        availableRides={availableRides}
         online={online}
+        driverLocation={driverLocation}
+        destination={destination}
+        tripStarted={tripStarted}
+        onAcceptRide={(rideId: string) => handleAcceptRide(rideId, driverLocation)}
+        onRejectRide={handleRejectRide}
         onToggleOnline={toggleOnline}
+        onUpdateRideStatus={updateRideStatus}
+        distanceKm={distanceKm}
+        etaMinutes={etaMinutes}
+        fare={fare}
       />
     </View>
   );

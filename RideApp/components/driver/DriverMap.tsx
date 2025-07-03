@@ -18,7 +18,6 @@ interface DriverMapProps {
   acceptedRide: Ride | null;
   destination: { latitude: number; longitude: number } | null;
   routeCoords: Array<{ latitude: number; longitude: number }>;
-
   online?: boolean;
   availableRides?: Ride[];
   isSearching?: boolean;
@@ -33,64 +32,101 @@ export default function DriverMap({
   availableRides = [],
   isSearching = false,
 }: DriverMapProps) {
-  if (!driverLocation) {
-    return (
-      <View style={[styles.flex2, styles.justifyCenter, styles.alignCenter]}>
-        <Text>Loading map...</Text>
-      </View>
-    );
-  }
-
+  console.log('DriverMap - driverLocation:', driverLocation);
+  console.log('DriverMap - Platform.OS:', Platform.OS);
+  
   return (
     <View style={[styles.flex2]}>
       <MapView style={[styles.flex1]} region={driverLocation}>
-        {/* Driver's current location */}
         <Marker
-          coordinate={{
-            latitude: driverLocation.latitude,
-            longitude: driverLocation.longitude,
-          }}
+          coordinate={driverLocation}
           title="Your Location"
           pinColor={colors.emergency[500]}
         />
 
-        {/* Display the accepted ride's pickup and drop locations */}
         {acceptedRide && (
-          <>
-            <Marker
-              coordinate={acceptedRide.pickup}
-              title="Patient Pickup"
-              pinColor={colors.primary[500]}
-            />
-            <Marker
-              coordinate={acceptedRide.drop}
-              title="Hospital"
-              pinColor={colors.secondary[500]}
-            />
-          </>
+          <Marker
+            coordinate={acceptedRide.pickup}
+            title="Patient Pickup"
+            pinColor={colors.warning[500]}
+          />
         )}
 
-        {/* Display route from driver to destination */}
+        {destination && (
+          <Marker
+            coordinate={destination}
+            title="Hospital Destination"
+            pinColor={colors.danger[500]}
+          />
+        )}
+
         {routeCoords.length > 0 && (
           <Polyline
             coordinates={routeCoords}
-            strokeColor={colors.primary[500]}
+            strokeColor={colors.emergency[500]}
             strokeWidth={4}
           />
         )}
-
-        {/* Display available rides on the map */}
-        {online &&
-          !acceptedRide &&
-          availableRides.map((ride) => (            
-          <Marker
-            key={ride._id}
-            coordinate={ride.pickup}
-            title="Emergency Call"
-            pinColor={colors.emergency[500]}
+      </MapView>      
+      
+      {online && (
+        <View
+          style={[
+            styles.absolute,
+            styles.top10,
+            styles.left5,
+            styles.bgWhite,
+            styles.roundedXl,
+            styles.px3,
+            styles.py2,
+            styles.shadowMd,
+            styles.flexRow,
+            styles.alignCenter,
+          ]}
+        >
+          <View
+            style={[
+              {
+                width: 8,
+                height: 8,
+                borderRadius: 4,
+                backgroundColor: acceptedRide
+                  ? colors.secondary[500]
+                  : availableRides.length > 0
+                  ? colors.warning[500]
+                  : isSearching
+                  ? colors.emergency[500]
+                  : colors.gray[400],
+              },
+              styles.mr2,
+            ]}
           />
-          ))}
-      </MapView>
+          <Text
+            style={[
+              styles.textSm,
+              styles.fontMedium,
+              { 
+                color: acceptedRide
+                  ? colors.secondary[700]
+                  : availableRides.length > 0
+                  ? colors.warning[700]
+                  : isSearching
+                  ? colors.emergency[700]
+                  : colors.gray[600]
+              },
+            ]}
+          >
+            {acceptedRide 
+              ? "On Emergency Call" 
+              : availableRides.length > 0
+              ? `${availableRides.length} Emergency Call${availableRides.length > 1 ? 's' : ''} Found`
+              : isSearching
+              ? "Searching..."
+              : "Offline"
+            }
+          </Text>
+        </View>
+      )}
     </View>
   );
 }

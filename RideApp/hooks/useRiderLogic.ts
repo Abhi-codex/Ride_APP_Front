@@ -1,7 +1,14 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Alert } from 'react-native';
-import { Ride, RideStatus } from '../types/rider';
+import { 
+  Ride, 
+  RideStatus, 
+  Driver, 
+  DriverStats, 
+  ApiResponse, 
+  RideResponse 
+} from '../types/rider';
 import { getServerUrl } from '../utils/network';
 
 export const useRiderLogic = () => {
@@ -11,9 +18,11 @@ export const useRiderLogic = () => {
   const [online, setOnline] = useState(false);
   const [availableRides, setAvailableRides] = useState<Ride[]>([]);
   const [acceptedRide, setAcceptedRide] = useState<Ride | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
-  // Driver statistics and profile data
-  const [driverStats, setDriverStats] = useState({
+  // Driver statistics and profile data with proper types
+  const [driverStats, setDriverStats] = useState<DriverStats>({
     totalRides: 0,
     todayRides: 0,
     todayEarnings: 0,
@@ -22,70 +31,160 @@ export const useRiderLogic = () => {
     monthlyEarnings: 0,
     rating: 0
   });
-  const [driverProfile, setDriverProfile] = useState(null);
+  const [driverProfile, setDriverProfile] = useState<Driver | null>(null);
+
+  // Auto-refresh intervals
+  const [refreshInterval, setRefreshInterval] = useState<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     fetchDriverProfile();
     fetchDriverStats();
+    
+    return () => {
+      if (refreshInterval) {
+        clearInterval(refreshInterval);
+      }
+    };
   }, []);
 
   useEffect(() => {
-    if (!online) return;
-    fetchAvailableRides();
-    // Refresh stats when going online
-    fetchDriverStats();
-  }, [online]);
-  const fetchAvailableRides = async () => {
-    try {
-      console.log('Fetching rides from:', getServerUrl());
-      const token = await AsyncStorage.getItem("access_token");
-      console.log('Token found:', !!token);
+    if (online && !acceptedRide) {
+      fetchAvailableRides();
+      updateOnlineStatus(true);
       
-      if (!token) {
-        console.error('No access token found');
-        Alert.alert('Authentication Error', 'Please login first');
-        return;
+      const interval = setInterval(() => {
+        if (online && !acceptedRide) {
+          fetchAvailableRides();
+        }
+      }, 30000);   //auto refresh every 30 seconds
+      
+      setRefreshInterval(interval);
+      
+      return () => {
+        if (interval) clearInterval(interval);
+      };
+    } else if (!online) {
+      updateOnlineStatus(false);
+      if (refreshInterval) {
+        clearInterval(refreshInterval);
+        setRefreshInterval(null);
+      }
+    }
+  }, [online, acceptedRide]);
+
+  const handleApiError = useCallback((error: any, context: string) => {
+    console.error(`${context} error:`, error);
+    
+    if (error instanceof TypeError && error.message.includes('Network request failed')) {
+      setError('Connection failed. Check your network and server.');
+      Alert.alert(
+        'Connection Error', 
+        'Cannot connect to server. Make sure:\n• Backend server is running\n• Using correct IP address\n• No firewall blocking connection'
+      );
+    } else if (error.message?.includes('401')) {
+      setError('Authentication failed. Please login again.');
+      Alert.alert('Authentication Error', 'Please login again');
+    } else {
+      setError(`${context} failed`);
+      Alert.alert('Error', `${context} failed. Please try again.`);
+    }
+  }, []);
+
+  const makeAuthenticatedRequest = useCallback(async (url: string, options: RequestInit = {}) => {
+    const token = await AsyncStorage.getItem("access_token");
+    
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        ...options.headers,
+      },
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        await refreshAuthToken();
+        throw new Error('Authentication failed');
+      }
+      
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    return response.json();
+  }, []);
+
+  const refreshAuthToken = useCallback(async () => {
+    try {
+      const refreshToken = await AsyncStorage.getItem("refresh_token");
+      if (!refreshToken) {
+        throw new Error('No refresh token found');
       }
 
-      const url = `${getServerUrl()}/ride/driverrides`;
-      console.log('Making request to:', url);
-        const res = await fetch(url, {
-        headers: { 
-          Authorization: `Bearer ${token}`,
+      const response = await fetch(`${getServerUrl()}/auth/refresh-token`, {
+        method: 'POST',
+        headers: {
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify({ refresh_token: refreshToken }),
       });
 
-      console.log('Response status:', res.status);
-      
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      if (response.ok) {
+        const data = await response.json();
+        await AsyncStorage.setItem("access_token", data.access_token);
+        await AsyncStorage.setItem("refresh_token", data.refresh_token);
+        return true;
       }
+    } catch (error) {
+      console.error('Token refresh failed:', error);
+      Alert.alert('Session Expired', 'Please login again');
+    }
+    return false;
+  }, []);
 
-      const data = await res.json();
-      console.log('Fetched rides data:', data);
+  const updateOnlineStatus = useCallback(async (isOnline: boolean) => {
+    try {
+      await makeAuthenticatedRequest(`${getServerUrl()}/driver/online-status`, {
+        method: 'PUT',
+        body: JSON.stringify({ isOnline }),
+      });
+      
+      // Update local profile state
+      if (driverProfile) {
+        setDriverProfile({ ...driverProfile, isOnline });
+      }
+    } catch (error) {
+      handleApiError(error, 'Update online status');
+    }
+  }, [driverProfile, makeAuthenticatedRequest, handleApiError]);
+
+  const fetchAvailableRides = useCallback(async () => {
+    if (loading) return; // Prevent multiple simultaneous requests
+    
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const data: RideResponse = await makeAuthenticatedRequest(`${getServerUrl()}/ride/driverrides`);
       
       if (data.rides && Array.isArray(data.rides)) {
         const searchingRides = data.rides.filter((ride: Ride) => ride.status === RideStatus.SEARCHING);
-        console.log('Available rides found:', searchingRides.length);
         setAvailableRides(searchingRides);
       } else {
-        console.log('No rides array in response');
         setAvailableRides([]);
       }
     } catch (error) {
-      console.error("Error fetching rides:", error);
-      
-      if (error instanceof TypeError && error.message.includes('Network request failed')) {
-        Alert.alert(
-          'Connection Error', 
-          'Cannot connect to server. Make sure:\n• Backend server is running\n• Using correct IP address\n• No firewall blocking connection'
-        );
-      } else {
-        Alert.alert('Error', 'Failed to fetch available rides');
-      }
+      handleApiError(error, 'Fetch available rides');
+      setAvailableRides([]);
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [loading, makeAuthenticatedRequest, handleApiError]);
 
   const fetchRoute = async (
     origin: { latitude: number; longitude: number },
@@ -103,186 +202,189 @@ export const useRiderLogic = () => {
         setRouteCoords(coords);
       }
     } catch (error) {
-      console.error(error);
-      Alert.alert('Error', 'Could not fetch route.');
+      console.error('Route fetch error:', error);
+      Alert.alert('Navigation Error', 'Could not fetch route. Using direct path.');
     }
   };
 
-  const handleAcceptRide = async (rideId: string, driverLocation: any) => {
+  const fetchDriverStats = useCallback(async () => {
     try {
-      const token = await AsyncStorage.getItem("access_token");
-      const res = await fetch(`${getServerUrl()}/ride/accept/${rideId}`, {
-        method: 'PATCH',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      setError(null);
+      const data: ApiResponse<DriverStats> = await makeAuthenticatedRequest(`${getServerUrl()}/driver/stats`);
       
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || `HTTP ${res.status}: ${res.statusText}`);
-      }
-      
-      const data = await res.json();
-      const ride = data.ride;
-      Alert.alert("Success", "Emergency call accepted successfully!");
-
-      setAcceptedRide(ride);
-      setAvailableRides([]);
-      setTripStarted(false);
-      const dropLocation = {
-        latitude: ride.drop.latitude,
-        longitude: ride.drop.longitude,
-      };
-      setDestination(dropLocation);
-      if (driverLocation) {
-        fetchRoute(driverLocation, dropLocation);
+      if (data.data) {
+        setDriverStats(data.data);
       }
     } catch (error) {
-      console.error("Error accepting ride:", error);
-      Alert.alert("Failed to Accept", error instanceof Error ? error.message : "Failed to accept ride");
+      handleApiError(error, 'Fetch driver statistics');
     }
-  };
+  }, [makeAuthenticatedRequest, handleApiError]);
 
-  const updateRideStatus = async (rideId: string, status: RideStatus) => {
+  const fetchDriverProfile = useCallback(async () => {
     try {
-      const token = await AsyncStorage.getItem("access_token");
-      const res = await fetch(`${getServerUrl()}/ride/update/${rideId}`, {
+      setError(null);
+      const data: ApiResponse<Driver> = await makeAuthenticatedRequest(`${getServerUrl()}/driver/profile`);
+      
+      if (data.data) {
+        setDriverProfile(data.data);
+        setOnline(data.data.isOnline); // Sync online state with backend
+      }
+    } catch (error) {
+      handleApiError(error, 'Fetch driver profile');
+    }
+  }, [makeAuthenticatedRequest, handleApiError]);
+
+  const handleAcceptRide = useCallback(async (rideId: string, driverLocation: any) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const data: RideResponse = await makeAuthenticatedRequest(`${getServerUrl()}/ride/accept/${rideId}`, {
         method: 'PATCH',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
+      });
+      
+      if (data.ride) {
+        Alert.alert("Success", "Emergency call accepted successfully!");
+        setAcceptedRide(data.ride);
+        setAvailableRides([]);
+        setTripStarted(false);
+        
+        const dropLocation = {
+          latitude: data.ride.drop.latitude,
+          longitude: data.ride.drop.longitude,
+        };
+        setDestination(dropLocation);
+        
+        if (driverLocation) {
+          await fetchRoute(driverLocation, dropLocation);
+        }
+        
+        // Refresh stats after accepting a ride
+        fetchDriverStats();
+      }
+    } catch (error) {
+      handleApiError(error, 'Accept ride');
+    } finally {
+      setLoading(false);
+    }
+  }, [makeAuthenticatedRequest, handleApiError, fetchDriverStats]);
+
+  const updateRideStatus = useCallback(async (rideId: string, status: RideStatus) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const data: RideResponse = await makeAuthenticatedRequest(`${getServerUrl()}/ride/update/${rideId}`, {
+        method: 'PATCH',
         body: JSON.stringify({ status }),
       });
 
-      const data = await res.json();
+      if (data.ride) {
+        Alert.alert("Success", `Ride status updated to ${status}`);
+        setAcceptedRide(data.ride);
 
-      if (!res.ok) {
-        throw new Error(data.message || "Failed to update ride status");
-      }
-
-      Alert.alert("Success", `Ride status updated to ${status}`);
-      setAcceptedRide(data.ride);
-
-      if (status === RideStatus.COMPLETED) {
-        setAcceptedRide(null);
-        setDestination(null);
-        setRouteCoords([]);
-        setTripStarted(false);
-        fetchAvailableRides();
-      } else if (status === RideStatus.START) {
-        setTripStarted(true);
-      } else if (status === RideStatus.ARRIVED) {
-        setTripStarted(true);
+        if (status === RideStatus.COMPLETED) {
+          setAcceptedRide(null);
+          setDestination(null);
+          setRouteCoords([]);
+          setTripStarted(false);
+          
+          // Refresh everything after completion
+          fetchAvailableRides();
+          fetchDriverStats();
+        } else if (status === RideStatus.START) {
+          setTripStarted(true);
+        } else if (status === RideStatus.ARRIVED) {
+          setTripStarted(true);
+        }
       }
     } catch (error) {
-      console.error("Error updating ride status:", error);
-      Alert.alert("Error", "Could not update ride status");
+      handleApiError(error, 'Update ride status');
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [makeAuthenticatedRequest, handleApiError, fetchAvailableRides, fetchDriverStats]);
 
-  const handleRejectRide = (rideId: string) => {
+  const handleRejectRide = useCallback((rideId: string) => {
     setAvailableRides(prev => prev.filter(r => r._id !== rideId));
-    fetchAvailableRides();
-  };
-  const toggleOnline = () => {
-    setOnline(!online);
-    if (!online) {
+    // Optionally, you could call an API endpoint to notify backend about rejection
+  }, []);
+
+  const toggleOnline = useCallback(() => {
+    const newOnlineState = !online;
+    setOnline(newOnlineState);
+    
+    if (newOnlineState) {
       checkAuthState();
     }
-  };
+  }, [online]);
 
-  const checkAuthState = async () => {
+  const checkAuthState = useCallback(async () => {
     try {
       const token = await AsyncStorage.getItem("access_token");
-      console.log('🔐 Auth Debug:');
-      console.log('- Token exists:', !!token);
-      console.log('- Token length:', token ? token.length : 0);
-      console.log('- Server URL:', getServerUrl());
       
       if (token) {
-        // Test token validity
-        const res = await fetch(`${getServerUrl()}/ride/driverrides`, {
-          headers: { 
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
-        console.log('- Token test status:', res.status);
-        
-        if (res.status === 401) {
-          console.log('⚠️  Token expired or invalid');
-          Alert.alert('Authentication Error', 'Please login again');
-        }
+        // Test token validity with a simple request
+        await makeAuthenticatedRequest(`${getServerUrl()}/driver/profile`);
       } else {
         Alert.alert('Not Logged In', 'Please login first to see available rides');
+        setOnline(false);
       }
     } catch (error) {
       console.error('Auth check error:', error);
+      setOnline(false);
     }
-  };
+  }, [makeAuthenticatedRequest]);
 
-  const fetchDriverProfile = async () => {
+  // Add method to get driver's ride history
+  const fetchDriverRideHistory = useCallback(async (page: number = 1, limit: number = 10) => {
     try {
-      const token = await AsyncStorage.getItem("access_token");
-      if (!token) {
-        console.error("No access token found");
-        Alert.alert("Authentication Error", "Please login first");
-        return;
-      }
-
-      const url = `${getServerUrl()}/driver/profile`;
-      const res = await fetch(url, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-      }
-
-      const data = await res.json();
-      setDriverProfile(data.data);
+      setLoading(true);
+      setError(null);
+      
+      const data = await makeAuthenticatedRequest(
+        `${getServerUrl()}/driver/rides?page=${page}&limit=${limit}`
+      );
+      
+      return data;
     } catch (error) {
-      console.error("Error fetching driver profile:", error);
-      Alert.alert("Error", "Failed to fetch driver profile");
+      handleApiError(error, 'Fetch ride history');
+      return null;
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [makeAuthenticatedRequest, handleApiError]);
 
-  const fetchDriverStats = async () => {
+  // Add method to update vehicle information
+  const updateVehicleInfo = useCallback(async (vehicleData: any) => {
     try {
-      const token = await AsyncStorage.getItem("access_token");
-      if (!token) {
-        console.error("No access token found");
-        Alert.alert("Authentication Error", "Please login first");
-        return;
+      setLoading(true);
+      setError(null);
+      
+      const data: ApiResponse<{ vehicle: any }> = await makeAuthenticatedRequest(
+        `${getServerUrl()}/driver/vehicle`, 
+        {
+          method: 'PUT',
+          body: JSON.stringify(vehicleData),
+        }
+      );
+      
+      if (data.data && driverProfile) {
+        setDriverProfile({
+          ...driverProfile,
+          vehicle: data.data.vehicle
+        });
+        Alert.alert('Success', 'Vehicle information updated successfully');
       }
-
-      const url = `${getServerUrl()}/driver/stats`;
-      const res = await fetch(url, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-      }
-
-      const data = await res.json();
-      setDriverStats(data.data);
     } catch (error) {
-      console.error("Error fetching driver stats:", error);
-      Alert.alert("Error", "Failed to fetch driver statistics");
+      handleApiError(error, 'Update vehicle information');
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [makeAuthenticatedRequest, handleApiError, driverProfile]);
 
   return {
+    // State
     routeCoords,
     destination,
     tripStarted,
@@ -291,6 +393,10 @@ export const useRiderLogic = () => {
     acceptedRide,
     driverStats,
     driverProfile,
+    loading,
+    error,
+    
+    // Actions
     handleAcceptRide,
     updateRideStatus,
     handleRejectRide,
@@ -298,5 +404,17 @@ export const useRiderLogic = () => {
     checkAuthState,
     fetchDriverStats,
     fetchDriverProfile,
+    fetchDriverRideHistory,
+    updateVehicleInfo,
+    
+    // Utilities
+    clearError: () => setError(null),
+    refreshData: () => {
+      fetchDriverProfile();
+      fetchDriverStats();
+      if (online && !acceptedRide) {
+        fetchAvailableRides();
+      }
+    }
   };
 };

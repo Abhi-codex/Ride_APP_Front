@@ -1,20 +1,28 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
+import { Ride } from '../types/rider';
 
 interface UseRideSearchingProps {
   online: boolean;
-  acceptedRide: any;
-  availableRides: any[];
+  acceptedRide: Ride | null;
+  availableRides: Ride[];
+  loading?: boolean;
 }
 
-export const useRideSearching = ({ online, acceptedRide, availableRides }: UseRideSearchingProps) => {
+export const useRideSearching = ({ 
+  online, 
+  acceptedRide, 
+  availableRides, 
+  loading = false 
+}: UseRideSearchingProps) => {
   const [isSearching, setIsSearching] = useState(false);
   const [lastSearchTime, setLastSearchTime] = useState<Date | null>(null);
 
   useEffect(() => {
+    let searchTimeout: ReturnType<typeof setTimeout>;
     let pauseTimeout: ReturnType<typeof setTimeout>;
 
     const startSearchCycle = () => {
-      if (!online || acceptedRide) {
+      if (!online || acceptedRide || loading) {
         setIsSearching(false);
         return;
       }
@@ -22,20 +30,24 @@ export const useRideSearching = ({ online, acceptedRide, availableRides }: UseRi
       setIsSearching(true);
       setLastSearchTime(new Date());
 
-      pauseTimeout = setTimeout(() => {
+      // Active search for 30 seconds
+      searchTimeout = setTimeout(() => {
         setIsSearching(false);
         
-        setTimeout(() => {
-          if (online && !acceptedRide) {
+        // Pause for 4.5 minutes, then start again
+        pauseTimeout = setTimeout(() => {
+          // Only restart if conditions are still met
+          if (online && !acceptedRide && !loading && availableRides.length === 0) {
             startSearchCycle();
           }
         }, 4.5 * 60 * 1000); 
       }, 30 * 1000); 
     };
 
-    if (online && !acceptedRide) {
+    if (online && !acceptedRide && !loading) {
       if (availableRides.length > 0) {
         setIsSearching(true);
+        setLastSearchTime(new Date());
       } else {
         startSearchCycle();
       }
@@ -44,9 +56,10 @@ export const useRideSearching = ({ online, acceptedRide, availableRides }: UseRi
     }
 
     return () => {
+      if (searchTimeout) clearTimeout(searchTimeout);
       if (pauseTimeout) clearTimeout(pauseTimeout);
     };
-  }, [online, acceptedRide, availableRides.length]);
+  }, [online, acceptedRide, availableRides.length, loading]);
 
   return {
     isSearching,

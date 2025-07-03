@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Dimensions, View } from "react-native";
 import { PanGestureHandler } from "react-native-gesture-handler";
 import Animated, {
@@ -7,11 +7,9 @@ import Animated, {
   useAnimatedStyle,
 } from "react-native-reanimated";
 import { styles } from "../../constants/TailwindStyles";
+import { Ride } from "../../types/rider";
 import DriverDrawerContent from "./DriverDrawerContent";
 import DriverMinimizedInfo from "./DriverMinimizedInfo";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { getServerUrl } from "../../utils/network";
-import { RideStatus } from "../../types/rider";
 
 const { height: screenHeight } = Dimensions.get("window");
 
@@ -19,82 +17,119 @@ interface DriverDrawerProps {
   translateY: any;
   currentSnapPoint: 'MINIMIZED' | 'PARTIAL' | 'FULL';
   gestureHandler: any;
-  acceptedRideId: string | null;
+  acceptedRide: Ride | null;
+  availableRides: Ride[];
   online: boolean;
+  driverLocation: any;
+  destination: any;
+  tripStarted: boolean;
+  onAcceptRide: (rideId: string) => void;
+  onRejectRide: (rideId: string) => void;
   onToggleOnline: () => void;
+  onUpdateRideStatus: (rideId: string, status: any) => void;
+  distanceKm: string;
+  etaMinutes: number;
+  fare: number;
 }
 
 export default function DriverDrawer({
   translateY,
   currentSnapPoint,
   gestureHandler,
-  acceptedRideId,
+  acceptedRide,
+  availableRides,
   online,
+  driverLocation,
+  destination,
+  tripStarted,
+  onAcceptRide,
+  onRejectRide,
   onToggleOnline,
+  onUpdateRideStatus,
+  distanceKm,
+  etaMinutes,
+  fare,
 }: DriverDrawerProps) {
-  const [availableRidesCount, setAvailableRidesCount] = useState(0);
+  const drawerStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ translateY: translateY.value }],
+    };
+  });
 
-  useEffect(() => {
-    if (online && !acceptedRideId) {
-      fetchAvailableRidesCount();
-    } else {
-      setAvailableRidesCount(0);
-    }
-  }, [online, acceptedRideId]);
+  const handleStyle = useAnimatedStyle(() => {
+    const SNAP_POINTS = {
+      MINIMIZED: screenHeight - 180,
+      PARTIAL: screenHeight * 0.5,
+      FULL: screenHeight * 0.1,
+    };
 
-  const fetchAvailableRidesCount = async () => {
-    try {
-      const token = await AsyncStorage.getItem("access_token");
-      if (!token) {
-        console.error("No access token found");
-        return;
-      }
-
-      const url = `${getServerUrl()}/ride/driverrides`;
-      const res = await fetch(url, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-      }
-
-      const data = await res.json();
-      // Filter rides to count only those with SEARCHING status
-      const searchingRides = data.rides?.filter((ride: any) => ride.status === RideStatus.SEARCHING) || [];
-      setAvailableRidesCount(searchingRides.length);
-    } catch (error) {
-      console.error("Error fetching available rides:", error);
-    }
-  };
-
-  const animatedStyle = useAnimatedStyle(() => {
     const opacity = interpolate(
       translateY.value,
-      [0, screenHeight],
-      [1, 0],
+      [SNAP_POINTS.FULL, SNAP_POINTS.PARTIAL, SNAP_POINTS.MINIMIZED],
+      [0.3, 0.6, 1],
       Extrapolate.CLAMP
     );
     return { opacity };
   });
-
   return (
-    <PanGestureHandler {...gestureHandler}>
-      <Animated.View style={[styles.flex1, animatedStyle]}>
-        {currentSnapPoint === "MINIMIZED" ? (
-          <DriverMinimizedInfo availableRidesCount={availableRidesCount} />
-        ) : (
-          <DriverDrawerContent
-            currentSnapPoint={currentSnapPoint}
-            acceptedRideId={acceptedRideId}
-            online={online}
-            onToggleOnline={onToggleOnline}
+    <Animated.View
+      style={[
+        styles.absolute,
+        styles.left0,
+        styles.right0,
+        styles.bgWhite,
+        styles.rounded2xl,
+        styles.shadowLg,
+        styles.z999,
+        styles.roundedTl3xl,
+        styles.roundedTr3xl,
+        {
+          height: screenHeight,
+          top: 0,
+        },
+        drawerStyle,
+      ]}
+    >
+      <PanGestureHandler onGestureEvent={gestureHandler}>
+        <Animated.View
+          style={[
+            styles.alignCenter,
+            styles.py3,
+            styles.borderB1,
+            styles.borderGray100,
+            handleStyle,
+          ]}
+        >
+          <View
+            style={[styles.w12, styles.h1, styles.bgGray300, styles.rounded]}
           />
-        )}
-      </Animated.View>
-    </PanGestureHandler>
+        </Animated.View>
+      </PanGestureHandler>      
+      
+      {currentSnapPoint === 'MINIMIZED' ? (
+        <DriverMinimizedInfo
+          availableRidesCount={availableRides.length}
+          online={online}
+          todaysEarnings="125"
+        />
+      ) : (
+        <DriverDrawerContent
+          currentSnapPoint={currentSnapPoint}
+          acceptedRide={acceptedRide}
+          availableRides={availableRides}
+          online={online}
+          driverLocation={driverLocation}
+          destination={destination}
+          tripStarted={tripStarted}
+          onAcceptRide={onAcceptRide}
+          onRejectRide={onRejectRide}
+          onToggleOnline={onToggleOnline}
+          onUpdateRideStatus={onUpdateRideStatus}
+          distanceKm={distanceKm}
+          etaMinutes={etaMinutes}
+          fare={fare}
+        />
+      )}
+    </Animated.View>
   );
 }

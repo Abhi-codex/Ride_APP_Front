@@ -5,10 +5,89 @@ export enum RideStatus {
   COMPLETED = "COMPLETED"
 }
 
+export enum AmbulanceType {
+  BASIC = "basicAmbulance",
+  ADVANCED = "advancedAmbulance",
+  ICU = "icuAmbulance",
+  AIR = "airAmbulance"
+}
+
+export enum CertificationLevel {
+  EMT_BASIC = "EMT-Basic",
+  EMT_INTERMEDIATE = "EMT-Intermediate",
+  EMT_PARAMEDIC = "EMT-Paramedic",
+  CRITICAL_CARE = "Critical Care"
+}
+
+export type Location = {
+  address: string;
+  latitude: number;
+  longitude: number;
+};
+
+export type Vehicle = {
+  type: AmbulanceType;
+  plateNumber: string;
+  model: string;
+  licenseNumber: string;
+  certificationLevel: CertificationLevel;
+};
+
+export type User = {
+  _id: string;
+  phone: string;
+  name?: string;
+  email?: string;
+};
+
+export type Driver = User & {
+  role: "driver";
+  isOnline: boolean;
+  vehicle: Vehicle;
+  createdAt: string;
+  updatedAt?: string;
+};
+
+export type Patient = User & {
+  role: "patient";
+};
+
 export type Ride = {
   _id: string;
-  pickup: { address: string; latitude: number; longitude: number };
-  drop: { address: string; latitude: number; longitude: number };
+  vehicle: AmbulanceType;
+  distance: number;
   fare: number;
+  pickup: Location;
+  drop: Location;
+  customer: Patient;
+  rider: Driver | null;
   status: RideStatus;
+  otp: string;
+  rating: number | null;
+  createdAt: string;
+  updatedAt?: string;
+};
+
+export type DriverStats = {
+  totalRides: number;
+  todayRides: number;
+  todayEarnings: number;
+  weeklyRides: number;
+  weeklyEarnings: number;
+  monthlyEarnings: number;
+  rating: number;
+};
+
+export type ApiResponse<T> = {
+  success: boolean;
+  message: string;
+  data?: T;
+  count?: number;
+};
+
+export type RideResponse = {
+  message: string;
+  ride?: Ride;
+  rides?: Ride[];
+  count?: number;
 };
