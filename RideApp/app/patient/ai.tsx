@@ -22,6 +22,35 @@ export default function AIChatScreen() {
   const [inputText, setInputText] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const sendMessage = async () => {
+    if (!inputText.trim() || loading) return;
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      text: inputText,
+      sender: 'user',
+    };
+
+    setMessages(prev => [userMessage, ...prev]);
+    setInputText('');
+    setLoading(true);
+
+    try {
+      // Simulate AI response
+      setTimeout(() => {
+        const aiMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          text: `I understand you said: "${userMessage.text}". How can I help you with your medical needs today?`,
+          sender: 'ai',
+        };
+        setMessages(prev => [aiMessage, ...prev]);
+        setLoading(false);
+      }, 1000);
+    } catch (error) {
+      setLoading(false);
+    }
+  };
+
   const renderItem = ({ item }: { item: Message }) => (
     <View
       style={[

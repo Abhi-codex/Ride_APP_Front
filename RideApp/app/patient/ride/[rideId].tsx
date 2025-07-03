@@ -23,7 +23,7 @@ export default function RideScreenID() {
           text: 'Confirm',
           onPress: () => {
             router.push({
-              pathname: '/user/tracking',
+              pathname: '/patient/tracking',
               params,
             });
           },

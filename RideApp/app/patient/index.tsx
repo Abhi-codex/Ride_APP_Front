@@ -32,17 +32,17 @@ export default function HomeScreen() {
     <View style={styles.container}>
       <Text style={styles.title}>Select a Service</Text>
 
-      <TouchableOpacity style={styles.card} onPress={() => router.push('/user/book-ride')}>
+      <TouchableOpacity style={styles.card} onPress={() => router.push('/patient/book-ride')}>
         <Text style={styles.emoji}>🚑</Text>
         <Text style={styles.label}>Ride</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.card} onPress={() => router.push('/user/medicine')}>
+      <TouchableOpacity style={styles.card} onPress={() => router.push('/patient/medicine')}>
         <Text style={styles.emoji}>💊</Text>
         <Text style={styles.label}>Medicine</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.card} onPress={() => router.push('/user/ai')}>
+      <TouchableOpacity style={styles.card} onPress={() => router.push('/patient/ai')}>
         <Text style={styles.emoji}>🤖</Text>
         <Text style={styles.label}>AI Assistant</Text>
       </TouchableOpacity>

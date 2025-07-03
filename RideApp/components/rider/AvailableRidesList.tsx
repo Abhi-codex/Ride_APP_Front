@@ -200,7 +200,7 @@ export default function AvailableRidesList({
                 <TouchableOpacity
                   style={[
                     styles.flex1,
-                    styles.py3Point5,
+                    styles.py3,
                     styles.px4,
                     styles.roundedLg,
                     styles.alignCenter,
@@ -220,7 +220,7 @@ export default function AvailableRidesList({
                 </TouchableOpacity>                <TouchableOpacity
                   style={[
                     styles.flex2,
-                    styles.py3Point5,
+                    styles.py3,
                     styles.px4,
                     styles.roundedLg,
                     styles.alignCenter,

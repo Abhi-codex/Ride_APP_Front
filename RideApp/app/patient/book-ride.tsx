@@ -165,7 +165,7 @@ export default function RideScreen() {
       if (response.ok) {
         Alert.alert('Success', 'Ambulance booked successfully!');
         router.push({
-          pathname: "/user/ride/[rideId]",
+          pathname: "/patient/ride/[rideId]",
           params: {
             rideId: data.ride._id,
             hospitalName: data.ride.drop.address,
@@ -242,7 +242,7 @@ export default function RideScreen() {
   if (loading) {
     return (
       <View style={[styles.flex1, styles.justifyCenter, styles.alignCenter, styles.bgGray50]}>
-        <ActivityIndicator size="large" color={colors.emergency[500]} />
+        <ActivityIndicator size="large" color={colors.primary[600]} />
         <Text style={[styles.mt4, styles.textBase, styles.textGray600]}>
           Getting your location...
         </Text>
@@ -280,7 +280,7 @@ export default function RideScreen() {
             {routeCoords.length > 0 && (
               <Polyline
                 coordinates={routeCoords}
-                strokeColor={colors.emergency[500]}
+                strokeColor={colors.primary[600]}
                 strokeWidth={4}
               />
             )}
@@ -311,7 +311,7 @@ export default function RideScreen() {
                 styles.mb2,
                 styles.border2,
                 selectedHospital?.id === hospital.id
-                  ? [styles.borderEmergency500, styles.bgDanger50]
+                  ? [styles.borderPrimary600, { backgroundColor: colors.primary[50] }]
                   : styles.borderGray200,
               ]}
               onPress={() => handleSelectHospital(hospital)}
@@ -353,7 +353,7 @@ export default function RideScreen() {
                   styles.alignCenter,
                   styles.mx1,
                   rideType === type
-                    ? [styles.bgEmergency500]
+                    ? [{ backgroundColor: colors.primary[600] }]
                     : [styles.bgGray200],
                 ]}
                 onPress={() => setRideType(type)}
@@ -382,7 +382,7 @@ export default function RideScreen() {
             styles.alignCenter,
             styles.roundedLg,
             selectedHospital
-              ? [styles.bgEmergency500, styles.shadowMd]
+              ? [{ backgroundColor: colors.primary[600] }, styles.shadowMd]
               : [styles.bgGray300],
           ]}
           onPress={handleBookRide}

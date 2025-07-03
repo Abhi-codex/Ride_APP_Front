@@ -47,7 +47,6 @@ export default function WelcomeScreen() {
         </Text>
       </View>
 
-      {/* Driver Login - Primary Option */}
       <View style={[tailwindStyles.px5, tailwindStyles.wFull]}>
         <TouchableOpacity
           style={[
@@ -68,7 +67,7 @@ export default function WelcomeScreen() {
           onPress={() => router.push("/driver/login")}
         >
           <View style={[tailwindStyles.flexRow, tailwindStyles.alignCenter]}>
-            <Text style={{ fontSize: 24, marginRight: 12 }}>👨‍⚕️</Text>
+            <Text style={{ fontSize: 24, marginRight: 24 }}>🧑🏻‍⚕️</Text>
             <View>
               <Text style={[tailwindStyles.textWhite, tailwindStyles.textLg, tailwindStyles.fontBold]}>
                 Driver Portal
@@ -80,7 +79,6 @@ export default function WelcomeScreen() {
           </View>
         </TouchableOpacity>
 
-        {/* Patient Login - Secondary Option */}
         <TouchableOpacity
           style={[
             tailwindStyles.wFull,
@@ -98,10 +96,10 @@ export default function WelcomeScreen() {
               elevation: 2,
             },
           ]}
-          onPress={() => router.push("/user")}
+          onPress={() => router.push("/patient/login")}
         >
           <View style={[tailwindStyles.flexRow, tailwindStyles.alignCenter]}>
-            <Text style={{ fontSize: 24, marginRight: 12 }}>🏥</Text>
+            <Text style={{ fontSize: 24, marginRight: 24 }}>🏥</Text>
             <View>
               <Text style={[tailwindStyles.textGray900, tailwindStyles.textLg, tailwindStyles.fontBold]}>
                 Book an Ambulance
@@ -126,7 +124,7 @@ export default function WelcomeScreen() {
           ]}
         >
           <Text style={[tailwindStyles.textSm, tailwindStyles.fontMedium, tailwindStyles.textGray800, tailwindStyles.textCenter, tailwindStyles.mb2]}>
-            🆘 Emergency Services Available 24/7
+           Emergency Services Available 24/7
           </Text>
           <Text style={[tailwindStyles.textXs, tailwindStyles.textGray600, tailwindStyles.textCenter]}>
             Professional medical transport • Certified EMT drivers • Real-time tracking

@@ -5,7 +5,7 @@ import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView, T
 import { colors, styles } from "../../constants/TailwindStyles";
 import { getServerUrl } from "../../utils/network";
 
-export default function DriverLoginScreen() {
+export default function PatientLoginScreen() {
   const router = useRouter();
   const [phoneDigits, setPhoneDigits] = useState<string[]>(Array(10).fill(""));
   const [loading, setLoading] = useState(false);
@@ -39,7 +39,7 @@ export default function DriverLoginScreen() {
     return phoneNumber.length === 10 && /^\d{10}$/.test(phoneNumber);
   };
 
-  const handleDriverLogin = async () => {
+  const handlePatientLogin = async () => {
     const phoneNumber = phoneDigits.join("");
 
     if (!phoneNumber.trim()) {
@@ -64,7 +64,7 @@ export default function DriverLoginScreen() {
         },
         body: JSON.stringify({
           phone: formattedPhone,
-          role: "driver",
+          role: "patient",
         }),
       });
 
@@ -73,33 +73,36 @@ export default function DriverLoginScreen() {
       if (response.ok) {
         await AsyncStorage.setItem("access_token", data.access_token);
         await AsyncStorage.setItem("refresh_token", data.refresh_token);
-        await AsyncStorage.setItem("role", "driver");
+        await AsyncStorage.setItem("role", "patient");
         await AsyncStorage.setItem("user_id", data.user._id);
 
+        // Check if patient profile is complete
         const isProfileComplete = data.user.name && 
-                                 data.user.vehicle && 
-                                 data.user.vehicle.type && 
-                                 data.user.vehicle.plateNumber && 
-                                 data.user.vehicle.licenseNumber;
+                                 data.user.age && 
+                                 data.user.gender && 
+                                 data.user.bloodGroup && 
+                                 data.user.emergencyContact;
 
         if (!isProfileComplete) {
+          // Redirect to profile completion
           Alert.alert(
-            "Welcome!",
-            data.message === "User created successfully"
-              ? "Please complete your driver profile to start accepting rides."
-              : "Please complete your profile information to continue.",
+            'Welcome!',
+            data.message === 'User created successfully' 
+              ? 'Please complete your profile to help us provide better emergency care.'
+              : 'Please complete your profile information to continue.',
             [
               {
-                text: "Complete Profile",
-                onPress: () => router.replace("/driver/profile-setup" as any),
+                text: 'Complete Profile',
+                onPress: () => router.replace('/patient/profile-setup'),
               },
             ]
           );
         } else {
+          // Profile is complete, go to booking
           Alert.alert("Success", "Login successful!", [
             {
               text: "Continue",
-              onPress: () => router.replace("/driver/dashboard"),
+              onPress: () => router.replace("/patient/book-ride"),
             },
           ]);
         }
@@ -135,7 +138,7 @@ export default function DriverLoginScreen() {
           <View style={[styles.alignCenter, styles.mb6]}>
             <View
               style={{
-                backgroundColor: colors.emergency[500],
+                backgroundColor: colors.primary[600],
                 width: 80,
                 height: 80,
                 borderRadius: 40,
@@ -144,7 +147,7 @@ export default function DriverLoginScreen() {
                 marginBottom: 20,
               }}
             >
-              <Text style={{ fontSize: 40, color: colors.white }}>🚑</Text>
+              <Text style={{ fontSize: 40, color: colors.white }}>🏥</Text>
             </View>
             <Text
               style={[
@@ -154,7 +157,7 @@ export default function DriverLoginScreen() {
                 styles.textCenter,
               ]}
             >
-              Driver Portal
+              Patient Login
             </Text>
             <Text
               style={[
@@ -164,7 +167,7 @@ export default function DriverLoginScreen() {
                 styles.mt2,
               ]}
             >
-              Login to start accepting emergency calls
+              Book an ambulance for immediate medical assistance
             </Text>
           </View>
 
@@ -188,7 +191,7 @@ export default function DriverLoginScreen() {
                       height: 40,
                       borderWidth: 1,
                       borderColor: digit
-                        ? colors.emergency[500]
+                        ? colors.primary[600]
                         : colors.gray[300],
                       borderRadius: 8,
                       textAlign: "center",
@@ -198,8 +201,8 @@ export default function DriverLoginScreen() {
                       color: colors.gray[900],
                     },
                     digit && {
-                      borderColor: colors.emergency[500],
-                      backgroundColor: colors.emergency[50],
+                      borderColor: colors.primary[600],
+                      backgroundColor: colors.primary[50],
                     },
                   ]}
                   value={digit}
@@ -227,7 +230,7 @@ export default function DriverLoginScreen() {
               {
                 backgroundColor: loading || !validatePhone()
                   ? colors.gray[300]
-                  : colors.emergency[500],
+                  : colors.primary[600],
                 shadowColor: colors.black,
                 shadowOffset: { width: 0, height: 2 },
                 shadowOpacity: 0.1,
@@ -235,61 +238,79 @@ export default function DriverLoginScreen() {
                 elevation: 3,
               },
             ]}
-            onPress={handleDriverLogin}
+            onPress={handlePatientLogin}
             disabled={loading || !validatePhone()}
           >
             {loading ? (
               <ActivityIndicator color={colors.white} size="small" />
             ) : (
               <Text style={[styles.textWhite, styles.textLg, styles.fontBold]}>
-                Continue as Driver
+                Book Emergency Ambulance
               </Text>
             )}
           </TouchableOpacity>
 
+          {/* Emergency Info Card */}
           <View
             style={[
               styles.mt6,
               styles.p4,
               styles.roundedLg,
-              styles.bgGray100,
-              styles.borderGray200,
-              { borderWidth: 1 },
+              { backgroundColor: colors.emergency[50], borderColor: colors.emergency[200], borderWidth: 1 },
             ]}
           >
             <Text
               style={[
                 styles.textSm,
                 styles.fontMedium,
-                styles.textGray800,
+                { color: colors.emergency[800] },
                 styles.mb2,
               ]}
             >
-              Driver Requirements:
+              Emergency Services Available:
             </Text>
-            <Text style={[styles.textXs, styles.textGray700, styles.mb1]}>
-              1. Valid EMT certification
+            <Text style={[styles.textXs, { color: colors.emergency[700] }, styles.mb1]}>
+              1. Basic Life Support Ambulance
             </Text>
-            <Text style={[styles.textXs, styles.textGray700, styles.mb1]}>
-              2. Ambulance vehicle registration
+            <Text style={[styles.textXs, { color: colors.emergency[700] }, styles.mb1]}>
+              2. Advanced Life Support (ALS)
             </Text>
-            <Text style={[styles.textXs, styles.textGray700, styles.mb1]}>
-              3. Medical equipment certification
+            <Text style={[styles.textXs, { color: colors.emergency[700] }, styles.mb1]}>
+              3. ICU Ambulance with Ventilator
             </Text>
-            <Text style={[styles.textXs, styles.textGray700]}>
-              4. Background verification completed
+            <Text style={[styles.textXs, { color: colors.emergency[700] }]}>
+              4. Air Ambulance for Critical Cases
             </Text>
           </View>
 
+          {/* Emergency Number */}
+          <View
+            style={[
+              styles.mt4,
+              styles.p3,
+              styles.roundedLg,
+              styles.bgGray100,
+              styles.alignCenter,
+            ]}
+          >
+            <Text style={[styles.textXs, styles.textGray600, styles.mb1]}>
+              For immediate emergency, call:
+            </Text>
+            <Text style={[styles.textBase, styles.fontBold, styles.textGray900]}>
+              📞 108 | 🚑 102
+            </Text>
+          </View>
+
+          {/* Back to Driver Login */}
           <TouchableOpacity
             style={[styles.alignCenter, styles.mt6]}
             onPress={() => router.replace("/")}
             disabled={loading}
           >
             <Text style={[styles.textSm, styles.textGray600]}>
-              Not a driver?{" "}
-              <Text style={[styles.textEmergency500, styles.fontMedium]}>
-                Book an Ambulance
+              Are you a driver?{" "}
+              <Text style={[styles.textPrimary600, styles.fontMedium]}>
+                Driver Portal
               </Text>
             </Text>
           </TouchableOpacity>
