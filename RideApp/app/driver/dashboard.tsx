@@ -1,39 +1,30 @@
-import {
-  ActionCard,
-  FloatingActionButton,
-  QuickStats,
-  StatsCard,
-  WelcomeHeader,
-} from '@/components/dashboard';
-import { colors, styles } from '@/constants/TailwindStyles';
+import { ActionCard, FloatingActionButton, QuickStats, StatsCard, WelcomeHeader } from '../../components/dashboard';
+import { colors, styles } from '../../constants/TailwindStyles';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  RefreshControl,
-  ScrollView,
-  StatusBar,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { ActivityIndicator, Alert, RefreshControl, ScrollView, StatusBar, Text, TouchableOpacity, View } from 'react-native';
+import { getServerUrl } from '../../utils/network';
 
-export default function DashboardScreen() {
+export default function DriverDashboard() {
   const router = useRouter();
   const [tokenLoaded, setTokenLoaded] = useState(false);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [dataLoaded, setDataLoaded] = useState(false);
   const [isOnline, setIsOnline] = useState(false);
   const [driverStats, setDriverStats] = useState({
-    totalRides: 156,
-    todayEarnings: 2850,
-    weeklyEarnings: 18500,
-    rating: 4.8,
-    todayRides: 8,
-    weeklyRides: 42,
-    monthlyEarnings: 78500,
+    totalRides: 0,
+    todayEarnings: 0,
+    weeklyEarnings: 0,
+    rating: 0,
+    todayRides: 0,
+    weeklyRides: 0,
+    monthlyEarnings: 0,
+  });
+  const [driverProfile, setDriverProfile] = useState({
+    name: 'Driver',
+    id: '',
   });
 
   useEffect(() => {
@@ -51,14 +42,76 @@ export default function DashboardScreen() {
   }, []);
 
   const loadDriverData = async () => {
-    setTimeout(() => {
-      setDriverStats(prev => ({
-        ...prev,
-        totalRides: Math.floor(Math.random() * 200) + 100,
-        todayEarnings: Math.floor(Math.random() * 5000) + 1000,
-        weeklyEarnings: Math.floor(Math.random() * 25000) + 10000,
-      }));
-    }, 1000);
+    try {
+      const token = await AsyncStorage.getItem('access_token');
+      if (!token) {
+        router.replace('/');
+        return;
+      }
+
+      // Fetch driver statistics
+      const statsResponse = await fetch(`${getServerUrl()}/driver/stats`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (statsResponse.ok) {
+        const statsData = await statsResponse.json();
+        console.log('Driver stats:', statsData);
+        setDriverStats({
+          totalRides: statsData.data.totalRides || 0,
+          todayEarnings: statsData.data.todayEarnings || 0,
+          weeklyEarnings: statsData.data.weeklyEarnings || 0,
+          rating: statsData.data.rating || 0,
+          todayRides: statsData.data.todayRides || 0,
+          weeklyRides: statsData.data.weeklyRides || 0,
+          monthlyEarnings: statsData.data.monthlyEarnings || 0,
+        });
+      } else {
+        console.error('Failed to fetch driver stats:', statsResponse.status);
+        // Don't show error alert on first load, just log it
+        if (!dataLoaded) {
+          console.log('Using default stats values for first load');
+        }
+      }
+
+      // Fetch driver profile
+      const profileResponse = await fetch(`${getServerUrl()}/driver/profile`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (profileResponse.ok) {
+        const profileData = await profileResponse.json();
+        console.log('Driver profile:', profileData);
+        setDriverProfile({
+          name: profileData.data.name || 'Driver',
+          id: profileData.data._id || '',
+        });
+        
+        // Set online status from backend
+        setIsOnline(profileData.data.isOnline || false);
+      } else {
+        console.error('Failed to fetch driver profile:', profileResponse.status);
+        // Don't show error alert on first load, just log it
+        if (!dataLoaded) {
+          console.log('Using default profile values for first load');
+        }
+      }
+
+      setDataLoaded(true);
+
+    } catch (error) {
+      console.error('Error loading driver data:', error);
+      if (dataLoaded) {
+        // Only show error alert if this is a refresh, not initial load
+        Alert.alert('Error', 'Failed to load driver data. Please try again.');
+      }
+    }
   };
 
   const onRefresh = async () => {
@@ -67,20 +120,37 @@ export default function DashboardScreen() {
     setRefreshing(false);
   };
 
-  const toggleOnlineStatus = () => {
-    setIsOnline(!isOnline);
-    if (!isOnline) {
-      Alert.alert(
-        'Going Online',
-        'You are now online and ready to accept ride requests.',
-        [{ text: 'OK' }]
-      );
-    } else {
-      Alert.alert(
-        'Going Offline',
-        'You are now offline and will stop receiving new requests.',
-        [{ text: 'OK' }]
-      );
+  const toggleOnlineStatus = async () => {
+    try {
+      const token = await AsyncStorage.getItem('access_token');
+      const newStatus = !isOnline;
+      
+      // Update backend first
+      const response = await fetch(`${getServerUrl()}/driver/online-status`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ isOnline: newStatus }),
+      });
+
+      if (response.ok) {
+        setIsOnline(newStatus);
+        Alert.alert(
+          newStatus ? 'Going Online' : 'Going Offline',
+          newStatus 
+            ? 'You are now online and ready to accept ride requests.'
+            : 'You are now offline and will stop receiving new requests.',
+          [{ text: 'OK' }]
+        );
+      } else {
+        console.error('Failed to update online status:', response.status);
+        Alert.alert('Error', 'Failed to update online status. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error toggling online status:', error);
+      Alert.alert('Error', 'Failed to update online status. Please try again.');
     }
   };
 
@@ -104,9 +174,9 @@ export default function DashboardScreen() {
     );
   };
 
-  const navigateToRiderDashboard = () => {
+  const navigateToDriverMap = () => {
     if (isOnline) {
-      router.push('/rider/' as any);
+      router.push('/driver/map');
     } else {
       Alert.alert(
         'Go Online First',
@@ -121,7 +191,7 @@ export default function DashboardScreen() {
   };
 
   const handleProfilePress = () => {
-    Alert.alert('Profile', 'Profile management coming soon!');
+    router.push('/driver/profile-setup');
   };
 
   if (loading) {
@@ -174,7 +244,7 @@ export default function DashboardScreen() {
           <View style={{ padding: 20 }}>
             {/* Welcome Header */}
             <WelcomeHeader
-              driverName="John Driver"
+              driverName={driverProfile.name}
               onProfilePress={handleProfilePress}
               isOnline={isOnline}
             />
@@ -192,13 +262,13 @@ export default function DashboardScreen() {
             <View style={[styles.flexRow, styles.mb4, { gap: 12 }]}>
               <StatsCard
                 title="Total Rides"
-                value={driverStats.totalRides}
+                value={dataLoaded ? driverStats.totalRides : '...'}
                 subtitle="All time"
                 style={{ flex: 1 }}
               />
               <StatsCard
                 title="Rating"
-                value={driverStats.rating}
+                value={dataLoaded ? driverStats.rating.toFixed(1) : '...'}
                 subtitle="Average"
                 style={{ flex: 1 }}
               />
@@ -207,13 +277,13 @@ export default function DashboardScreen() {
             <View style={[styles.flexRow, styles.mb6, { gap: 12 }]}>
               <StatsCard
                 title="Weekly Rides"
-                value={driverStats.weeklyRides}
+                value={dataLoaded ? driverStats.weeklyRides : '...'}
                 subtitle="This week"
                 style={{ flex: 1 }}
               />
               <StatsCard
                 title="Weekly Earnings"
-                value={`₹${driverStats.weeklyEarnings}`}
+                value={dataLoaded ? `₹${driverStats.weeklyEarnings}` : '...'}
                 subtitle="7 days total"
                 style={{ flex: 1 }}
               />
@@ -228,7 +298,7 @@ export default function DashboardScreen() {
               <ActionCard
                 title="Start Driving"
                 subtitle="Go online and start accepting ride requests"
-                onPress={navigateToRiderDashboard}
+                onPress={navigateToDriverMap}
               />
 
               <ActionCard

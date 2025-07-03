@@ -313,6 +313,8 @@ export const styles = StyleSheet.create({
   pt2: { paddingTop: 8 },
   pt3: { paddingTop: 12 },
   pt4: { paddingTop: 16 },
+  pt8: { paddingTop: 32 },
+  pt10: { paddingTop: 40 },
   pt50: { paddingTop: 50 },
   pb1: { paddingBottom: 4 },
   pb2: { paddingBottom: 8 },
