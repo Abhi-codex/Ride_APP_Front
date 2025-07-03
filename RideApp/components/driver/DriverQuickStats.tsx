@@ -4,7 +4,7 @@ import { styles } from "../../constants/TailwindStyles";
 
 interface DriverQuickStatsProps {
   availableRidesCount: number;
-  rating: string;
+  rating?: string;
   todaysEarnings: string;
 }
 
@@ -53,9 +53,7 @@ export default function DriverQuickStats({
         >
           ₹{todaysEarnings}
         </Text>
-        <Text style={[styles.textSm, styles.textGray500]}>
-          Today's Earnings
-        </Text>
+        <Text style={[styles.textSm, styles.textGray500]}> {"Today's Earnings"} </Text>
       </View>
     </View>
   );

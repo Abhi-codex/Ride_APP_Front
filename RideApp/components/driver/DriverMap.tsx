@@ -119,7 +119,7 @@ export default function DriverMap({
             {acceptedRide 
               ? "On Emergency Call" 
               : availableRides.length > 0
-              ? `${availableRides.length} Emergency Call${availableRides.length > 1 ? 's' : ''} Found`
+              ? `${availableRides.length} Found`
               : isSearching
               ? "Searching..."
               : "Offline"

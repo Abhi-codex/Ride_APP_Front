@@ -29,12 +29,7 @@
         "INTERNET",
         "ACCESS_NETWORK_STATE"
       ],
-      "package": "com.dhruva12.RideApp",
-      "config": {
-        "googleMaps": {
-          "apiKey": "AIzaSyAERM44Mxqwz42ywZPPnQ8-ltHa63kuGmQ"
-        }
-      }
+      "package": "com.dhruva12.RideApp"
     },
     "web": {
       "bundler": "metro",

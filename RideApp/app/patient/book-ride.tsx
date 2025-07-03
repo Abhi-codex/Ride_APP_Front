@@ -15,7 +15,6 @@ import {
 import { MapViewWrapper as Map, MarkerWrapper as Marker, PolylineWrapper as Polyline } from '../../components/MapView';
 import { colors, styles } from '../../constants/TailwindStyles';
 import { getServerUrl } from '../../utils/network';
-import { config } from '../../config';
 
 type Hospital = {
   id: string;
@@ -74,8 +73,15 @@ export default function RideScreen() {
   }, []);
 
   const fetchHospitals = async (lat: number, lon: number) => {
-    const radius = config.PLACES_API.RADIUS;
-    const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lon}&radius=${radius}&type=hospital&key=${config.GOOGLE_API_KEY}`;
+    const radius = 10000; // 10km radius
+    const apiKey = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY;
+    
+    if (!apiKey) {
+      Alert.alert('Error', 'Google Maps API key not configured');
+      return;
+    }
+    
+    const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lon}&radius=${radius}&type=hospital&key=${apiKey}`;
 
     try {
       const response = await fetch(url);
@@ -86,7 +92,7 @@ export default function RideScreen() {
         return;
       }
 
-      const fetchedHospitals = data.results.slice(0, config.PLACES_API.MAX_RESULTS).map((place: any) => {
+      const fetchedHospitals = data.results.slice(0, 20).map((place: any) => {
         const distance = getDistance(lat, lon, place.geometry.location.lat, place.geometry.location.lng);
         const photoRef = place.photos?.[0]?.photo_reference;
         return {
@@ -97,7 +103,7 @@ export default function RideScreen() {
           distance: Math.round(distance * 10) / 10, // Round to 1 decimal place
           rating: place.rating,
           photoUrl: photoRef
-            ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${photoRef}&key=${config.GOOGLE_API_KEY}`
+            ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${photoRef}&key=${apiKey}`
             : 'https://via.placeholder.com/80x80?text=H',
         };
       });
@@ -220,8 +226,14 @@ export default function RideScreen() {
   const handleSelectHospital = async (hospital: Hospital) => {
     setSelectedHospital(hospital);
     if (currentLocation) {
-      // Fetch route using Google Directions API
-      const directionsUrl = `https://maps.googleapis.com/maps/api/directions/json?origin=${currentLocation.latitude},${currentLocation.longitude}&destination=${hospital.latitude},${hospital.longitude}&key=${config.GOOGLE_API_KEY}`;
+      const apiKey = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY;
+      
+      if (!apiKey) {
+        Alert.alert('Error', 'Google Maps API key not configured');
+        return;
+      }
+      
+      const directionsUrl = `https://maps.googleapis.com/maps/api/directions/json?origin=${currentLocation.latitude},${currentLocation.longitude}&destination=${hospital.latitude},${hospital.longitude}&key=${apiKey}`;
       
       try {
         const response = await fetch(directionsUrl);

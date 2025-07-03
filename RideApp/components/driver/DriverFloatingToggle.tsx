@@ -10,7 +10,8 @@ interface DriverFloatingToggleProps {
 export default function DriverFloatingToggle({
   online,
   onToggle,
-}: DriverFloatingToggleProps) {  return (
+}: DriverFloatingToggleProps) {
+  return (
     <TouchableOpacity
       onPress={onToggle}
       style={[
@@ -36,13 +37,7 @@ export default function DriverFloatingToggle({
           online ? styles.bgWhite : styles.bgGray600,
         ]}
       />
-      <Text
-        style={[
-          styles.fontMedium,
-          styles.textSm,
-          styles.textWhite,
-        ]}
-      >
+      <Text style={[styles.fontMedium, styles.textSm, styles.textWhite]}>
         {online ? "Online" : "Offline"}
       </Text>
     </TouchableOpacity>

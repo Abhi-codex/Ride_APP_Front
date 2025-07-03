@@ -15,7 +15,7 @@ const { height: screenHeight } = Dimensions.get("window");
 
 interface DriverDrawerProps {
   translateY: any;
-  currentSnapPoint: 'MINIMIZED' | 'PARTIAL' | 'FULL';
+  currentSnapPoint: "MINIMIZED" | "PARTIAL" | "FULL";
   gestureHandler: any;
   acceptedRide: Ride | null;
   availableRides: Ride[];
@@ -75,8 +75,8 @@ export default function DriverDrawer({
     <Animated.View
       style={[
         styles.absolute,
-        styles.left0,
-        styles.right0,
+        styles.left1,
+        styles.right1,
         styles.bgWhite,
         styles.rounded2xl,
         styles.shadowLg,
@@ -104,9 +104,9 @@ export default function DriverDrawer({
             style={[styles.w12, styles.h1, styles.bgGray300, styles.rounded]}
           />
         </Animated.View>
-      </PanGestureHandler>      
-      
-      {currentSnapPoint === 'MINIMIZED' ? (
+      </PanGestureHandler>
+
+      {currentSnapPoint === "MINIMIZED" ? (
         <DriverMinimizedInfo
           availableRidesCount={availableRides.length}
           online={online}

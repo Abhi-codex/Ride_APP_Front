@@ -1,7 +1,7 @@
 import React from "react";
 import { ScrollView, Text, View } from "react-native";
 import { styles } from "../../constants/TailwindStyles";
-import { Ride } from "../../types/rider";
+import { Ride, DriverStats } from "../../types/rider";
 import AcceptedRideInfo from "./AcceptedRideInfo";
 import AvailableRidesList from "./AvailableRidesList";
 import NoRidesAvailable from "./NoRidesAvailable";
@@ -9,7 +9,7 @@ import DriverControlPanel from "./DriverControlPanel";
 import DriverQuickStats from "./DriverQuickStats";
 
 interface DriverDrawerContentProps {
-  currentSnapPoint: 'MINIMIZED' | 'PARTIAL' | 'FULL';
+  currentSnapPoint: "MINIMIZED" | "PARTIAL" | "FULL";
   acceptedRide: Ride | null;
   availableRides: Ride[];
   online: boolean;
@@ -23,6 +23,7 @@ interface DriverDrawerContentProps {
   distanceKm: string;
   etaMinutes: number;
   fare: number;
+  driverStats?: DriverStats;
 }
 
 export default function DriverDrawerContent({
@@ -30,6 +31,7 @@ export default function DriverDrawerContent({
   acceptedRide,
   availableRides,
   online,
+  driverLocation,
   onAcceptRide,
   onRejectRide,
   onToggleOnline,
@@ -38,7 +40,18 @@ export default function DriverDrawerContent({
   distanceKm,
   etaMinutes,
   fare,
-}: DriverDrawerContentProps) {  return (
+  driverStats,
+}: DriverDrawerContentProps) {
+  const stats = driverStats || {
+    totalRides: 0,
+    todayRides: 0,
+    todayEarnings: 0,
+    weeklyRides: 0,
+    weeklyEarnings: 0,
+    monthlyEarnings: 0,
+    rating: 0,
+  };
+  return (
     <ScrollView
       style={[styles.flex1, styles.px4]}
       contentContainerStyle={{ flexGrow: 1, paddingBottom: 20 }}
@@ -49,36 +62,24 @@ export default function DriverDrawerContent({
     >
       {acceptedRide ? (
         <View style={[styles.py4]}>
-          <AcceptedRideInfo acceptedRide={acceptedRide} />
+          <AcceptedRideInfo acceptedRide={acceptedRide} driverLocation={driverLocation} />
         </View>
       ) : (
         <View style={[styles.py4]}>
           <DriverQuickStats
             availableRidesCount={availableRides.length}
-            rating="4.9"
-            todaysEarnings="125"
+            rating={stats.rating.toFixed(1)}
+            todaysEarnings={stats.todayEarnings.toString()}
           />
 
           <View>
-            <Text
-              style={[
-                styles.textLg,
-                styles.fontSemibold,
-                styles.textGray900,
-                styles.mb3,
-              ]}
-            >
-              Nearby Emergency Calls
-            </Text>
-
             {availableRides.length > 0 ? (
               <AvailableRidesList
                 online={online}
                 acceptedRide={acceptedRide}
                 availableRides={availableRides}
-                onAcceptRide={(rideId: string) =>
-                  onAcceptRide(rideId)
-                }
+                driverLocation={driverLocation}
+                onAcceptRide={(rideId: string) => onAcceptRide(rideId)}
                 onRejectRide={onRejectRide}
               />
             ) : (
@@ -86,7 +87,7 @@ export default function DriverDrawerContent({
             )}
           </View>
 
-          {currentSnapPoint === 'FULL' && (
+          {currentSnapPoint === "FULL" && (
             <View style={[styles.mt6]}>
               <DriverControlPanel
                 online={online}

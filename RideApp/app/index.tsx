@@ -40,7 +40,7 @@ export default function WelcomeScreen() {
           <Text style={{ fontSize: 50, color: colors.white }}>🚑</Text>
         </View>
         <Text style={[tailwindStyles.text3xl, tailwindStyles.fontBold, tailwindStyles.textGray900, tailwindStyles.textCenter]}>
-          Emergency Medical Services
+          Insta Aid
         </Text>
         <Text style={[tailwindStyles.textBase, tailwindStyles.textGray600, tailwindStyles.textCenter, tailwindStyles.mt2]}>
           Professional ambulance services at your fingertips

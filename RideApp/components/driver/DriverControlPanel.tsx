@@ -21,7 +21,6 @@ export default function DriverControlPanel({
   fare,
   acceptedRide,
   tripStarted,
-  onToggleOnline,
   onUpdateRideStatus,
 }: DriverControlPanelProps) {
   const handleRideAction = () => {
@@ -31,7 +30,10 @@ export default function DriverControlPanel({
     let actionText: string;
 
     // Determine next status based on current status
-    if (acceptedRide.status === RideStatus.START || (!tripStarted && acceptedRide.status === RideStatus.SEARCHING)) {
+    if (
+      acceptedRide.status === RideStatus.START ||
+      (!tripStarted && acceptedRide.status === RideStatus.SEARCHING)
+    ) {
       nextStatus = RideStatus.ARRIVED;
       actionText = "Mark as Arrived";
     } else if (acceptedRide.status === RideStatus.ARRIVED) {
@@ -87,13 +89,17 @@ export default function DriverControlPanel({
         <View style={[styles.flexRow, styles.justifyBetween, styles.mb4]}>
           <View style={[styles.alignCenter, styles.flex1]}>
             <Text style={[styles.textSm, styles.textGray500]}>Distance</Text>
-            <Text style={[styles.textLg, styles.fontBold, styles.textPrimary600]}>
+            <Text
+              style={[styles.textLg, styles.fontBold, styles.textPrimary600]}
+            >
               {distanceKm} km
             </Text>
           </View>
           <View style={[styles.alignCenter, styles.flex1]}>
             <Text style={[styles.textSm, styles.textGray500]}>ETA</Text>
-            <Text style={[styles.textLg, styles.fontBold, styles.textSecondary600]}>
+            <Text
+              style={[styles.textLg, styles.fontBold, styles.textSecondary600]}
+            >
               {etaMinutes} min
             </Text>
           </View>
@@ -115,18 +121,18 @@ export default function DriverControlPanel({
           ]}
         >
           <Text style={[styles.textSm, styles.fontMedium, styles.textGray600]}>
-            {acceptedRide.status === RideStatus.START 
-              ? "En Route to Patient" 
-              : acceptedRide.status === RideStatus.ARRIVED 
-              ? "Arrived at Pickup Location" 
+            {acceptedRide.status === RideStatus.START
+              ? "En Route to Patient"
+              : acceptedRide.status === RideStatus.ARRIVED
+              ? "Arrived at Pickup Location"
               : "Ready to Start"}
           </Text>
         </View>
 
         <TouchableOpacity
           style={[
-            acceptedRide.status === RideStatus.ARRIVED 
-              ? styles.bgSecondary500 
+            acceptedRide.status === RideStatus.ARRIVED
+              ? styles.bgSecondary500
               : styles.bgPrimary500,
             styles.py4,
             styles.roundedXl,
@@ -137,10 +143,10 @@ export default function DriverControlPanel({
           activeOpacity={0.8}
         >
           <Text style={[styles.textWhite, styles.fontBold, styles.textBase]}>
-            {acceptedRide.status === RideStatus.START 
-              ? "Mark as Arrived" 
-              : acceptedRide.status === RideStatus.ARRIVED 
-              ? "Complete Trip" 
+            {acceptedRide.status === RideStatus.START
+              ? "Mark as Arrived"
+              : acceptedRide.status === RideStatus.ARRIVED
+              ? "Complete Trip"
               : "Start Trip"}
           </Text>
         </TouchableOpacity>
