@@ -11,10 +11,29 @@ export const useRiderLogic = () => {
   const [online, setOnline] = useState(false);
   const [availableRides, setAvailableRides] = useState<Ride[]>([]);
   const [acceptedRide, setAcceptedRide] = useState<Ride | null>(null);
+  
+  // Driver statistics and profile data
+  const [driverStats, setDriverStats] = useState({
+    totalRides: 0,
+    todayRides: 0,
+    todayEarnings: 0,
+    weeklyRides: 0,
+    weeklyEarnings: 0,
+    monthlyEarnings: 0,
+    rating: 0
+  });
+  const [driverProfile, setDriverProfile] = useState(null);
+
+  useEffect(() => {
+    fetchDriverProfile();
+    fetchDriverStats();
+  }, []);
 
   useEffect(() => {
     if (!online) return;
     fetchAvailableRides();
+    // Refresh stats when going online
+    fetchDriverStats();
   }, [online]);
   const fetchAvailableRides = async () => {
     try {
@@ -99,9 +118,15 @@ export const useRiderLogic = () => {
           'Content-Type': 'application/json',
         },
       });
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || `HTTP ${res.status}: ${res.statusText}`);
+      }
+      
       const data = await res.json();
       const ride = data.ride;
-      Alert.alert("Ride accepted!");
+      Alert.alert("Success", "Emergency call accepted successfully!");
 
       setAcceptedRide(ride);
       setAvailableRides([]);
@@ -115,8 +140,8 @@ export const useRiderLogic = () => {
         fetchRoute(driverLocation, dropLocation);
       }
     } catch (error) {
-      Alert.alert("Failed to accept ride");
-      console.error(error);
+      console.error("Error accepting ride:", error);
+      Alert.alert("Failed to Accept", error instanceof Error ? error.message : "Failed to accept ride");
     }
   };
 
@@ -147,7 +172,9 @@ export const useRiderLogic = () => {
         setRouteCoords([]);
         setTripStarted(false);
         fetchAvailableRides();
-      } else if (status === RideStatus.STARTED) {
+      } else if (status === RideStatus.START) {
+        setTripStarted(true);
+      } else if (status === RideStatus.ARRIVED) {
         setTripStarted(true);
       }
     } catch (error) {
@@ -196,6 +223,65 @@ export const useRiderLogic = () => {
       console.error('Auth check error:', error);
     }
   };
+
+  const fetchDriverProfile = async () => {
+    try {
+      const token = await AsyncStorage.getItem("access_token");
+      if (!token) {
+        console.error("No access token found");
+        Alert.alert("Authentication Error", "Please login first");
+        return;
+      }
+
+      const url = `${getServerUrl()}/driver/profile`;
+      const res = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      }
+
+      const data = await res.json();
+      setDriverProfile(data.data);
+    } catch (error) {
+      console.error("Error fetching driver profile:", error);
+      Alert.alert("Error", "Failed to fetch driver profile");
+    }
+  };
+
+  const fetchDriverStats = async () => {
+    try {
+      const token = await AsyncStorage.getItem("access_token");
+      if (!token) {
+        console.error("No access token found");
+        Alert.alert("Authentication Error", "Please login first");
+        return;
+      }
+
+      const url = `${getServerUrl()}/driver/stats`;
+      const res = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      }
+
+      const data = await res.json();
+      setDriverStats(data.data);
+    } catch (error) {
+      console.error("Error fetching driver stats:", error);
+      Alert.alert("Error", "Failed to fetch driver statistics");
+    }
+  };
+
   return {
     routeCoords,
     destination,
@@ -203,10 +289,14 @@ export const useRiderLogic = () => {
     online,
     availableRides,
     acceptedRide,
+    driverStats,
+    driverProfile,
     handleAcceptRide,
     updateRideStatus,
     handleRejectRide,
     toggleOnline,
-    checkAuthState, // Export for debugging
+    checkAuthState,
+    fetchDriverStats,
+    fetchDriverProfile,
   };
 };

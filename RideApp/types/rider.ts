@@ -1,6 +1,7 @@
 export enum RideStatus {
   SEARCHING = "SEARCHING_FOR_RIDER",
-  STARTED = "STARTED",
+  START = "START",
+  ARRIVED = "ARRIVED",
   COMPLETED = "COMPLETED"
 }
 

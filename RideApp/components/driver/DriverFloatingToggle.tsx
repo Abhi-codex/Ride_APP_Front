@@ -1,22 +1,24 @@
 import React from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import { styles } from "../../constants/TailwindStyles";
+import { Ionicons } from '@expo/vector-icons';
 
-interface RiderFloatingToggleProps {
+interface DriverFloatingToggleProps {
   online: boolean;
   onToggle: () => void;
 }
 
-export default function RiderFloatingToggle({
+export default function DriverFloatingToggle({
   online,
   onToggle,
-}: RiderFloatingToggleProps) {  return (
+}: DriverFloatingToggleProps) {
+  return (
     <TouchableOpacity
       onPress={onToggle}
       style={[
         styles.absolute,
-        styles.top10,
-        styles.right5,
+        styles.top40,
+        styles.right2,
         styles.z1000,
         styles.px4,
         styles.py2,
@@ -45,6 +47,13 @@ export default function RiderFloatingToggle({
       >
         {online ? "Online" : "Offline"}
       </Text>
+      <View style={styles.ml2}>
+        <Ionicons 
+          name={online ? "radio" : "radio-outline"} 
+          size={16} 
+          color="white" 
+        />
+      </View>
     </TouchableOpacity>
   );
 }

@@ -2,13 +2,13 @@ import * as Location from "expo-location";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, Dimensions, StatusBar, Text, View } from "react-native";
 import { runOnJS, useAnimatedGestureHandler, useSharedValue, withSpring } from "react-native-reanimated";
-import RiderDrawer from "../../components/rider/RiderDrawer";
-import RiderFloatingToggle from "../../components/rider/RiderFloatingToggle";
-import RiderMap from "../../components/rider/RiderMap";
 import { colors, styles } from "../../constants/TailwindStyles";
 import { useRiderLogic } from "../../hooks/useRiderLogic";
 import { useRideSearching } from "../../hooks/useRideSearching";
 import { haversineDistance } from "../../utils/distance";
+import DriverDrawer from "@/components/driver/DriverDrawer";
+import DriverMap from "@/components/driver/DriverMap";
+import DriverFloatingToggle from "@/components/driver/DriverFloatingToggle";
 
 const { height: screenHeight } = Dimensions.get("window");
 
@@ -173,13 +173,17 @@ export default function DriverMapScreen() {
       </View>
     );
   }
+  
+  // Calculate the acceptedRideId from acceptedRide
+  const acceptedRideId = acceptedRide ? acceptedRide._id : null;
+
   return (
     <View style={[styles.flex1, styles.bgGray50, styles.pt8]}>
       <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent/>
 
       <View style={[styles.flex1]}>
         {driverLocation && (
-          <RiderMap
+          <DriverMap
             driverLocation={driverLocation}
             acceptedRide={acceptedRide}
             destination={destination}
@@ -191,25 +195,15 @@ export default function DriverMapScreen() {
         )}
       </View>
 
-      <RiderFloatingToggle online={online} onToggle={toggleOnline} />
+      <DriverFloatingToggle online={online} onToggle={toggleOnline} />
 
-      <RiderDrawer
+      <DriverDrawer
         translateY={translateY}
         currentSnapPoint={currentSnapPoint}
         gestureHandler={gestureHandler}
-        acceptedRide={acceptedRide}
-        availableRides={availableRides}
+        acceptedRideId={acceptedRideId}
         online={online}
-        driverLocation={driverLocation}
-        destination={destination}
-        tripStarted={tripStarted}
-        onAcceptRide={(rideId: string) => handleAcceptRide(rideId, driverLocation)}
-        onRejectRide={handleRejectRide}
         onToggleOnline={toggleOnline}
-        onUpdateRideStatus={updateRideStatus}
-        distanceKm={distanceKm}
-        etaMinutes={etaMinutes}
-        fare={fare}
       />
     </View>
   );

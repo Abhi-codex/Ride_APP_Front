@@ -27,11 +27,13 @@ type Hospital = {
   photoUrl?: string;
 };
 
+type AmbulanceType = 'basicAmbulance' | 'advancedAmbulance' | 'icuAmbulance' | 'airAmbulance';
+
 export default function RideScreen() {
   const router = useRouter();
   const [currentLocation, setCurrentLocation] = useState<any>(null);
   const [selectedHospital, setSelectedHospital] = useState<Hospital | null>(null);
-  const [rideType, setRideType] = useState('Emergency');
+  const [ambulanceType, setAmbulanceType] = useState<AmbulanceType>('basicAmbulance');
   const [loading, setLoading] = useState(true);
   const [booking, setBooking] = useState(false);
   const [hospitals, setHospitals] = useState<Hospital[]>([]);
@@ -126,7 +128,7 @@ export default function RideScreen() {
     setBooking(true);
 
     const rideData = {
-      vehicle: "cabEconomy",
+      vehicle: ambulanceType,
       pickup: {
         latitude: currentLocation.latitude,
         longitude: currentLocation.longitude,
@@ -169,7 +171,7 @@ export default function RideScreen() {
           params: {
             rideId: data.ride._id,
             hospitalName: data.ride.drop.address,
-            rideType: "Emergency",
+            rideType: ambulanceType,
             destination: data.ride.drop.address,
             fare: data.ride.fare.toString(),
             otp: data.ride.otp,
@@ -178,11 +180,20 @@ export default function RideScreen() {
           },
         });
       } else {
-        Alert.alert('Booking Failed', data.message || 'Something went wrong.');
+        console.log('Booking failed response:', data);
+        Alert.alert('Booking Failed', data.message || `Server responded with status ${response.status}. Please try again.`);
       }
     } catch (error) {
       console.error('Booking error:', error);
-      Alert.alert('Error', 'Failed to book ambulance. Please try again.');
+      
+      if (error instanceof TypeError && error.message.includes('Network request failed')) {
+        Alert.alert(
+          'Connection Error', 
+          'Cannot connect to server. Make sure:\n• Backend server is running\n• Using correct IP address\n• No firewall blocking connection'
+        );
+      } else {
+        Alert.alert('Error', `Failed to book ambulance: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
     } finally {
       setBooking(false);
     }
@@ -339,12 +350,15 @@ export default function RideScreen() {
 
         <View style={[styles.mt5]}>
           <Text style={[styles.textLg, styles.fontBold, styles.mb3, styles.textGray800]}>
-            Ride Type
+            Ambulance Type
           </Text>
           <View style={[styles.flexRow, styles.justifyBetween]}>
-            {['Emergency', 'Scheduled', 'Transfer'].map((type) => (
+            {[
+              { key: 'basicAmbulance', label: 'Basic', desc: '₹50 + ₹15/km' },
+              { key: 'advancedAmbulance', label: 'Advanced', desc: '₹80 + ₹20/km' },
+            ].map((type) => (
               <TouchableOpacity
-                key={type}
+                key={type.key}
                 style={[
                   styles.flex1,
                   styles.py3,
@@ -352,22 +366,79 @@ export default function RideScreen() {
                   styles.roundedLg,
                   styles.alignCenter,
                   styles.mx1,
-                  rideType === type
+                  ambulanceType === type.key
                     ? [{ backgroundColor: colors.primary[600] }]
                     : [styles.bgGray200],
                 ]}
-                onPress={() => setRideType(type)}
+                onPress={() => setAmbulanceType(type.key as AmbulanceType)}
               >
                 <Text
                   style={[
                     styles.textSm,
                     styles.fontSemibold,
-                    rideType === type
+                    ambulanceType === type.key
                       ? styles.textWhite
                       : styles.textGray600,
                   ]}
                 >
-                  {type}
+                  {type.label}
+                </Text>
+                <Text
+                  style={[
+                    styles.textXs,
+                    styles.mt1,
+                    ambulanceType === type.key
+                      ? styles.textWhite
+                      : styles.textGray500,
+                  ]}
+                >
+                  {type.desc}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          
+          <View style={[styles.flexRow, styles.justifyBetween, styles.mt2]}>
+            {[
+              { key: 'icuAmbulance', label: 'ICU', desc: '₹120 + ₹30/km' },
+              { key: 'airAmbulance', label: 'Air', desc: '₹500 + ₹100/km' },
+            ].map((type) => (
+              <TouchableOpacity
+                key={type.key}
+                style={[
+                  styles.flex1,
+                  styles.py3,
+                  styles.px4,
+                  styles.roundedLg,
+                  styles.alignCenter,
+                  styles.mx1,
+                  ambulanceType === type.key
+                    ? [{ backgroundColor: colors.primary[600] }]
+                    : [styles.bgGray200],
+                ]}
+                onPress={() => setAmbulanceType(type.key as AmbulanceType)}
+              >
+                <Text
+                  style={[
+                    styles.textSm,
+                    styles.fontSemibold,
+                    ambulanceType === type.key
+                      ? styles.textWhite
+                      : styles.textGray600,
+                  ]}
+                >
+                  {type.label}
+                </Text>
+                <Text
+                  style={[
+                    styles.textXs,
+                    styles.mt1,
+                    ambulanceType === type.key
+                      ? styles.textWhite
+                      : styles.textGray500,
+                  ]}
+                >
+                  {type.desc}
                 </Text>
               </TouchableOpacity>
             ))}

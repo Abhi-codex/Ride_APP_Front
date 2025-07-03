@@ -1,15 +1,82 @@
-import React from "react";
-import { Text, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import { Text, View, ActivityIndicator } from "react-native";
 import { styles } from "../../constants/TailwindStyles";
 import { Ride } from "../../types/rider";
+import { getServerUrl } from "../../utils/network";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface AcceptedRideInfoProps {
-  acceptedRide: Ride | null;
+  acceptedRide?: Ride | null;
+  acceptedRideId?: string | null;
 }
 
 export default function AcceptedRideInfo({
-  acceptedRide,
+  acceptedRide: propRide,
+  acceptedRideId,
 }: AcceptedRideInfoProps) {
+  const [loading, setLoading] = useState(false);
+  const [fetchedRide, setFetchedRide] = useState<Ride | null>(null);
+
+  // Use the provided ride prop or the fetched ride
+  const acceptedRide = propRide || fetchedRide;
+
+  useEffect(() => {
+    if (!propRide && acceptedRideId) {
+      fetchAcceptedRide(acceptedRideId);
+    }
+  }, [acceptedRideId, propRide]);
+
+  const fetchAcceptedRide = async (rideId: string) => {
+    try {
+      setLoading(true);
+      const token = await AsyncStorage.getItem("access_token");
+      if (!token) {
+        console.error("No access token found");
+        return;
+      }
+
+      const url = `${getServerUrl()}/ride/${rideId}`;
+      const res = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      }
+
+      const data = await res.json();
+      setFetchedRide(data.ride);
+    } catch (error) {
+      console.error("Error fetching accepted ride details:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <View
+        style={[
+          styles.bgWhite,
+          styles.roundedXl,
+          styles.shadowLg,
+          styles.p4,
+          styles.alignCenter,
+          styles.justifyCenter,
+          styles.h32,
+        ]}
+      >
+        <ActivityIndicator size="large" color="#4f46e5" />
+        <Text style={[styles.mt2, styles.textGray600]}>
+          Loading trip details...
+        </Text>
+      </View>
+    );
+  }
+
   if (!acceptedRide) {
     return null;
   }

@@ -148,6 +148,7 @@ export const styles = StyleSheet.create({
   top0: { top: 0 },
   top10: { top: 10 },
   top20: { top: 20 },
+  top40: { top:40 },
   top50: { top: 50 },
   
   // Bottom
