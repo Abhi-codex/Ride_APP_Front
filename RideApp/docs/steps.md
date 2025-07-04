@@ -174,3 +174,7 @@ Your documentation shows these endpoints, but they need to be created in your ba
 ```
 
 This guide will be updated as we implement each phase.
+
+
+
+featured hospital, independent driver and hospital registered driver their fare will be calculated diffeently, icu, blu, auto ambulance, bike safety unit, area wise ambulance availability,

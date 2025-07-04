@@ -5,7 +5,7 @@ export const getServerUrl = () => {
     return 'http://localhost:3000';
   } 
   else if (Platform.OS === 'android' || Platform.OS === 'ios') {
-    return 'http://192.168.96.247:3000'; 
+    return 'http://192.168.173.247:3000'; 
   } 
   else {
     return 'http://localhost:3000';

@@ -9,8 +9,13 @@ import {
   ApiResponse, 
   RideResponse 
 } from '../types/rider';
+import { Hospital, AmbulanceType } from '../types/patient';
 import { getServerUrl } from '../utils/network';
+import { useLocationAndHospitals } from './useLocationAndHospitals';
+import { useHospitalSelection } from './useHospitalSelection';
+import { useRideBooking } from './useRideBooking';
 
+// Original driver side logic
 export const useRiderLogic = () => {
   const [routeCoords, setRouteCoords] = useState([]);
   const [destination, setDestination] = useState<{ latitude: number; longitude: number } | null>(null);
@@ -418,3 +423,6 @@ export const useRiderLogic = () => {
     }
   };
 };
+
+// Patient side logic - removed duplicate implementation
+// See useRideSearching.ts for the implementation
