@@ -1,7 +1,16 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { Alert, Text, TouchableOpacity, View } from "react-native";
-import { getRideDurations, RideDirections } from "../../utils/directions";
+import { 
+  getRideDurations, 
+  getDirectionsCacheKey,
+  RideDirections, 
+  formatDuration, 
+  formatDistance,
+  CACHE_DURATION,
+  directionsCache,
+  LatLng
+} from "../../utils/directions";
 import { styles } from "../../constants/TailwindStyles";
 import { Ride } from "../../types/rider";
 
@@ -13,10 +22,6 @@ interface AvailableRidesListProps {
   onAcceptRide: (rideId: string) => void;
   onRejectRide: (rideId: string) => void;
 }
-
-// Cache for ETA calculations to avoid repeated API calls
-const etaCache = new Map<string, { directions: RideDirections; timestamp: number }>();
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 // Utility function to calculate relative time
 const getRelativeTime = (createdAt: string | Date): string => {
@@ -115,7 +120,11 @@ export default function AvailableRidesList({
 
     const cacheKey = useMemo(() => {
       if (!driverLocation) return null;
-      return `${driverLocation.latitude.toFixed(4)},${driverLocation.longitude.toFixed(4)}-${ride.pickup.latitude.toFixed(4)},${ride.pickup.longitude.toFixed(4)}-${ride.drop.latitude.toFixed(4)},${ride.drop.longitude.toFixed(4)}`;
+      return getDirectionsCacheKey(
+        { latitude: driverLocation.latitude, longitude: driverLocation.longitude },
+        ride.pickup,
+        ride.drop
+      );
     }, [driverLocation, ride.pickup, ride.drop]);
 
     useEffect(() => {
@@ -127,7 +136,7 @@ export default function AvailableRidesList({
       }
 
       // Check cache first
-      const cached = etaCache.get(cacheKey);
+      const cached = directionsCache.get(cacheKey);
       if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
         setDirections(cached.directions);
         setLoading(false);
@@ -138,12 +147,17 @@ export default function AvailableRidesList({
       setLoading(true);
       setHasError(false);
       
-      getRideDurations(driverLocation, ride.pickup, ride.drop)
+      // Create LatLng objects
+      const origin: LatLng = { 
+        latitude: driverLocation.latitude, 
+        longitude: driverLocation.longitude 
+      };
+      
+      getRideDurations(origin, ride.pickup, ride.drop)
         .then((result) => {
           setDirections(result);
           setHasError(false);
-          // Cache the result
-          etaCache.set(cacheKey, { directions: result, timestamp: Date.now() });
+          // Cache is handled inside getRideDurations
         })
         .catch((error) => {
           console.error('Error fetching ride durations for ride:', ride._id, error);
@@ -151,21 +165,9 @@ export default function AvailableRidesList({
           // Always provide fallback durations - better than showing 0
           const fallbackDirections: RideDirections = { toPickup: 8, toDropoff: 12, pickupDistance: 5.0, dropoffDistance: 8.0 };
           setDirections(fallbackDirections);
-          // Cache fallback too (for shorter time)
-          etaCache.set(cacheKey, { directions: fallbackDirections, timestamp: Date.now() - CACHE_DURATION + 60000 }); // Expire in 1 minute
         })
         .finally(() => setLoading(false));
     }, [cacheKey, ride._id]);
-
-    const formatDuration = (minutes: number): string => {
-      if (minutes < 1) return "< 1 min";
-      return `${Math.round(minutes)} min`;
-    };
-
-    const formatDistance = (km: number): string => {
-      if (km < 0.1) return "< 0.1 km";
-      return `${km} km`;
-    };
 
     const formatFare = (fare: number): number => {
       return Math.round(fare / 5) * 5;

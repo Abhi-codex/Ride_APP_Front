@@ -1,7 +1,15 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useState, useMemo } from "react";
 import { Text, View, ScrollView, TouchableOpacity, TextInput, Alert, ActivityIndicator } from "react-native";
-import { getRideDurations, RideDirections } from "../../utils/directions";
+import { 
+  getRideDurations, 
+  getDirectionsCacheKey,
+  RideDirections, 
+  formatDuration, 
+  formatDistance,
+  CACHE_DURATION,
+  directionsCache
+} from "../../utils/directions";
 import { styles, colors } from "../../constants/TailwindStyles";
 import { Ride } from "../../types/rider";
 import { Linking } from "react-native";
@@ -12,11 +20,7 @@ interface AcceptedRideInfoProps {
   driverLocation: { latitude: number; longitude: number } | null;
 }
 
-const dataCache = new Map<string, { 
-  directions: RideDirections; 
-  timestamp: number; 
-}>();
-const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes for accepted ride directions
+// Using centralized directionsCache and CACHE_DURATION from directions.ts
 
 // Utility function to calculate relative time for ride start
 const getRelativeTime = (createdAt: string | Date): string => {
@@ -114,7 +118,11 @@ export default function AcceptedRideInfo({
 
   const cacheKey = useMemo(() => {
     if (!driverLocation || !acceptedRide) return null;
-    return `accepted-${driverLocation.latitude.toFixed(4)},${driverLocation.longitude.toFixed(4)}-${acceptedRide.pickup.latitude.toFixed(4)},${acceptedRide.pickup.longitude.toFixed(4)}-${acceptedRide.drop.latitude.toFixed(4)},${acceptedRide.drop.longitude.toFixed(4)}`;
+    return getDirectionsCacheKey(
+      { latitude: driverLocation.latitude, longitude: driverLocation.longitude },
+      acceptedRide.pickup,
+      acceptedRide.drop
+    );
   }, [driverLocation, acceptedRide]);
 
   useEffect(() => {
@@ -155,7 +163,7 @@ export default function AcceptedRideInfo({
       console.log('API key starts with:', apiKey.substring(0, 10) + '...');
     }
 
-    const cached = dataCache.get(cacheKey);
+    const cached = directionsCache.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
       setDirections(cached.directions);
       setLoading(false);
@@ -171,7 +179,7 @@ export default function AcceptedRideInfo({
         console.log('Fetched directions:', directionsResult);
         setDirections(directionsResult);
         setHasError(false);
-        dataCache.set(cacheKey, { 
+        directionsCache.set(cacheKey, { 
           directions: directionsResult, 
           timestamp: Date.now() 
         });
@@ -190,15 +198,7 @@ export default function AcceptedRideInfo({
       .finally(() => setLoading(false));
   }, [cacheKey, acceptedRide?._id]);
 
-  const formatDuration = (minutes: number): string => {
-    if (minutes < 1) return "< 1 min";
-    return `${Math.round(minutes)} min`;
-  };
-
-  const formatDistance = (km: number): string => {
-    if (km < 0.1) return "< 0.1 km";
-    return `${km} km`;
-  };
+  // Using imported formatDuration and formatDistance from directions.ts
 
   const formatFare = (fare: number): number => {
     return Math.round(fare / 5) * 5;

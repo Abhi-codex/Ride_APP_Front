@@ -10,12 +10,15 @@ interface AmbulanceTypeSelectorProps {
 
 const AMBULANCE_TYPES: AmbulanceOption[][] = [
   [
-    { key: 'basicAmbulance', label: 'Basic', desc: '₹50 + ₹15/km' },
-    { key: 'advancedAmbulance', label: 'Advanced', desc: '₹80 + ₹20/km' },
+    { key: 'bls', label: 'BLS', desc: 'Basic Life Support' },
+    { key: 'als', label: 'ALS', desc: 'Advanced Life Support' },
   ],
   [
-    { key: 'icuAmbulance', label: 'ICU', desc: '₹120 + ₹30/km' },
-    { key: 'airAmbulance', label: 'Air', desc: '₹500 + ₹100/km' },
+    { key: 'ccs', label: 'CCS', desc: 'Critical Care Support' },
+    { key: 'auto', label: 'Auto', desc: 'Compact Urban Unit' },
+  ],
+  [
+    { key: 'bike', label: 'Bike', desc: 'Emergency Response Motorcycle' },
   ]
 ];
 

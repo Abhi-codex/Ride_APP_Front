@@ -6,10 +6,11 @@ export enum RideStatus {
 }
 
 export enum AmbulanceType {
-  BASIC = "basicAmbulance",
-  ADVANCED = "advancedAmbulance",
-  ICU = "icuAmbulance",
-  AIR = "airAmbulance"
+  BLS = "bls",
+  ALS = "als", 
+  CCS = "ccs",
+  AUTO = "auto",
+  BIKE = "bike"
 }
 
 export enum CertificationLevel {

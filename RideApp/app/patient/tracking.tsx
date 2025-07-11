@@ -1,13 +1,11 @@
-import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Dimensions, Text, View } from 'react-native';
-import { MapViewWrapper as Map, PolylineWrapper as MapPolyline, MarkerWrapper as Marker } from '../../components/MapView';
+import { ActivityIndicator, Alert, Text, View, TouchableOpacity } from 'react-native';
 import { colors, styles } from '../../constants/TailwindStyles';
-import { haversineDistance } from '../../utils/distance';
-
-const { height } = Dimensions.get('window');
+import { PatientRideMap, TripSummary } from '../../components/patient';
+import { Ionicons } from '@expo/vector-icons';
+import { useRideTracking } from '../../hooks';
 
 function getFirstParam(param: string | string[] | undefined): string {
   if (!param) return '';
@@ -16,161 +14,211 @@ function getFirstParam(param: string | string[] | undefined): string {
 
 export default function TrackingScreen() {
   const params = useLocalSearchParams();
-  const latitudeStr = getFirstParam(params.latitude);
-  const longitudeStr = getFirstParam(params.longitude);
-  const latitudeNum = parseFloat(latitudeStr);
-  const longitudeNum = parseFloat(longitudeStr);
-
-  const isValidCoords =
-    !isNaN(latitudeNum) && latitudeNum >= -90 && latitudeNum <= 90 &&
-    !isNaN(longitudeNum) && longitudeNum >= -180 && longitudeNum <= 180;
-
-  const [riderLocation, setRiderLocation] = useState<{
+  const rideId = getFirstParam(params.rideId);
+  
+  // Get user's current location
+  const [userLocation, setUserLocation] = useState<{
     latitude: number;
     longitude: number;
     latitudeDelta: number;
     longitudeDelta: number;
   } | null>(null);
-  const [routeCoords, setRouteCoords] = useState([]);
-  const [accepted, setAccepted] = useState(false);
-  const [loading, setLoading] = useState(true);
+  
+  const [routeCoords, setRouteCoords] = useState<Array<any>>([]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [locationLoading, setLocationLoading] = useState(true);
+  
+  // Use the real tracking hook to get all ride data from API
+  const {
+    ride,
+    loading: rideLoading,
+    error: rideError,
+    rideStatus,
+    driverLocation,
+    refreshRideData
+  } = useRideTracking(rideId);
 
+  // Handle refresh
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await refreshRideData();
+    setIsRefreshing(false);
+  };
+
+  // Initialize user location and route coordinates
   useEffect(() => {
-    if (!isValidCoords) {
-      Alert.alert('Invalid coordinates', 'Please check the destination coordinates.');
-      setLoading(false);
-      return;
-    }
-
-    (async () => {
+    const initializeLocationAndRoute = async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permission Denied', 'Location permission is required to track.');
-        setLoading(false);
+        Alert.alert('Permission Denied', 'Location permission is required to track your ride.');
+        setLocationLoading(false);
         return;
       }
 
       try {
+        // Get user's current location
         const location = await Location.getCurrentPositionAsync({});
-        const origin = `${location.coords.longitude},${location.coords.latitude}`;
-        const destination = `${longitudeNum},${latitudeNum}`;
         const region = {
           latitude: location.coords.latitude,
           longitude: location.coords.longitude,
           latitudeDelta: 0.05,
           longitudeDelta: 0.05,
         };
-        setRiderLocation(region);
-        setLoading(false);
+        setUserLocation(region);
 
-        const url = `https://router.project-osrm.org/route/v1/driving/${origin};${destination}?overview=full&geometries=geojson`;
-        const res = await fetch(url);
-        const json = await res.json();
+        // Get route coordinates for the map if we have ride data
+        if (ride && ride.drop) {
+          const origin = {
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude
+          };
+          
+          const destination = {
+            latitude: ride.drop.latitude,
+            longitude: ride.drop.longitude
+          };
+          
+          try {
+            // Get the route for display on the map
+            const url = `https://router.project-osrm.org/route/v1/driving/${origin.longitude},${origin.latitude};${destination.longitude},${destination.latitude}?overview=full&geometries=geojson`;
+            const res = await fetch(url);
+            const json = await res.json();
 
-        if (json.routes?.length > 0) {
-          const coords = json.routes[0].geometry.coordinates.map(
-            ([lng, lat]: [number, number]) => ({ latitude: lat, longitude: lng })
-          );
-          setRouteCoords(coords);
+            if (json.routes?.length > 0) {
+              const coords = json.routes[0].geometry.coordinates.map(
+                ([lng, lat]: [number, number]) => ({ latitude: lat, longitude: lng })
+              );
+              setRouteCoords(coords);
+            }
+          } catch (err) {
+            console.error('Route error:', err);
+          }
         }
       } catch (err) {
-        console.error('Route error:', err);
-        Alert.alert('Routing error', 'Could not fetch route information.');
-        setLoading(false);
+        console.error('Location tracking error:', err);
+        Alert.alert('Location error', 'Could not get your current location.');
+      } finally {
+        setLocationLoading(false);
       }
+    };
 
-      setTimeout(() => setAccepted(true), 3000);
-    })();
-  }, []);
+    initializeLocationAndRoute();
+  }, [ride]);
 
-  if (loading || !riderLocation) {
+  // Show loading state if we're loading location or ride data
+  if (locationLoading || rideLoading || !userLocation || !ride) {
     return (
       <View style={[styles.flex1, styles.justifyCenter, styles.alignCenter, styles.bgGray50]}>
         <ActivityIndicator size="large" color={colors.primary[600]} />
         <Text style={[styles.mt3, styles.textBase, styles.textGray600]}>
-          Getting rider location...
+          {locationLoading ? 'Getting your location...' : 'Loading ride details...'}
         </Text>
       </View>
     );
   }
 
-  const distanceMeters = haversineDistance(
-    riderLocation.latitude,
-    riderLocation.longitude,
-    latitudeNum,
-    longitudeNum
-  );
+  // Show error if there's an issue with fetching ride data
+  if (rideError) {
+    return (
+      <View style={[styles.flex1, styles.justifyCenter, styles.alignCenter, styles.bgGray50]}>
+        <Ionicons name="alert-circle-outline" size={48} color={colors.danger[500]} />
+        <Text style={[styles.mt3, styles.textLg, styles.fontBold, styles.textDanger700]}>
+          Error Loading Ride
+        </Text>
+        <Text style={[styles.mt1, styles.textBase, styles.textGray600, styles.textCenter, styles.mx4]}>
+          {rideError}
+        </Text>
+        <TouchableOpacity
+          style={[styles.mt4, styles.bgPrimary600, styles.roundedLg, styles.py2, styles.px4]}
+          onPress={handleRefresh}
+        >
+          <Text style={[styles.textBase, styles.textWhite, styles.fontBold]}>
+            Try Again
+          </Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
-  const speedMetersPerSecond = 11.11;
-  const etaSeconds = Math.round(distanceMeters / speedMetersPerSecond);
-  const etaMinutes = Math.ceil(etaSeconds / 60);
-  const distanceKm = distanceMeters / 1000;
-  const farePerKm = 15; // adjust as needed
-  const estimatedFare = Math.ceil(distanceKm * farePerKm);
+  // Get available drivers from the ride data
+  const availableDrivers = [];
+  
+  // If we have an assigned driver, add them as the accepted driver
+  if (ride.rider) {
+    // Use driverLocation from the tracking hook, which has the most up-to-date location
+    const driverLoc = driverLocation || {
+      // Fallback to pickup location if driver location not available
+      latitude: ride.pickup.latitude,
+      longitude: ride.pickup.longitude
+    };
+    
+    availableDrivers.push({
+      id: ride.rider._id,
+      location: driverLoc,
+      isAccepted: true
+    });
+  }
+
+  // API currently doesn't provide nearby drivers, but when it does,
+  // we can uncomment and adapt this code
+  /* 
+  if (ride.nearbyDrivers && Array.isArray(ride.nearbyDrivers)) {
+    ride.nearbyDrivers.forEach(driver => {
+      if (driver._id !== ride.rider?._id && driver.location) {
+        availableDrivers.push({
+          id: driver._id,
+          location: {
+            latitude: driver.location.latitude,
+            longitude: driver.location.longitude
+          },
+          isAccepted: false
+        });
+      }
+    });
+  }
+  */
+
+  // Get destination from ride data
+  const destinationLocation = ride.drop ? {
+    latitude: ride.drop.latitude,
+    longitude: ride.drop.longitude
+  } : null;
+
+  if (!destinationLocation) {
+    return (
+      <View style={[styles.flex1, styles.justifyCenter, styles.alignCenter, styles.bgGray50]}>
+        <Text style={[styles.textBase, styles.textDanger600]}>
+          Destination information not available
+        </Text>
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.flex1]}>
-      <Map style={[styles.flex1]}>
-        <Marker coordinate={riderLocation} pinColor="blue" title="Ambulance" />
-        <Marker coordinate={{ latitude: latitudeNum, longitude: longitudeNum }} pinColor="red" title="Hospital" />
-        {routeCoords.length > 0 && (
-          <MapPolyline coordinates={routeCoords} strokeColor={colors.primary[600]} strokeWidth={5} />
-        )}
-      </Map>
+      <PatientRideMap
+        userLocation={userLocation}
+        destinationLocation={destinationLocation}
+        availableDrivers={availableDrivers}
+        routeCoords={routeCoords}
+        acceptedRide={ride}
+      />
 
       <View style={[
         styles.absolute,
         styles.bottom0,
         styles.wFull,
-        styles.p5,
-        styles.bgWhite,
-        styles.roundedTl3xl,
-        styles.roundedTr3xl,
-        styles.shadowXl,
       ]}>
-        <Text style={[styles.textLg, styles.fontBold, styles.mb3, styles.textCenter, styles.textGray800]}>
-          🚑 Trip Summary
-        </Text>
-        
-        <View style={[styles.flexRow, styles.alignCenter, styles.my2]}>
-          <Ionicons name="checkmark-circle" size={20} color={colors.medical[500]} />
-          <Text style={[styles.ml3, styles.textBase, styles.textGray700]}>
-            Status: 
-          </Text>
-          <Text style={[styles.textBase, styles.fontBold, styles.textGray800]}>
-            {accepted ? 'Accepted' : 'Waiting...'}
-          </Text>
-        </View>
-        
-        <View style={[styles.flexRow, styles.alignCenter, styles.my2]}>
-          <Ionicons name="time-outline" size={20} color={colors.gray[600]} />
-          <Text style={[styles.ml3, styles.textBase, styles.textGray700]}>
-            ETA: 
-          </Text>
-          <Text style={[styles.textBase, styles.fontBold, styles.textPrimary600]}>
-            {etaMinutes} min
-          </Text>
-        </View>
-        
-        <View style={[styles.flexRow, styles.alignCenter, styles.my2]}>
-          <Ionicons name="map-outline" size={20} color={colors.gray[600]} />
-          <Text style={[styles.ml3, styles.textBase, styles.textGray700]}>
-            Distance: 
-          </Text>
-          <Text style={[styles.textBase, styles.fontBold, styles.textPrimary600]}>
-            {distanceKm.toFixed(2)} km
-          </Text>
-        </View>
-        
-        <View style={[styles.flexRow, styles.alignCenter, styles.my2]}>
-          <Ionicons name="cash-outline" size={20} color={colors.gray[600]} />
-          <Text style={[styles.ml3, styles.textBase, styles.textGray700]}>
-            Estimated Fare: 
-          </Text>
-          <Text style={[styles.textBase, styles.fontBold, styles.textPrimary600]}>
-            ₹{estimatedFare}
-          </Text>
-        </View>
+        <TripSummary 
+          status={rideStatus}
+          distance={ride.distance || 0}
+          // Calculate duration based on distance if not available
+          duration={ride.distance ? Math.round(ride.distance / 0.6) : 0} // ~36km/h average ambulance speed in traffic
+          ambulanceType={ride.vehicle || 'bls'} 
+          otp={ride.otp || ''}
+          vehicleDetails={ride.rider ? `${ride.rider.vehicle.model} (${ride.rider.vehicle.plateNumber})` : undefined}
+          driverName={ride.rider?.name || undefined}
+        />
       </View>
     </View>
   );

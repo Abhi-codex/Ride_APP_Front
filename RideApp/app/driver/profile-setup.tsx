@@ -16,8 +16,21 @@ import { Picker } from '@react-native-picker/picker';
 import { colors, styles } from '../../constants/TailwindStyles';
 import { getServerUrl } from '../../utils/network';
 
-type VehicleType = 'basicAmbulance' | 'advancedAmbulance' | 'icuAmbulance' | 'airAmbulance';
+type VehicleType = 'bls' | 'als' | 'ccs' | 'auto' | 'bike';
 type CertificationLevel = 'EMT-Basic' | 'EMT-Intermediate' | 'EMT-Paramedic' | 'Critical Care';
+
+interface HospitalAffiliation {
+  isAffiliated: boolean;
+  hospitalName: string;
+  hospitalId: string;
+  hospitalAddress: string;
+  employeeId: string;
+  customFareFormula?: {
+    baseFare: number;
+    perKmRate: number;
+    minimumFare: number;
+  };
+}
 
 interface DriverProfile {
   name: string;
@@ -27,6 +40,7 @@ interface DriverProfile {
   model: string;
   licenseNumber: string;
   certificationLevel: CertificationLevel | '';
+  hospitalAffiliation: HospitalAffiliation;
 }
 
 export default function DriverProfileSetupScreen() {
@@ -40,6 +54,13 @@ export default function DriverProfileSetupScreen() {
     model: '',
     licenseNumber: '',
     certificationLevel: '',
+    hospitalAffiliation: {
+      isAffiliated: false,
+      hospitalName: '',
+      hospitalId: '',
+      hospitalAddress: '',
+      employeeId: '',
+    },
   });
 
   useEffect(() => {
@@ -58,10 +79,11 @@ export default function DriverProfileSetupScreen() {
 
   const vehicleTypes = [
     { label: 'Select Ambulance Type', value: '' },
-    { label: 'Basic Ambulance (₹50 base + ₹15/km)', value: 'basicAmbulance' },
-    { label: 'Advanced Life Support (₹80 base + ₹20/km)', value: 'advancedAmbulance' },
-    { label: 'ICU Ambulance (₹120 base + ₹30/km)', value: 'icuAmbulance' },
-    { label: 'Air Ambulance (₹500 base + ₹100/km)', value: 'airAmbulance' },
+    { label: 'BLS - Basic Life Support', value: 'bls' },
+    { label: 'ALS - Advanced Life Support', value: 'als' },
+    { label: 'CCS - Critical Care Support', value: 'ccs' },
+    { label: 'Auto - Compact Urban Unit', value: 'auto' },
+    { label: 'Bike - Emergency Response Motorcycle', value: 'bike' },
   ];
 
   const certificationLevels = [
@@ -108,6 +130,22 @@ export default function DriverProfileSetupScreen() {
       return false;
     }
 
+    // Validate hospital affiliation if selected
+    if (formData.hospitalAffiliation.isAffiliated) {
+      if (!formData.hospitalAffiliation.hospitalName.trim()) {
+        Alert.alert('Validation Error', 'Please enter hospital name');
+        return false;
+      }
+      if (!formData.hospitalAffiliation.hospitalId.trim()) {
+        Alert.alert('Validation Error', 'Please enter hospital ID');
+        return false;
+      }
+      if (!formData.hospitalAffiliation.employeeId.trim()) {
+        Alert.alert('Validation Error', 'Please enter employee ID');
+        return false;
+      }
+    }
+
     return true;
   };
 
@@ -144,6 +182,20 @@ export default function DriverProfileSetupScreen() {
           model: formData.model.trim(),
           licenseNumber: formData.licenseNumber.trim(),
           certificationLevel: formData.certificationLevel,
+        },
+        hospitalAffiliation: formData.hospitalAffiliation.isAffiliated ? {
+          isAffiliated: true,
+          hospitalName: formData.hospitalAffiliation.hospitalName.trim(),
+          hospitalId: formData.hospitalAffiliation.hospitalId.trim(),
+          hospitalAddress: formData.hospitalAffiliation.hospitalAddress.trim(),
+          employeeId: formData.hospitalAffiliation.employeeId.trim(),
+          customFareFormula: formData.hospitalAffiliation.customFareFormula,
+        } : {
+          isAffiliated: false,
+          hospitalName: '',
+          hospitalId: '',
+          hospitalAddress: '',
+          employeeId: '',
         },
       };
 
@@ -187,6 +239,16 @@ export default function DriverProfileSetupScreen() {
     setFormData(prev => ({
       ...prev,
       [field]: value,
+    }));
+  };
+
+  const updateHospitalAffiliation = (updates: Partial<HospitalAffiliation>) => {
+    setFormData(prev => ({
+      ...prev,
+      hospitalAffiliation: {
+        ...prev.hospitalAffiliation,
+        ...updates,
+      },
     }));
   };
 
@@ -419,6 +481,200 @@ export default function DriverProfileSetupScreen() {
                 </Picker>
               </View>
             </View>
+          </View>
+
+          {/* Hospital Affiliation Section */}
+          <View style={[styles.mb6]}>
+            <Text style={[styles.textLg, styles.fontBold, styles.textGray900, styles.mb3]}>
+              Hospital Affiliation
+            </Text>
+
+            {/* Affiliation Toggle */}
+            <View style={[styles.mb4]}>
+              <Text style={[styles.textSm, styles.fontMedium, styles.textGray700, styles.mb2]}>
+                Driver Type *
+              </Text>
+              <View style={[styles.flexRow, styles.justifyBetween]}>
+                <TouchableOpacity
+                  style={[
+                    styles.flex1,
+                    styles.py3,
+                    styles.px4,
+                    styles.roundedLg,
+                    styles.alignCenter,
+                    styles.mr2,
+                    styles.border,
+                    !formData.hospitalAffiliation.isAffiliated
+                      ? [styles.bgPrimary600, styles.borderPrimary600]
+                      : [styles.bgWhite, styles.borderGray300],
+                  ]}
+                  onPress={() => updateHospitalAffiliation({
+                    isAffiliated: false,
+                    hospitalName: '',
+                    hospitalId: '',
+                    hospitalAddress: '',
+                    employeeId: '',
+                  })}
+                  disabled={loading}
+                >
+                  <Text
+                    style={[
+                      styles.textSm,
+                      styles.fontMedium,
+                      !formData.hospitalAffiliation.isAffiliated
+                        ? styles.textWhite
+                        : styles.textGray700,
+                    ]}
+                  >
+                    Independent Driver
+                  </Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity
+                  style={[
+                    styles.flex1,
+                    styles.py3,
+                    styles.px4,
+                    styles.roundedLg,
+                    styles.alignCenter,
+                    styles.ml2,
+                    styles.border,
+                    formData.hospitalAffiliation.isAffiliated
+                      ? [styles.bgPrimary600, styles.borderPrimary600]
+                      : [styles.bgWhite, styles.borderGray300],
+                  ]}
+                  onPress={() => updateHospitalAffiliation({
+                    isAffiliated: true,
+                  })}
+                  disabled={loading}
+                >
+                  <Text
+                    style={[
+                      styles.textSm,
+                      styles.fontMedium,
+                      formData.hospitalAffiliation.isAffiliated
+                        ? styles.textWhite
+                        : styles.textGray700,
+                    ]}
+                  >
+                    Hospital Affiliated
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Hospital Details (only if affiliated) */}
+            {formData.hospitalAffiliation.isAffiliated && (
+              <>
+                <View style={[styles.mb4]}>
+                  <Text style={[styles.textSm, styles.fontMedium, styles.textGray700, styles.mb2]}>
+                    Hospital Name *
+                  </Text>
+                  <TextInput
+                    style={[
+                      styles.wFull,
+                      styles.px4,
+                      styles.py3,
+                      styles.borderGray300,
+                      styles.roundedLg,
+                      styles.textBase,
+                      styles.bgWhite,
+                      { borderWidth: 1 },
+                    ]}
+                    placeholder="e.g., City General Hospital"
+                    placeholderTextColor={colors.gray[400]}
+                    value={formData.hospitalAffiliation.hospitalName}
+                    onChangeText={(value) => updateHospitalAffiliation({
+                      hospitalName: value,
+                    })}
+                    editable={!loading}
+                  />
+                </View>
+
+                <View style={[styles.mb4]}>
+                  <Text style={[styles.textSm, styles.fontMedium, styles.textGray700, styles.mb2]}>
+                    Hospital ID *
+                  </Text>
+                  <TextInput
+                    style={[
+                      styles.wFull,
+                      styles.px4,
+                      styles.py3,
+                      styles.borderGray300,
+                      styles.roundedLg,
+                      styles.textBase,
+                      styles.bgWhite,
+                      { borderWidth: 1 },
+                    ]}
+                    placeholder="e.g., CGH001"
+                    placeholderTextColor={colors.gray[400]}
+                    value={formData.hospitalAffiliation.hospitalId}
+                    onChangeText={(value) => updateHospitalAffiliation({
+                      hospitalId: value,
+                    })}
+                    editable={!loading}
+                  />
+                </View>
+
+                <View style={[styles.mb4]}>
+                  <Text style={[styles.textSm, styles.fontMedium, styles.textGray700, styles.mb2]}>
+                    Hospital Address
+                  </Text>
+                  <TextInput
+                    style={[
+                      styles.wFull,
+                      styles.px4,
+                      styles.py3,
+                      styles.borderGray300,
+                      styles.roundedLg,
+                      styles.textBase,
+                      styles.bgWhite,
+                      { borderWidth: 1 },
+                    ]}
+                    placeholder="Hospital address"
+                    placeholderTextColor={colors.gray[400]}
+                    value={formData.hospitalAffiliation.hospitalAddress}
+                    onChangeText={(value) => updateHospitalAffiliation({
+                      hospitalAddress: value,
+                    })}
+                    editable={!loading}
+                    multiline
+                    numberOfLines={2}
+                  />
+                </View>
+
+                <View style={[styles.mb4]}>
+                  <Text style={[styles.textSm, styles.fontMedium, styles.textGray700, styles.mb2]}>
+                    Employee ID *
+                  </Text>
+                  <TextInput
+                    style={[
+                      styles.wFull,
+                      styles.px4,
+                      styles.py3,
+                      styles.borderGray300,
+                      styles.roundedLg,
+                      styles.textBase,
+                      styles.bgWhite,
+                      { borderWidth: 1 },
+                    ]}
+                    placeholder="e.g., EMP789"
+                    placeholderTextColor={colors.gray[400]}
+                    value={formData.hospitalAffiliation.employeeId}
+                    onChangeText={(value) => updateHospitalAffiliation({
+                      employeeId: value,
+                    })}
+                    editable={!loading}
+                  />
+                </View>
+
+                <View style={[styles.p4, styles.bgGray100, styles.roundedLg, styles.mb4]}>
+                  <Text style={[styles.textSm, styles.textGray700, styles.fontMedium]}>
+                    Note: Hospital-affiliated drivers will use their hospital's custom fare structure instead of the platform's standard rates.
+                  </Text>
+                </View>
+              </>
+            )}
           </View>
 
           {/* Submit Button */}

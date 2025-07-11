@@ -5,7 +5,14 @@ import { runOnJS, useAnimatedGestureHandler, useSharedValue, withSpring } from "
 import { colors, styles } from "../../constants/TailwindStyles";
 import { useRiderLogic } from "../../hooks/useRiderLogic";
 import { useRideSearching } from "../../hooks/useRideSearching";
-import { haversineDistance } from "../../utils/distance";
+import { 
+  getRideDurations, 
+  getCachedDirectionData,
+  formatDuration, 
+  formatDistance,
+  getFallbackDistance,
+  LatLng
+} from "../../utils/directions";
 import DriverDrawer from "@/components/driver/DriverDrawer";
 import DriverMap from "@/components/driver/DriverMap";
 import DriverFloatingToggle from "@/components/driver/DriverFloatingToggle";
@@ -82,25 +89,74 @@ export default function DriverMapScreen() {
     },
   });
 
-  const distanceKm =
-    driverLocation && destination
-      ? (
-          haversineDistance(
-            driverLocation.latitude,
-            driverLocation.longitude,
-            destination.latitude,
-            destination.longitude
-          ) / 1000
-        ).toFixed(2)
-      : "0";
-
-  const etaMinutes =
-    driverLocation && destination
-      ? Math.ceil(parseFloat(distanceKm) / 0.666)
-      : 0;
-
-  const fare =
-    driverLocation && destination ? Math.ceil(parseFloat(distanceKm) * 15) : 0;
+  // State for Google Maps API-based distance and ETA
+  const [routeDetails, setRouteDetails] = useState({
+    distanceKm: "0",
+    etaMinutes: 0
+  });
+  
+  // Effect to calculate distance and ETA using Google Maps API
+  useEffect(() => {
+    if (!driverLocation || !destination || !acceptedRide) {
+      setRouteDetails({
+        distanceKm: "0",
+        etaMinutes: 0
+      });
+      return;
+    }
+    
+    // Calculate using fallback method first for immediate display
+    const origin: LatLng = { 
+      latitude: driverLocation.latitude, 
+      longitude: driverLocation.longitude 
+    };
+    
+    const dest: LatLng = {
+      latitude: destination.latitude,
+      longitude: destination.longitude
+    };
+    
+    const fallbackDistance = getFallbackDistance(origin, dest);
+    const fallbackDistanceKm = fallbackDistance.toFixed(2);
+    
+    const fallbackEtaMinutes = Math.ceil(parseFloat(fallbackDistanceKm) / 0.666);
+    
+    setRouteDetails({
+      distanceKm: fallbackDistanceKm,
+      etaMinutes: fallbackEtaMinutes
+    });
+    
+    // Now get accurate distance and ETA from Google Maps API
+    const calculateGoogleMapsDistance = async () => {
+      try {
+        const result = await getRideDurations(
+          origin,
+          acceptedRide.pickup,
+          acceptedRide.drop
+        );
+        
+        // Update with more accurate data
+        setRouteDetails({
+          distanceKm: result.pickupDistance.toFixed(2),
+          etaMinutes: result.toPickup
+        });
+      } catch (error) {
+        console.warn("Error calculating Google Maps distance:", error);
+        // Fallback values already set above
+      }
+    };
+    
+    calculateGoogleMapsDistance();
+  }, [driverLocation, destination, acceptedRide]);
+  
+  // Use the values from state
+  const distanceKm = routeDetails.distanceKm;
+  const etaMinutes = routeDetails.etaMinutes;
+  
+  // Calculate fare based on distance
+  const fare = driverLocation && destination 
+    ? Math.ceil(parseFloat(distanceKm) * 15) 
+    : 0;
   useEffect(() => {
     const initializeLocationTracking = async () => {
       try {

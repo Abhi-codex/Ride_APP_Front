@@ -177,4 +177,4 @@ This guide will be updated as we implement each phase.
 
 
 
-featured hospital, independent driver and hospital registered driver their fare will be calculated diffeently, icu, blu, auto ambulance, bike safety unit, area wise ambulance availability,
+featured hospital, independent driver and hospital registered driver their fare will be calculated diffeently, als, bls, cct, auto ambulance, bike safety unit, area wise ambulance availability,

@@ -23,7 +23,7 @@ import {
 
 export default function RideScreen() {
   // State for ambulance type selection
-  const [ambulanceType, setAmbulanceType] = useState<AmbulanceType>('basicAmbulance');
+  const [ambulanceType, setAmbulanceType] = useState<AmbulanceType>('bls');
   
   // Use hooks for location management
   const { 

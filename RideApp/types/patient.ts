@@ -8,7 +8,7 @@ export type Hospital = {
   photoUrl?: string;
 };
 
-export type AmbulanceType = 'basicAmbulance' | 'advancedAmbulance' | 'icuAmbulance' | 'airAmbulance';
+export type AmbulanceType = 'bls' | 'als' | 'ccs' | 'auto' | 'bike';
 
 export interface AmbulanceOption {
   key: AmbulanceType;

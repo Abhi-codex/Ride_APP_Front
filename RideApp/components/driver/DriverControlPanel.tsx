@@ -15,7 +15,6 @@ interface DriverControlPanelProps {
 }
 
 export default function DriverControlPanel({
-  online,
   distanceKm,
   etaMinutes,
   fare,
@@ -29,7 +28,6 @@ export default function DriverControlPanel({
     let nextStatus: RideStatus;
     let actionText: string;
 
-    // Determine next status based on current status
     if (
       acceptedRide.status === RideStatus.START ||
       (!tripStarted && acceptedRide.status === RideStatus.SEARCHING)
