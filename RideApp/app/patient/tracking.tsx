@@ -218,6 +218,9 @@ export default function TrackingScreen() {
           otp={ride.otp || ''}
           vehicleDetails={ride.rider ? `${ride.rider.vehicle.model} (${ride.rider.vehicle.plateNumber})` : undefined}
           driverName={ride.rider?.name || undefined}
+          emergencyType={getFirstParam(params.emergencyType)}
+          emergencyName={getFirstParam(params.emergencyName)}
+          priority={getFirstParam(params.priority)}
         />
       </View>
     </View>

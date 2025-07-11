@@ -6,6 +6,9 @@ export type Hospital = {
   distance: number;
   rating?: number;
   photoUrl?: string;
+  emergencyServices?: string[];
+  placeId?: string;
+  specialties?: string[];
 };
 
 export type AmbulanceType = 'bls' | 'als' | 'ccs' | 'auto' | 'bike';

@@ -9,19 +9,55 @@ interface HospitalListProps {
   onSelectHospital: (hospital: Hospital) => void;
   selectedHospital: Hospital | null;
   isLoading?: boolean;
+  emergencyContext?: {
+    name: string;
+    priority: string;
+    requiredServices: string[];
+  };
 }
 
 export default function HospitalList({
   hospitals,
   onSelectHospital,
   selectedHospital,
-  isLoading = false
+  isLoading = false,
+  emergencyContext
 }: HospitalListProps) {
   return (
     <View style={[styles.flex1]}>
-      <Text style={[styles.textLg, styles.fontBold, styles.mb3, styles.textGray800]}>
-        Select a Hospital
-      </Text>
+      <View style={[styles.flexRow, styles.alignCenter, styles.justifyBetween, styles.mb3]}>
+        <Text style={[styles.textLg, styles.fontBold, styles.textGray800]}>
+          Select a Hospital
+        </Text>
+        {emergencyContext && (
+          <View style={[
+            styles.px2,
+            styles.py1,
+            styles.roundedMd,
+            { backgroundColor: colors.primary[100] }
+          ]}>
+            <Text style={[styles.textXs, { color: colors.primary[600] }]}>
+              For {emergencyContext.name}
+            </Text>
+          </View>
+        )}
+      </View>
+      
+      {emergencyContext && emergencyContext.requiredServices.length > 0 && (
+        <View style={[
+          styles.mb3,
+          styles.p3,
+          styles.roundedLg,
+          { backgroundColor: colors.medical[50] },
+          styles.border,
+          { borderColor: colors.medical[200] }
+        ]}>
+          <Text style={[styles.textSm, styles.textCenter, { color: colors.medical[700] }]}>
+            Showing hospitals with emergency services for {emergencyContext.name}
+          </Text>
+        </View>
+      )}
+      
       <ScrollView
         style={[styles.flex1]}
         showsVerticalScrollIndicator={true}

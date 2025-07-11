@@ -32,9 +32,10 @@ export default function HomeScreen() {
     <View style={styles.container}>
       <Text style={styles.title}>Select a Service</Text>
 
-      <TouchableOpacity style={styles.card} onPress={() => router.push('/patient/book-ride')}>
+      <TouchableOpacity style={styles.card} onPress={() => router.push('/patient/emergency-selection')}>
         <Text style={styles.emoji}>🚑</Text>
-        <Text style={styles.label}>Ride</Text>
+        <Text style={styles.label}>Emergency Ride</Text>
+        <Text style={styles.sublabel}>Book ambulance for emergency</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.card} onPress={() => router.push('/patient/medicine')}>
@@ -78,6 +79,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: '#333',
+  },
+  sublabel: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 4,
+    textAlign: 'center',
   },
   logout: {
     marginTop: 30,

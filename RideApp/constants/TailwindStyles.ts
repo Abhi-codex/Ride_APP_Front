@@ -358,6 +358,7 @@ export const styles = StyleSheet.create({
   mt4: { marginTop: 16 },
   mt5: { marginTop: 20 },
   mt6: { marginTop: 24 },
+  mt8: { marginTop: 32 },
   mb1: { marginBottom: 4 },
   mb2: { marginBottom: 8 },
   mb25: { marginBottom: 10 },

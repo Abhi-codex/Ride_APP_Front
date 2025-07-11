@@ -48,6 +48,9 @@ interface TripSummaryProps {
   driverName?: string;
   vehicleDetails?: string;
   otp?: string;
+  emergencyType?: string;
+  emergencyName?: string;
+  priority?: string;
 }
 
 export default function TripSummary({
@@ -58,9 +61,23 @@ export default function TripSummary({
   driverName = '',
   vehicleDetails = '',
   otp = '',
+  emergencyType,
+  emergencyName,
+  priority,
 }: TripSummaryProps) {
   const statusInfo = statusMap[status] || statusMap[RideStatus.SEARCHING];
   const estimatedFare = calculateFare(ambulanceType, distance);
+
+  // Get emergency details if available
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'critical': return colors.emergency[500];
+      case 'high': return colors.warning[500];
+      case 'medium': return colors.primary[500];
+      case 'low': return colors.medical[500];
+      default: return colors.gray[500];
+    }
+  };
 
   return (
     <View style={[
@@ -73,6 +90,40 @@ export default function TripSummary({
       <Text style={[styles.textLg, styles.fontBold, styles.mb3, styles.textCenter, styles.textGray800]}>
         🚑 Trip Summary
       </Text>
+      
+      {/* Emergency Information */}
+      {emergencyName && (
+        <View style={[
+          styles.mb4,
+          styles.p3,
+          styles.roundedLg,
+          { backgroundColor: priority ? getPriorityColor(priority) + '10' : colors.gray[50] },
+          styles.border,
+          { borderColor: priority ? getPriorityColor(priority) + '30' : colors.gray[200] }
+        ]}>
+          <View style={[styles.flexRow, styles.alignCenter, styles.justifyBetween]}>
+            <Text style={[styles.textBase, styles.fontSemibold, styles.textGray800]}>
+              Emergency: {emergencyName}
+            </Text>
+            {priority && (
+              <View style={[
+                styles.px2,
+                styles.py1,
+                styles.roundedFull,
+                { backgroundColor: getPriorityColor(priority) + '20' }
+              ]}>
+                <Text style={[
+                  styles.textXs,
+                  styles.fontMedium,
+                  { color: getPriorityColor(priority) }
+                ]}>
+                  {priority.toUpperCase()}
+                </Text>
+              </View>
+            )}
+          </View>
+        </View>
+      )}
       
       <View style={[styles.flexRow, styles.alignCenter, styles.my2]}>
         <Ionicons name={statusInfo.icon as any} size={20} color={statusInfo.color} />

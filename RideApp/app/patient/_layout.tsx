@@ -6,6 +6,7 @@ export default function PatientLayout() {
       <Stack.Screen name="login" options={{ headerShown: false, title: "Patient Login" }} />
       <Stack.Screen name="profile-setup" options={{ headerShown: false, title: "Profile Setup" }} />
       <Stack.Screen name="index" options={{ headerShown: false, title: "Home" }} />
+      <Stack.Screen name="emergency-selection" options={{ headerShown: false, title: "Emergency Selection" }} />
       <Stack.Screen name="book-ride" options={{ headerShown: false, title: "Book Ride" }} />
       <Stack.Screen name="ride" options={{ headerShown: false }} />
       <Stack.Screen name="tracking" options={{ headerShown: false, title: "Track Ride" }} />

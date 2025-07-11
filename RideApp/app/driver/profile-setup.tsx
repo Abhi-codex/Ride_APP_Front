@@ -263,7 +263,7 @@ export default function DriverProfileSetupScreen() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.px5, styles.py6]}>
+        <View style={[styles.px5, styles.mt5, styles.py6]}>
           {/* Header */}
           <View style={[styles.alignCenter, styles.mb6]}>
             <View

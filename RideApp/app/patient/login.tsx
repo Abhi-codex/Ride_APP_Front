@@ -98,11 +98,11 @@ export default function PatientLoginScreen() {
             ]
           );
         } else {
-          // Profile is complete, go to booking
+          // Profile is complete, go to patient home/index
           Alert.alert("Success", "Login successful!", [
             {
               text: "Continue",
-              onPress: () => router.replace("/patient/book-ride"),
+              onPress: () => router.replace("/patient"),
             },
           ]);
         }

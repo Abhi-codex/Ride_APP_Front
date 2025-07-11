@@ -164,7 +164,7 @@ export default function PatientProfileSetupScreen() {
           [
             {
               text: 'Continue',
-              onPress: () => router.replace('/patient/book-ride'),
+              onPress: () => router.replace('/patient'),
             },
           ]
         );
@@ -197,7 +197,7 @@ export default function PatientProfileSetupScreen() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.px5, styles.py6]}>
+        <View style={[styles.px5, styles.mt6, styles.py6]}>
           {/* Header */}
           <View style={[styles.alignCenter, styles.mb6]}>
             <View
@@ -498,7 +498,7 @@ export default function PatientProfileSetupScreen() {
           {/* Skip Button */}
           <TouchableOpacity
             style={[styles.alignCenter, styles.py2]}
-            onPress={() => router.replace('/patient/book-ride')}
+            onPress={() => router.replace('/patient')}
             disabled={loading}
           >
             <Text style={[styles.textSm, styles.textGray600]}>
