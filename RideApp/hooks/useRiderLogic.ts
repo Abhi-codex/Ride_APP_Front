@@ -9,13 +9,8 @@ import {
   ApiResponse, 
   RideResponse 
 } from '../types/rider';
-import { Hospital, AmbulanceType } from '../types/patient';
 import { getServerUrl } from '../utils/network';
-import { useLocationAndHospitals } from './useLocationAndHospitals';
-import { useHospitalSelection } from './useHospitalSelection';
-import { useRideBooking } from './useRideBooking';
 
-// Original driver side logic
 export const useRiderLogic = () => {
   const [routeCoords, setRouteCoords] = useState([]);
   const [destination, setDestination] = useState<{ latitude: number; longitude: number } | null>(null);
@@ -57,11 +52,12 @@ export const useRiderLogic = () => {
       fetchAvailableRides();
       updateOnlineStatus(true);
       
+      // Set up auto-refresh for available rides every 10 seconds
       const interval = setInterval(() => {
         if (online && !acceptedRide) {
           fetchAvailableRides();
         }
-      }, 30000);   //auto refresh every 30 seconds
+      }, 10000);
       
       setRefreshInterval(interval);
       
@@ -113,6 +109,7 @@ export const useRiderLogic = () => {
 
     if (!response.ok) {
       if (response.status === 401) {
+        // Try to refresh token
         await refreshAuthToken();
         throw new Error('Authentication failed');
       }
@@ -423,6 +420,3 @@ export const useRiderLogic = () => {
     }
   };
 };
-
-// Patient side logic - removed duplicate implementation
-// See useRideSearching.ts for the implementation

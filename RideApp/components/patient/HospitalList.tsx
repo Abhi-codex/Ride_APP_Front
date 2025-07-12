@@ -33,9 +33,9 @@ export default function HospitalList({
 }: HospitalListProps) {
   const [sortBy, setSortBy] = useState<SortOption>('capability');
 
-  // Sort hospitals based on selected criteria
   const sortedHospitals = useMemo(() => {
-    const hospitalsCopy = [...hospitals];
+    const openHospitals = hospitals.filter(hospital => hospital.isOpen !== false);
+    const hospitalsCopy = [...openHospitals];
     
     switch (sortBy) {
       case 'capability':
@@ -72,15 +72,13 @@ export default function HospitalList({
         return hospitalsCopy;
     }
   }, [hospitals, sortBy]);
-
-  // Get verification statistics
-  const verifiedCount = hospitals.filter(h => h.isEmergencyVerified).length;
-  const highCapabilityCount = hospitals.filter(h => (h.emergencyCapabilityScore || 0) >= 50).length;
+  const openHospitals = hospitals.filter(hospital => hospital.isOpen !== false);
+  const verifiedCount = openHospitals.filter(h => h.isEmergencyVerified).length;
 
   return (
     <View style={[styles.flex1]}>
       {/* Header with Emergency Context */}
-      <View style={[styles.mb3]}>
+      <View style={[styles.mb2]}>
         <View style={[styles.flexRow, styles.alignCenter, styles.justifyBetween]}>
           <Text style={[styles.textLg, styles.fontBold, styles.textGray800]}>
             Emergency Hospitals
@@ -98,7 +96,7 @@ export default function HospitalList({
         {searchCriteria && (
           <View style={[styles.mb1]}>
             <Text style={[styles.textXs, styles.textGray500, styles.mt1]}>
-              Found {hospitals.length} hospitals • {verifiedCount} verified • {highCapabilityCount} high capability
+              Found {sortedHospitals.length} hospitals • {verifiedCount} verified
             </Text>
           </View>
         )}
@@ -157,8 +155,8 @@ export default function HospitalList({
             <>
             {/* Show recommended hospitals first */}
             {sortedHospitals.filter(h => h.isEmergencyVerified).length > 0 && (
-              <View style={[styles.mb3]}>
-              <Text style={[styles.textSm, styles.fontMedium, { color: colors.medical[600] }, styles.mb2]}>
+              <View style={[styles.mb1]}>
+              <Text style={[styles.textSm, styles.fontMedium, { color: colors.medical[600] }, styles.ml2, styles.mb1]}>
                 Recommended Emergency Hospitals
               </Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} 
@@ -167,7 +165,7 @@ export default function HospitalList({
                 .filter(h => h.isEmergencyVerified)
                 .slice(0, 4)
                 .map(hospital => (
-                  <View key={hospital.id} style={[{ marginRight: 10, width: 300, height: 300 }]}>
+                  <View key={hospital.id} style={[{ marginRight: 10, width: 300, height: 320 }]}>
                   <HospitalCard
                     hospital={hospital}
                     onSelect={onSelectHospital}
@@ -189,7 +187,7 @@ export default function HospitalList({
               <View
                 key={hospital.id}
                 style={[
-                { marginBottom: 10, width: 350, height: 400 },
+                { marginBottom: 12, width: 370 },
                 styles.selfCenter
                 ]}
               >

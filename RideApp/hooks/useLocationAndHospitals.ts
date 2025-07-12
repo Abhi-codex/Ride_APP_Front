@@ -157,7 +157,6 @@ export function useLocationAndHospitals(): LocationState {
               longitude: hospitalLng,
               distance: hospital.distance || getDistance(lat, lon, hospitalLat, hospitalLng),
               rating: hospital.rating,
-              photoUrl: hospital.photoUrl || 'https://via.placeholder.com/80x80?text=H',
               emergencyServices: hospital.emergencyServices || [],
               // Enhanced emergency capability fields
               emergencyCapabilityScore: hospital.emergencyCapabilityScore,
@@ -168,6 +167,7 @@ export function useLocationAndHospitals(): LocationState {
               isOpen: hospital.isOpen,
               priceLevel: hospital.priceLevel,
               placeId: hospital.placeId,
+              photos: hospital.photos || [],
             };
             
             console.log(`Hospital: ${processedHospital.name}, Score: ${processedHospital.emergencyCapabilityScore}, Services:`, processedHospital.emergencyServices);

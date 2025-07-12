@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import { Image, Text, TouchableOpacity, View } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { MaterialCommunityIcons, MaterialIcons, Octicons } from "@expo/vector-icons";
 import { styles, colors } from "../../constants/TailwindStyles";
 import { Hospital } from "../../types/patient";
+import { getServerUrl } from "../../utils/network";
 
 interface HospitalCardProps {
   hospital: Hospital;
@@ -18,11 +19,35 @@ export default function HospitalCard({
   emergencyType 
 }: HospitalCardProps) {
   
+  if (hospital.isOpen === false) {
+    return null;
+  }
+    const [imageError, setImageError] = useState(false);
+  
+  const getPhotoUrl = () => {
+    if (hospital.photos && hospital.photos.length > 0 && hospital.photos[0].photoReference) {
+      const photoReference = hospital.photos[0].photoReference;
+      const baseUrl = getServerUrl();
+      const url = `${baseUrl}/hospitals/photo/${photoReference}?maxwidth=400&maxheight=400`;
+      return url;
+    }
+    
+    // Fallback to photoUrl if it's not a placeholder
+    if (hospital.photoUrl && !hospital.photoUrl.includes('placeholder')) {
+      return hospital.photoUrl;
+    }
+    
+    console.log('No valid photo found - will show icon');
+    return null;
+  };
+  
+  const photoUrl = getPhotoUrl();
+  
   // Emergency verification status
   const getVerificationStatus = () => {
     if (hospital.isEmergencyVerified) {
       return { 
-        icon: "checkmark-circle", 
+        icon: "verified", 
         text: "Verified", 
         color: colors.medical[600],
         iconColor: colors.medical[600]
@@ -30,14 +55,14 @@ export default function HospitalCard({
     } 
     else if (hospital.emergencyCapabilityScore && hospital.emergencyCapabilityScore >= 30) {
       return { 
-        icon: "warning", 
+        icon: "question", 
         text: "Likely", 
         color: colors.warning[600],
         iconColor: colors.warning[600]
       };
     }
     return { 
-      icon: "close-circle", 
+      icon: "circle", 
       text: "Uncertain", 
       color: colors.danger[600],
       iconColor: colors.danger[600]
@@ -49,32 +74,23 @@ export default function HospitalCard({
     if (!score) return colors.gray[400];
     if (score >= 70) return colors.medical[500];
     if (score >= 50) return colors.warning[500];
-    if (score >= 30) return colors.warning[600];
+    if (score >= 30) return colors.warning[800];
     return colors.danger[500];
   };
 
   const verificationStatus = getVerificationStatus();
-  const scoreColor = getScoreColor(hospital.emergencyCapabilityScore);
 
   return (
     <TouchableOpacity
-      style={[
-        styles.bgGray100,
-        styles.roundedLg,
-        styles.p4,
-        styles.mb3,
-        styles.border2,
-        styles.borderGray200,
-        styles.shadowSm,
-        isSelected && [styles.borderPrimary600, { backgroundColor: colors.primary[50] }],
-        hospital.isEmergencyVerified && !isSelected && [styles.borderPrimary200, { backgroundColor: colors.medical[50] }]
-      ]}
-      onPress={() => onSelect(hospital)}
-    >
+      style={[ styles.bgGray100, styles.py2, styles.roundedLg, styles.px3, styles.shadowSm, 
+        isSelected && [{ backgroundColor: colors.primary[50] }],
+        hospital.isEmergencyVerified && !isSelected && [styles.borderPrimary200, 
+        { backgroundColor: colors.medical[50] }]]} onPress={() => onSelect(hospital)}>
+
       {/* Header Row with Name and Verification */}
-      <View style={[styles.flexRow, styles.alignCenter, styles.justifyBetween, styles.mb2]}>
+      <View style={[styles.flexRow, styles.alignStart, styles.justifyBetween, styles.mb2]}>
         <View style={[styles.flex1, styles.mr2]}>
-          <Text style={[styles.textBase, styles.fontBold, styles.textGray800]} numberOfLines={2}>
+          <Text style={[styles.textBase, styles.fontBold, styles.textGray800]} numberOfLines={1}>
             {hospital.name}
           </Text>
           {hospital.recommendation && (
@@ -85,93 +101,72 @@ export default function HospitalCard({
         </View>
         
         {/* Verification Badge */}
-        <View style={[
-          styles.flexRow, 
-          styles.alignCenter, 
-          styles.px2, 
-          styles.py1, 
-          styles.roundedMd,
-          { backgroundColor: colors.gray[100] }
-        ]}>
-          <Ionicons 
+        <View style={[styles.flexRow, styles.alignCenter, styles.py1]}>
+          <Octicons 
             name={verificationStatus.icon as any} 
-            size={12} 
+            size={14} 
             color={verificationStatus.iconColor} 
             style={[styles.mr1]} 
           />
-          <Text style={[styles.textXs, styles.fontMedium, { color: verificationStatus.color }]}>
-            {verificationStatus.text}
-          </Text>
         </View>
       </View>
 
       {/* Hospital Details Row */}
-      <View style={[styles.flexRow, styles.alignCenter, styles.mb2]}>
-        <Image 
-          source={{ uri: hospital.photoUrl }} 
-          style={[styles.w12, styles.h12, styles.roundedFull, styles.mr3]} 
-        />
-        <View style={[styles.flex1]}>
-          <View style={[styles.flexRow, styles.alignCenter]}>
-            <Ionicons name="location-outline" size={14} color={colors.gray[600]} style={[styles.mr1]} />
-            <Text style={[styles.textSm, styles.textGray600]}>
-              {hospital.distance.toFixed(1)} km away
+      <View style={[styles.flexRow, styles.alignCenter, styles.justifyBetween, styles.mb1]}>
+        <View style={[styles.w36, styles.h24, styles.roundedLg, styles.mr3, styles.overflowHidden,
+          styles.alignCenter, styles.justifyCenter, { backgroundColor: colors.medical[100] }]}>
+          {photoUrl && !imageError ? (
+            <Image 
+              source={{ uri: photoUrl }} 
+              style={[styles.w36, styles.h24, styles.roundedLg]}
+              onError={(error) => {
+                console.log('Image loading error:', error.nativeEvent.error);
+                console.log('Failed URL:', photoUrl);
+                setImageError(true);
+              }}
+              onLoad={() => {
+                console.log('Image loaded successfully for:', hospital.name);
+                console.log('Loaded URL:', photoUrl);
+                setImageError(false);
+              }}
+              resizeMode="cover"
+            />
+          ) : (
+            <MaterialCommunityIcons
+              name="hospital-building" 
+              size={32} 
+              color={colors.medical[600]} 
+            />
+          )}
+        </View>
+        <View style={{ width: 125 }}>
+          <View style={[styles.flexRow, styles.py1, styles.px2, styles.rounded3xl, styles.border,
+            styles.alignCenter, styles.borderGray200, styles.mt1, { width: 125 }]}>
+            <Octicons name="location" size={14} color={colors.gray[600]} style={[styles.mr2]} />
+            <Text style={[styles.textXs, styles.textGray600]}>
+              {hospital.distance.toFixed(2)} km away
             </Text>
           </View>
           {hospital.rating && (
-            <View style={[styles.flexRow, styles.alignCenter, styles.mt1]}>
-              <Ionicons name="star" size={14} color={colors.warning[500]} style={[styles.mr1]} />
-              <Text style={[styles.textSm, styles.textWarning500]}>
-                {hospital.rating}/5
+            <View style={[styles.flexRow, styles.py1, styles.px2, styles.rounded3xl, styles.border,
+              styles.alignCenter, styles.borderGray200, styles.mt1, { width: 125 }]}>
+              <Octicons name="feed-star" size={12} color={colors.gray[600]} style={[styles.mr2]} />
+              <Text style={[styles.textXs, styles.textGray600]}>
+                {hospital.rating} out of 5
               </Text>
             </View>
           )}
-          {hospital.isOpen !== undefined && (
-            <View style={[styles.flexRow, styles.alignCenter, styles.mt1]}>
-              <Ionicons 
-                name={hospital.isOpen ? "checkmark-circle" : "close-circle"} 
-                size={12} 
-                color={hospital.isOpen ? colors.medical[600] : colors.danger[600]} 
-                style={[styles.mr1]} 
-              />
-              <Text style={[
-                styles.textXs, 
-                { color: hospital.isOpen ? colors.medical[600] : colors.danger[600] }
-              ]}>
-                {hospital.isOpen ? "Open" : "Closed"}
+          {hospital.emergencyCapabilityScore !== undefined && (
+            <View style={[styles.flexRow, styles.py1, styles.px2, styles.rounded3xl, styles.border,
+              styles.alignCenter, styles.borderGray200, styles.mt1, { width: 125 }]}>
+              <MaterialIcons name="credit-score" size={14} color={colors.gray[600]} style={[styles.mr2]} />
+              <Text style={[styles.textXs, styles.textGray600]}>
+                {hospital.emergencyCapabilityScore} % capability
               </Text>
             </View>
           )}
         </View>
       </View>
-
-      {/* Emergency Capability Score */}
-      {hospital.emergencyCapabilityScore !== undefined && (
-        <View style={[styles.mb2]}>
-          <View style={[styles.flexRow, styles.alignCenter, styles.justifyBetween, styles.mb1]}>
-            <Text style={[styles.textXs, styles.textGray600]}>Emergency Capability</Text>
-            <Text style={[styles.textXs, styles.fontBold, { color: scoreColor }]}>
-              {hospital.emergencyCapabilityScore}/100
-            </Text>
-          </View>
-          {/* Progress Bar */}
-          <View style={[
-            styles.h1, 
-            styles.bgGray200, 
-            styles.roundedFull, 
-            styles.overflowHidden
-          ]}>
-            <View style={[
-              styles.h1,
-              styles.roundedFull,
-              {
-                backgroundColor: scoreColor,
-                width: `${hospital.emergencyCapabilityScore}%`
-              }
-            ]} />
-          </View>
-        </View>
-      )}
 
       {/* Emergency Features */}
       {hospital.emergencyFeatures && hospital.emergencyFeatures.length > 0 && (
@@ -179,17 +174,8 @@ export default function HospitalCard({
           <Text style={[styles.textXs, styles.textGray600, styles.mb1]}>Emergency Features:</Text>
           <View style={[styles.flexRow, styles.flexWrap]}>
             {hospital.emergencyFeatures.slice(0, 3).map((feature, index) => (
-              <View
-                key={index}
-                style={[
-                  styles.px2,
-                  styles.py1,
-                  styles.mr1,
-                  styles.mb1,
-                  styles.roundedMd,
-                  { backgroundColor: colors.secondary[100] }
-                ]}
-              >
+              <View key={index} style={[styles.px1, styles.py1, styles.mr1, styles.mb1,
+                  styles.roundedMd, { backgroundColor: colors.secondary[100] }]}>
                 <Text style={[styles.textXs, { color: colors.secondary[700] }]}>
                   {feature}
                 </Text>
@@ -210,17 +196,8 @@ export default function HospitalCard({
           <Text style={[styles.textXs, styles.textGray600, styles.mb1]}>Available Services:</Text>
           <View style={[styles.flexRow, styles.flexWrap]}>
             {hospital.emergencyServices.slice(0, 4).map((service, index) => (
-              <View
-                key={index}
-                style={[
-                  styles.px2,
-                  styles.py1,
-                  styles.mr1,
-                  styles.mb1,
-                  styles.roundedMd,
-                  { backgroundColor: colors.medical[100] }
-                ]}
-              >
+              <View key={index} style={[styles.px2, styles.py1, styles.mr1, styles.mb1,
+                  styles.roundedMd, { backgroundColor: colors.medical[100] }]}>
                 <Text style={[styles.textXs, { color: colors.medical[700] }]}>
                   {service.replace(/_/g, ' ')}
                 </Text>
@@ -229,36 +206,6 @@ export default function HospitalCard({
           </View>
         </View>
       )}
-
-      {/* Selection Button */}
-      <View style={[styles.alignCenter, styles.justifyCenter, styles.mt2]}>
-        <View style={[
-          styles.px4,
-          styles.py2,
-          styles.roundedMd,
-          styles.flexRow,
-          styles.alignCenter,
-          isSelected 
-            ? { backgroundColor: colors.primary[600] }
-            : { backgroundColor: colors.primary[100] }
-        ]}>
-          {isSelected && (
-            <Ionicons 
-              name="checkmark" 
-              size={16} 
-              color={colors.white} 
-              style={[styles.mr1]} 
-            />
-          )}
-          <Text style={[
-            styles.fontMedium, 
-            styles.textSm,
-            { color: isSelected ? colors.white : colors.primary[600] }
-          ]}>
-            {isSelected ? "Selected" : "Select Hospital"}
-          </Text>
-        </View>
-      </View>
     </TouchableOpacity>
   );
 }

@@ -9,7 +9,6 @@ export type Hospital = {
   emergencyServices?: string[];
   placeId?: string;
   specialties?: string[];
-  // Enhanced emergency capability fields
   emergencyCapabilityScore?: number;
   emergencyFeatures?: string[];
   isEmergencyVerified?: boolean;
@@ -17,6 +16,11 @@ export type Hospital = {
   address?: string;
   isOpen?: boolean;
   priceLevel?: number;
+  photos?: Array<{
+    photoReference: string;
+    width: number;
+    height: number;
+  }>;
 };
 
 export type AmbulanceType = 'bls' | 'als' | 'ccs' | 'auto' | 'bike';

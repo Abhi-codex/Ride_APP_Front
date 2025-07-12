@@ -205,6 +205,7 @@ export const styles = StyleSheet.create({
   w24: { width: 96 },
   w28: { width: 112 },
   w32: { width: 128 },
+  w36: { width: 144 },
   w40: { width: 160 },
   w48: { width: 192 },
   w64: { width: 256 },

@@ -40,7 +40,7 @@ export const EMERGENCY_TYPES: EmergencyType[] = [
     category: 'cardiac',
     name: 'Heart Attack',
     description: 'Chest pain, shortness of breath, suspected myocardial infarction',
-    icon: '🫀',
+    icon: '💓',
     requiredAmbulanceTypes: ['als', 'ccs'],
     requiredHospitalServices: ['emergency_room', 'cardiology', 'cardiac_catheterization'],
     priority: 'critical',
