@@ -1,21 +1,18 @@
 import React, { useEffect } from 'react';
 import { View, Text } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { MaterialCommunityIcons, MaterialIcons, Octicons } from '@expo/vector-icons';
 import { styles, colors } from '../../constants/TailwindStyles';
 import { formatDuration, formatDistance } from '../../utils/directions';
 import { RideStatus } from '../../types/rider';
 
-// Mapping of status codes to user-friendly text and colors
 const statusMap = {
-  [RideStatus.SEARCHING]: { text: 'Finding Driver', color: colors.warning[500], icon: 'search-outline' },
-  [RideStatus.START]: { text: 'En Route', color: colors.emergency[500], icon: 'car-outline' },
-  [RideStatus.ARRIVED]: { text: 'Arrived', color: colors.primary[600], icon: 'checkmark-circle-outline' },
-  [RideStatus.COMPLETED]: { text: 'Completed', color: colors.medical[500], icon: 'flag-outline' },
+  [RideStatus.SEARCHING]: { text: 'Finding Driver', color: colors.warning[500], icon: 'search' },
+  [RideStatus.START]: { text: 'En Route', color: colors.emergency[500], icon: 'rocket' },
+  [RideStatus.ARRIVED]: { text: 'Arrived', color: colors.primary[600], icon: 'verified' },
+  [RideStatus.COMPLETED]: { text: 'Completed', color: colors.medical[500], icon: 'check' },
 };
 
-// Calculate fare based on ambulance type and distance
 const calculateFare = (ambulanceType: string, distanceKm: number): number => {
-  // Base rates per km for different ambulance types (new system)
   const ratePerKm = {
     bls: 15,    // Basic Life Support
     als: 20,    // Advanced Life Support
@@ -81,35 +78,31 @@ export default function TripSummary({
 
   return (
     <View style={[
-      styles.p5,
-      styles.bgWhite,
-      styles.roundedTl3xl,
-      styles.roundedTr3xl,
-      styles.shadowXl,
+      styles.bgGray100, 
+      styles.py2, 
+      styles.roundedLg, 
+      styles.px3, 
+      styles.shadowSm,
     ]}>
       <Text style={[styles.textLg, styles.fontBold, styles.mb3, styles.textCenter, styles.textGray800]}>
-        🚑 Trip Summary
+        Trip Summary
       </Text>
       
       {/* Emergency Information */}
       {emergencyName && (
-        <View style={[
-          styles.mb4,
-          styles.p3,
-          styles.roundedLg,
-          { backgroundColor: priority ? getPriorityColor(priority) + '10' : colors.gray[50] },
-          styles.border,
-          { borderColor: priority ? getPriorityColor(priority) + '30' : colors.gray[200] }
-        ]}>
-          <View style={[styles.flexRow, styles.alignCenter, styles.justifyBetween]}>
-            <Text style={[styles.textBase, styles.fontSemibold, styles.textGray800]}>
+        <View style={[styles.mb2]}>
+          <View style={[styles.flexRow, styles.py1, styles.px2, styles.rounded3xl, styles.border,
+            styles.alignCenter, styles.borderGray200, styles.mt1]}>
+            <MaterialCommunityIcons name="alert-circle" size={14} color={colors.gray[600]} style={[styles.mr2]} />
+            <Text style={[styles.textXs, styles.textGray600]}>
               Emergency: {emergencyName}
             </Text>
             {priority && (
               <View style={[
                 styles.px2,
                 styles.py1,
-                styles.roundedFull,
+                styles.roundedMd,
+                styles.ml2,
                 { backgroundColor: getPriorityColor(priority) + '20' }
               ]}>
                 <Text style={[
@@ -125,79 +118,65 @@ export default function TripSummary({
         </View>
       )}
       
-      <View style={[styles.flexRow, styles.alignCenter, styles.my2]}>
-        <Ionicons name={statusInfo.icon as any} size={20} color={statusInfo.color} />
-        <Text style={[styles.ml3, styles.textBase, styles.textGray700]}>
-          Status: 
-        </Text>
-        <Text style={[styles.textBase, styles.fontBold, { color: statusInfo.color }]}>
-          {statusInfo.text}
+      <View style={[styles.flexRow, styles.py1, styles.px2, styles.rounded3xl, styles.border,
+        styles.alignCenter, styles.borderGray200, styles.mt1]}>
+        <Octicons name={statusInfo.icon as any} size={14} color={statusInfo.color} style={[styles.mr2]} />
+        <Text style={[styles.textXs, styles.textGray600]}>
+          Status: {statusInfo.text}
         </Text>
       </View>
       
       {driverName && (
-        <View style={[styles.flexRow, styles.alignCenter, styles.my2]}>
-          <Ionicons name="person" size={20} color={colors.gray[600]} />
-          <Text style={[styles.ml3, styles.textBase, styles.textGray700]}>
-            Driver: 
-          </Text>
-          <Text style={[styles.textBase, styles.fontBold, styles.textGray800]}>
-            {driverName}
+        <View style={[styles.flexRow, styles.py1, styles.px2, styles.rounded3xl, styles.border,
+          styles.alignCenter, styles.borderGray200, styles.mt1]}>
+          <Octicons name="person" size={14} color={colors.gray[600]} style={[styles.mr2]} />
+          <Text style={[styles.textXs, styles.textGray600]}>
+            Driver: {driverName}
           </Text>
         </View>
       )}
       
       {vehicleDetails && (
-        <View style={[styles.flexRow, styles.alignCenter, styles.my2]}>
-          <Ionicons name="car" size={20} color={colors.gray[600]} />
-          <Text style={[styles.ml3, styles.textBase, styles.textGray700]}>
-            Vehicle: 
-          </Text>
-          <Text style={[styles.textBase, styles.fontBold, styles.textGray800]}>
-            {vehicleDetails}
+        <View style={[styles.flexRow, styles.py1, styles.px2, styles.rounded3xl, styles.border,
+          styles.alignCenter, styles.borderGray200, styles.mt1]}>
+          <MaterialCommunityIcons name="car-emergency" size={14} color={colors.gray[600]} style={[styles.mr2]} />
+          <Text style={[styles.textXs, styles.textGray600]}>
+            Vehicle: {vehicleDetails}
           </Text>
         </View>
       )}
       
       {otp && (
-        <View style={[styles.flexRow, styles.alignCenter, styles.my2]}>
-          <Ionicons name="key" size={20} color={colors.warning[500]} />
-          <Text style={[styles.ml3, styles.textBase, styles.textGray700]}>
-            OTP: 
-          </Text>
-          <Text style={[styles.textBase, styles.fontBold, styles.textEmergency500]}>
-            {otp}
+        <View style={[styles.flexRow, styles.py1, styles.px2, styles.rounded3xl, styles.border,
+          styles.alignCenter, styles.borderGray200, styles.mt1]}>
+          <MaterialIcons name="vpn-key" size={14} color={colors.warning[500]} style={[styles.mr2]} />
+          <Text style={[styles.textXs, styles.textGray600]}>
+            OTP: <Text style={[styles.fontBold, { color: colors.warning[500] }]}>{otp}</Text>
           </Text>
         </View>
       )}
       
-      <View style={[styles.flexRow, styles.alignCenter, styles.my2]}>
-        <Ionicons name="time-outline" size={20} color={colors.gray[600]} />
-        <Text style={[styles.ml3, styles.textBase, styles.textGray700]}>
-          ETA: 
-        </Text>
-        <Text style={[styles.textBase, styles.fontBold, styles.textPrimary600]}>
-          {formatDuration(duration)}
+      <View style={[styles.flexRow, styles.py1, styles.px2, styles.rounded3xl, styles.border,
+        styles.alignCenter, styles.borderGray200, styles.mt1]}>
+        <Octicons name="clock" size={14} color={colors.gray[600]} style={[styles.mr2]} />
+        <Text style={[styles.textXs, styles.textGray600]}>
+          ETA: {formatDuration(duration)}
         </Text>
       </View>
       
-      <View style={[styles.flexRow, styles.alignCenter, styles.my2]}>
-        <Ionicons name="map-outline" size={20} color={colors.gray[600]} />
-        <Text style={[styles.ml3, styles.textBase, styles.textGray700]}>
-          Distance: 
-        </Text>
-        <Text style={[styles.textBase, styles.fontBold, styles.textPrimary600]}>
-          {formatDistance(distance)}
+      <View style={[styles.flexRow, styles.py1, styles.px2, styles.rounded3xl, styles.border,
+        styles.alignCenter, styles.borderGray200, styles.mt1]}>
+        <Octicons name="location" size={14} color={colors.gray[600]} style={[styles.mr2]} />
+        <Text style={[styles.textXs, styles.textGray600]}>
+          Distance: {formatDistance(distance)}
         </Text>
       </View>
       
-      <View style={[styles.flexRow, styles.alignCenter, styles.my2]}>
-        <Ionicons name="cash-outline" size={20} color={colors.gray[600]} />
-        <Text style={[styles.ml3, styles.textBase, styles.textGray700]}>
-          Estimated Fare: 
-        </Text>
-        <Text style={[styles.textBase, styles.fontBold, styles.textPrimary600]}>
-          ₹{estimatedFare}
+      <View style={[styles.flexRow, styles.py1, styles.px2, styles.rounded3xl, styles.border,
+        styles.alignCenter, styles.borderGray200, styles.mt1]}>
+        <MaterialIcons name="attach-money" size={14} color={colors.gray[600]} style={[styles.mr2]} />
+        <Text style={[styles.textXs, styles.textGray600]}>
+          Estimated Fare: ₹{estimatedFare}
         </Text>
       </View>
     </View>

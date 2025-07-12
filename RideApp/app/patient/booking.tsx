@@ -246,6 +246,7 @@ export default function RideScreen() {
           hospitals={hospitals}
           selectedHospital={selectedHospital}
           routeCoords={routeCoords}
+          onHospitalSelect={handleSelectHospital}
         />
       </View>
 

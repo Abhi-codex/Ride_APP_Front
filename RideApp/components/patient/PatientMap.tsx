@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { View } from "react-native";
 import { MapViewWrapper as Map, MarkerWrapper as Marker, PolylineWrapper as Polyline } from "../MapView";
 import { styles, colors } from "../../constants/TailwindStyles";
@@ -9,6 +9,7 @@ interface PatientMapProps {
   hospitals: Hospital[];
   selectedHospital: Hospital | null;
   routeCoords: Array<{ latitude: number; longitude: number }>;
+  onHospitalSelect?: (hospital: Hospital) => void;
 }
 
 export default function PatientMap({
@@ -16,10 +17,39 @@ export default function PatientMap({
   hospitals,
   selectedHospital,
   routeCoords,
+  onHospitalSelect,
 }: PatientMapProps) {
+  const [clickedHospital, setClickedHospital] = useState<Hospital | null>(null);
+
+  React.useEffect(() => {
+    if (selectedHospital) {
+      setClickedHospital(null);
+    }
+  }, [selectedHospital]);
+
   if (!currentLocation) {
     return null;
   }
+
+  const handleMarkerPress = (hospital: Hospital) => {
+    if (selectedHospital) return;
+    
+    if (clickedHospital?.id === hospital.id) {
+      if (onHospitalSelect) {
+        onHospitalSelect(hospital);
+      }
+      setClickedHospital(null);
+    } else {
+      setClickedHospital(hospital);
+    }
+  };
+
+  const handleCalloutPress = (hospital: Hospital) => {
+    if (onHospitalSelect) {
+      onHospitalSelect(hospital);
+    }
+    setClickedHospital(null);
+  };
 
   return (
     <View style={[styles.flex1]}>
@@ -27,16 +57,22 @@ export default function PatientMap({
         style={[styles.wFull, styles.hFull]}
         showsUserLocation={true}
         region={currentLocation}
+        onPress={() => setClickedHospital(null)} 
       >
-        {hospitals.map((hospital) => (
+        {!selectedHospital && hospitals.map((hospital) => (
           <Marker
             key={hospital.id}
             coordinate={{
               latitude: hospital.latitude,
               longitude: hospital.longitude,
             }}
-            title={hospital.name}
-            pinColor={selectedHospital?.id === hospital.id ? colors.primary[600] : colors.danger[500]}
+            title={clickedHospital?.id === hospital.id ? 
+              `${hospital.name}\n${hospital.distance.toFixed(1)} km away • Rating: ${hospital.rating || 'N/A'}\nTap to select this hospital` : 
+              hospital.name
+            }
+            pinColor={clickedHospital?.id === hospital.id ? colors.primary[600] : colors.danger[500]}
+            onPress={() => handleMarkerPress(hospital)}
+            onCalloutPress={() => handleCalloutPress(hospital)}
           />
         ))}
         

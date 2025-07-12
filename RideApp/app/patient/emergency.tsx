@@ -152,7 +152,7 @@ export default function EmergencySelectionScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.flex1, styles.bgGray50]}>
+    <SafeAreaView style={[styles.flex1, styles.mt8, styles.bgGray50]}>
       {/* Header */}
       <View style={[styles.px5, styles.py4, styles.bgWhite]}>
         <View style={[styles.flexRow, styles.alignCenter, styles.mb4]}>

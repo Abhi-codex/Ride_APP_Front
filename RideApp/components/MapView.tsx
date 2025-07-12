@@ -30,6 +30,7 @@ interface MapViewWrapperProps {
   };
   showsUserLocation?: boolean;
   children?: React.ReactNode;
+  onPress?: () => void;
 }
 
 interface MarkerProps {
@@ -39,6 +40,8 @@ interface MarkerProps {
   };
   title?: string;
   pinColor?: string;
+  onPress?: () => void;
+  onCalloutPress?: () => void;
 }
 
 interface PolylineProps {
@@ -50,17 +53,20 @@ interface PolylineProps {
   strokeWidth?: number;
 }
 
-const WebMapFallback: React.FC<MapViewWrapperProps> = ({ style, region, children }) => (
-  <View style={[
-    style, 
-    tailwindStyles.bgGray100,
-    tailwindStyles.justifyCenter,
-    tailwindStyles.alignCenter,
-    tailwindStyles.border2,
-    tailwindStyles.borderGray300,
-    tailwindStyles.roundedLg,
-    tailwindStyles.p4
-  ]}>
+const WebMapFallback: React.FC<MapViewWrapperProps> = ({ style, region, children, onPress }) => (
+  <View 
+    style={[
+      style, 
+      tailwindStyles.bgGray100,
+      tailwindStyles.justifyCenter,
+      tailwindStyles.alignCenter,
+      tailwindStyles.border2,
+      tailwindStyles.borderGray300,
+      tailwindStyles.roundedLg,
+      tailwindStyles.p4
+    ]}
+    onTouchEnd={onPress}
+  >
     <Text style={[
       tailwindStyles.textBase,
       tailwindStyles.textGray600,
@@ -78,20 +84,26 @@ const WebMapFallback: React.FC<MapViewWrapperProps> = ({ style, region, children
   </View>
 );
 
-const WebMarkerFallback: React.FC<MarkerProps> = ({ coordinate, title, pinColor }) => (
-  <View style={[
-    tailwindStyles.absolute,
-    tailwindStyles.p2,
-    tailwindStyles.roundedLg,
-    tailwindStyles.m1,
-    { backgroundColor: pinColor || colors.danger[500], maxWidth: 200 }
-  ]}>
-    <Text style={[
-      tailwindStyles.textWhite,
-      tailwindStyles.textXs,
-      tailwindStyles.fontBold,
-      tailwindStyles.textCenter
-    ]}>
+const WebMarkerFallback: React.FC<MarkerProps> = ({ coordinate, title, pinColor, onPress, onCalloutPress }) => (
+  <View 
+    style={[
+      tailwindStyles.absolute,
+      tailwindStyles.p2,
+      tailwindStyles.roundedLg,
+      tailwindStyles.m1,
+      { backgroundColor: pinColor || colors.danger[500], maxWidth: 200 }
+    ]}
+    onTouchEnd={onPress}
+  >
+    <Text 
+      style={[
+        tailwindStyles.textWhite,
+        tailwindStyles.textXs,
+        tailwindStyles.fontBold,
+        tailwindStyles.textCenter
+      ]}
+      onPress={onCalloutPress}
+    >
       📍 {title || 'Marker'}
     </Text>
     <Text style={[
@@ -154,6 +166,7 @@ export const MapViewWrapper: React.FC<MapViewWrapperProps> = (props) => {
       loadingEnabled={true}
       loadingIndicatorColor={colors.primary[600]}
       loadingBackgroundColor={colors.gray[100]}
+      onPress={props.onPress}
     >
       {props.children}
     </MapView>
@@ -170,6 +183,8 @@ export const MarkerWrapper: React.FC<MarkerProps> = (props) => {
       coordinate={props.coordinate}
       title={props.title}
       pinColor={props.pinColor || colors.primary[600]}
+      onPress={props.onPress}
+      onCalloutPress={props.onCalloutPress}
     />
   );
 };

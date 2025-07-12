@@ -29,4 +29,5 @@ export interface AmbulanceOption {
   key: AmbulanceType;
   label: string;
   desc: string;
+  icon: string;
 }

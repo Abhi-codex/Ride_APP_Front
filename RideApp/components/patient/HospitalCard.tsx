@@ -174,7 +174,7 @@ export default function HospitalCard({
           <Text style={[styles.textXs, styles.textGray600, styles.mb1]}>Emergency Features:</Text>
           <View style={[styles.flexRow, styles.flexWrap]}>
             {hospital.emergencyFeatures.slice(0, 3).map((feature, index) => (
-              <View key={index} style={[styles.px1, styles.py1, styles.mr1, styles.mb1,
+              <View key={index} style={[styles.px2, styles.py1, styles.mr1, styles.mb1,
                   styles.roundedMd, { backgroundColor: colors.secondary[100] }]}>
                 <Text style={[styles.textXs, { color: colors.secondary[700] }]}>
                   {feature}

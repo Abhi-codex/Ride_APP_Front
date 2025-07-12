@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
+import { MaterialCommunityIcons, MaterialIcons, Octicons } from "@expo/vector-icons";
 import { styles, colors } from "../../constants/TailwindStyles";
 import { AmbulanceOption, AmbulanceType } from "../../types/patient";
 
@@ -14,11 +15,11 @@ interface AmbulanceTypeSelectorProps {
 }
 
 const ALL_AMBULANCE_TYPES: AmbulanceOption[] = [
-  { key: 'bls', label: 'BLS', desc: 'Basic Life Support - Oxygen, CPR, First Aid' },
-  { key: 'als', label: 'ALS', desc: 'Advanced Life Support - Cardiac Monitor, Defibrillator' },
-  { key: 'ccs', label: 'CCS', desc: 'Critical Care Support - Ventilator, Advanced Monitoring' },
-  { key: 'auto', label: 'Auto', desc: 'Compact Urban Unit - Quick Response in Traffic' },
-  { key: 'bike', label: 'Bike', desc: 'Emergency Response Motorcycle - Fastest Access' },
+  { key: 'bls', label: 'Basic Life Support', desc: 'BLS - Oxygen, CPR, First Aid', icon: 'medical-bag' },
+  { key: 'als', label: 'Advanced Life Support', desc: 'ALS - Cardiac Monitor, Defibrillator', icon: 'heart-pulse' },
+  { key: 'ccs', label: 'Critical Care Support', desc: 'CCS - Ventilator, Advanced Monitoring', icon: 'hospital' },
+  { key: 'auto', label: 'Compact Urban Unit', desc: 'Auto - Quick Response in Traffic', icon: 'car-emergency' },
+  { key: 'bike', label: 'Emergency Response Motorcycle', desc: 'Bike - Fastest Access', icon: 'motorbike' },
 ];
 
 export default function AmbulanceTypeSelector({
@@ -50,13 +51,10 @@ export default function AmbulanceTypeSelector({
           Select Ambulance Type
         </Text>
         {emergencyContext && (
-          <View style={[
-            styles.px2,
-            styles.py1,
-            styles.roundedMd,
-            { backgroundColor: colors.primary[100] }
-          ]}>
-            <Text style={[styles.textXs, { color: colors.primary[600] }]}>
+          <View style={[styles.flexRow, styles.py1, styles.px2, styles.rounded3xl, styles.border,
+            styles.alignCenter, styles.borderGray200]}>
+            <MaterialCommunityIcons name="alert-circle" size={14} color={colors.primary[600]} style={[styles.mr2]} />
+            <Text style={[styles.textXs, styles.textGray600]}>
               For {emergencyContext.name}
             </Text>
           </View>
@@ -71,65 +69,52 @@ export default function AmbulanceTypeSelector({
           {row.map((type: AmbulanceOption) => (
             <TouchableOpacity
               key={type.key}
-              style={[
-                styles.flex1,
-                styles.py4,
-                styles.px3,
-                styles.roundedLg,
-                styles.alignCenter,
-                styles.mx1,
-                styles.border2,
-                selectedType === type.key
-                  ? [{ backgroundColor: colors.primary[600] }, styles.borderPrimary600]
-                  : [styles.bgGray100, styles.borderGray200],
+              style={[styles.flex1, styles.py1, styles.px2, styles.roundedLg, styles.mx1,
+                styles.shadowSm, selectedType === type.key
+                  ? [{ backgroundColor: colors.primary[200] }, styles.borderPrimary300]
+                  : [styles.bgGray100, styles.borderGray300],
               ]}
               onPress={() => onSelectType(type.key)}
             >
-              <Text
-                style={[
-                  styles.textSm,
-                  styles.fontBold,
-                  selectedType === type.key
-                    ? styles.textWhite
-                    : styles.textGray700,
-                ]}
-              >
-                {type.label}
-              </Text>
-              <Text
-                style={[
-                  styles.textXs,
-                  styles.textCenter,
-                  styles.mt1,
-                  selectedType === type.key
-                    ? { color: colors.gray[200] }
-                    : styles.textGray500,
-                ]}
-              >
-                {type.desc}
-              </Text>
+              {/* Header Row with Icon and Name */}
+              <View style={[styles.flexRow, styles.alignCenter, styles.justifyBetween]}>
+                <View style={[styles.flex1, styles.mr2]}>
+                  <Text style={[styles.textXs, styles.fontBold, styles.textGray800]} numberOfLines={1}>
+                    {type.label}
+                  </Text>
+                </View>
+                
+                {/* Ambulance Icon */}
+                <View style={[styles.flexRow, styles.alignCenter, styles.py1]}>
+                  <MaterialCommunityIcons 
+                    name={type.icon as any} 
+                    size={18} 
+                    color={selectedType === type.key ? colors.primary[600] : colors.gray[600]} 
+                    style={[styles.mr1]} 
+                  />
+                </View>
+              </View>
+
+              {/* Description */}
+              <View style={[styles.mt1]}>
+                <Text style={[styles.textSm, styles.textGray600]} numberOfLines={2}>
+                  {type.desc}
+                </Text>
+              </View>
             </TouchableOpacity>
           ))}
-          
-          {/* Add empty space if row has only one item */}
-          {row.length === 1 && (
-            <View style={[styles.flex1, styles.mx1]} />
-          )}
         </View>
       ))}
       
       {availableTypes && availableTypes.length < ALL_AMBULANCE_TYPES.length && (
-        <View style={[
-          styles.mt3,
-          styles.p3,
-          styles.roundedLg,
-          { backgroundColor: colors.warning[50] },
-          styles.border,
-          { borderColor: colors.warning[200] }
-        ]}>
-          <Text style={[styles.textSm, styles.textCenter, { color: colors.warning[700] }]}>
-            Only suitable ambulance types are shown for this emergency
-          </Text>
+        <View style={[styles.mb2, styles.mt3]}>
+          <View style={[styles.flexRow, styles.py1, styles.px2, styles.rounded3xl, styles.border,
+            styles.alignCenter, styles.borderGray200]}>
+            <MaterialCommunityIcons name="information" size={14} color={colors.warning[600]} style={[styles.mr2]} />
+            <Text style={[styles.textXs, styles.textGray600]}>
+              Only suitable ambulance types are shown for this emergency
+            </Text>
+          </View>
         </View>
       )}
     </View>

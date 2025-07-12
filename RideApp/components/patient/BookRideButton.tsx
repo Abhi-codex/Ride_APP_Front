@@ -13,15 +13,15 @@ interface BookRideButtonProps {
 export default function BookRideButton({
   onPress,
   isLoading,
-  selectedHospital,
   disabled = false,
 }: BookRideButtonProps) {
   return (
     <TouchableOpacity
       style={[
         styles.py4,
+        styles.justifyBetween,
         styles.alignCenter,
-        styles.roundedLg,
+        styles.rounded3xl,
         styles.shadowMd,
         { backgroundColor: colors.primary[600] },
         disabled && { opacity: 0.7 }
@@ -35,9 +35,6 @@ export default function BookRideButton({
         <View style={[styles.alignCenter]}>
           <Text style={[styles.textWhite, styles.textLg, styles.fontBold]}>
             Book Ambulance
-          </Text>
-          <Text style={[styles.textWhite, styles.textSm, styles.mt1, styles.opacity75]}>
-            to {selectedHospital.name}
           </Text>
         </View>
       )}
