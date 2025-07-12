@@ -91,7 +91,7 @@ export default function DriverLoginScreen() {
             [
               {
                 text: "Complete Profile",
-                onPress: () => router.replace("/driver/profile-setup" as any),
+                onPress: () => router.replace("/driver/profile" as any),
               },
             ]
           );
@@ -121,10 +121,7 @@ export default function DriverLoginScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={[styles.flex1]}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
+    <KeyboardAvoidingView style={[styles.flex1]} behavior={Platform.OS === "ios" ? "padding" : "height"}>
       <ScrollView
         style={[styles.flex1, { backgroundColor: colors.gray[50] }]}
         contentContainerStyle={[styles.flexGrow, styles.justifyCenter]}
@@ -133,37 +130,17 @@ export default function DriverLoginScreen() {
         <View style={[styles.px5, styles.py6]}>
           {/* Header */}
           <View style={[styles.alignCenter, styles.mb6]}>
-            <View
-              style={{
-                backgroundColor: colors.emergency[500],
-                width: 80,
-                height: 80,
-                borderRadius: 40,
-                alignItems: "center",
-                justifyContent: "center",
-                marginBottom: 20,
-              }}
-            >
-              <Text style={{ fontSize: 40, color: colors.white }}>🚑</Text>
+            <View style={{backgroundColor: colors.emergency[500], width: 80, height: 80, borderRadius: 40,
+                alignItems: "center", justifyContent: "center", marginBottom: 20,}}>
+              <Text style={{ fontSize: 40, color: colors.white }}>
+                🚑
+              </Text>
             </View>
-            <Text
-              style={[
-                styles.text3xl,
-                styles.fontBold,
-                styles.textGray900,
-                styles.textCenter,
-              ]}
-            >
+            <Text style={[styles.text3xl, styles.fontBold, styles.textGray900, styles.textCenter]}>
               Driver Portal
             </Text>
-            <Text
-              style={[
-                styles.textBase,
-                styles.textGray600,
-                styles.textCenter,
-                styles.mt2,
-              ]}
-            >
+
+            <Text style={[styles.textBase, styles.textGray600, styles.textCenter, styles.mt2]}>
               Login to start accepting emergency calls
             </Text>
           </View>
@@ -177,36 +154,15 @@ export default function DriverLoginScreen() {
             {/* Phone Number Boxes */}
             <View style={[styles.flexRow, styles.justifyCenter, { gap: 6 }]}>
               {phoneDigits.map((digit, index) => (
-                <TextInput
-                  key={index}
-                  ref={(ref) => {
-                    inputRefs.current[index] = ref;
-                  }}
-                  style={[
-                    {
-                      width: 32,
-                      height: 40,
-                      borderWidth: 1,
-                      borderColor: digit
-                        ? colors.emergency[500]
-                        : colors.gray[300],
-                      borderRadius: 8,
-                      textAlign: "center",
-                      fontSize: 16,
-                      fontWeight: "600",
-                      backgroundColor: colors.white,
-                      color: colors.gray[900],
-                    },
-                    digit && {
-                      borderColor: colors.emergency[500],
-                      backgroundColor: colors.emergency[50],
-                    },
-                  ]}
+                <TextInput key={index} ref={(ref) => { inputRefs.current[index] = ref; }}
+                  style={[ {width: 32, height: 40, borderWidth: 1, 
+                            borderColor: digit ? colors.emergency[500] : colors.gray[300],
+                            borderRadius: 8, textAlign: "center", fontSize: 16, fontWeight: "600",
+                            backgroundColor: colors.white, color: colors.gray[900] },
+                            digit && { borderColor: colors.emergency[500], backgroundColor: colors.emergency[50]}]}
                   value={digit}
                   onChangeText={(value) => handleDigitChange(index, value)}
-                  onKeyPress={({ nativeEvent }) =>
-                    handleKeyPress(index, nativeEvent.key)
-                  }
+                  onKeyPress={({ nativeEvent }) => handleKeyPress(index, nativeEvent.key)}
                   keyboardType="numeric"
                   maxLength={1}
                   autoComplete="off"
@@ -219,22 +175,10 @@ export default function DriverLoginScreen() {
 
           {/* Login Button */}
           <TouchableOpacity
-            style={[
-              styles.wFull,
-              styles.py4,
-              styles.alignCenter,
-              styles.roundedLg,
-              {
-                backgroundColor: loading || !validatePhone()
-                  ? colors.gray[300]
-                  : colors.emergency[500],
-                shadowColor: colors.black,
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.1,
-                shadowRadius: 4,
-                elevation: 3,
-              },
-            ]}
+            style={[styles.wFull, styles.py4, styles.alignCenter, styles.roundedLg, 
+                  {backgroundColor: loading || !validatePhone() ? colors.gray[300] : colors.emergency[500],
+                   shadowColor: colors.black, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1,
+                   shadowRadius: 4, elevation: 3}]}
             onPress={handleDriverLogin}
             disabled={loading || !validatePhone()}
           >
@@ -247,24 +191,8 @@ export default function DriverLoginScreen() {
             )}
           </TouchableOpacity>
 
-          <View
-            style={[
-              styles.mt6,
-              styles.p4,
-              styles.roundedLg,
-              styles.bgGray100,
-              styles.borderGray200,
-              { borderWidth: 1 },
-            ]}
-          >
-            <Text
-              style={[
-                styles.textSm,
-                styles.fontMedium,
-                styles.textGray800,
-                styles.mb2,
-              ]}
-            >
+          <View style={[styles.mt6, styles.p4, styles.roundedLg, styles.bgGray100, styles.borderGray200, { borderWidth: 1 }]}>
+            <Text style={[styles.textSm, styles.fontMedium, styles.textGray800, styles.mb2]}>
               Driver Requirements:
             </Text>
             <Text style={[styles.textXs, styles.textGray700, styles.mb1]}>
@@ -283,7 +211,7 @@ export default function DriverLoginScreen() {
 
           <TouchableOpacity
             style={[styles.alignCenter, styles.mt6]}
-            onPress={() => router.replace("/")}
+            onPress={() => router.replace("/patient/login")}
             disabled={loading}
           >
             <Text style={[styles.textSm, styles.textGray600]}>

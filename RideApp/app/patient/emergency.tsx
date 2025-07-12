@@ -1,14 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  TextInput,
-  SafeAreaView,
-  FlatList,
-  Alert,
-} from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, SafeAreaView, FlatList } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { colors, styles } from '../../constants/TailwindStyles';
@@ -38,9 +29,9 @@ export default function EmergencySelectionScreen() {
   }, [selectedCategory]);
 
   const handleEmergencySelect = (emergency: EmergencyType) => {
-    // Navigate to book-ride with emergency context
+    // Navigate to booking with emergency context
     router.push({
-      pathname: '/patient/book-ride',
+      pathname: '/patient/booking',
       params: {
         emergencyType: emergency.id,
         emergencyName: emergency.name,
@@ -177,14 +168,7 @@ export default function EmergencySelectionScreen() {
         </View>
 
         {/* Search Bar */}
-        <View style={[
-          styles.flexRow,
-          styles.alignCenter,
-          styles.bgGray100,
-          styles.roundedXl,
-          styles.px4,
-          styles.py3
-        ]}>
+        <View style={[styles.flexRow, styles.alignCenter, styles.bgGray100, styles.roundedXl, styles.px4, styles.py3]}>
           <Ionicons name="search" size={20} color={colors.gray[400]} />
           <TextInput
             style={[styles.flex1, styles.ml3, styles.textBase]}

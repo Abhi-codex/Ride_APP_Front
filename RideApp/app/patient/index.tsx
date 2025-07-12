@@ -32,7 +32,7 @@ export default function HomeScreen() {
     <View style={styles.container}>
       <Text style={styles.title}>Select a Service</Text>
 
-      <TouchableOpacity style={styles.card} onPress={() => router.push('/patient/emergency-selection')}>
+      <TouchableOpacity style={styles.card} onPress={() => router.push('/patient/emergency')}>
         <Text style={styles.emoji}>🚑</Text>
         <Text style={styles.label}>Emergency Ride</Text>
         <Text style={styles.sublabel}>Book ambulance for emergency</Text>

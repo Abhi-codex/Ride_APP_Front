@@ -93,7 +93,7 @@ export default function PatientLoginScreen() {
             [
               {
                 text: 'Complete Profile',
-                onPress: () => router.replace('/patient/profile-setup'),
+                onPress: () => router.replace('/patient/profile'),
               },
             ]
           );

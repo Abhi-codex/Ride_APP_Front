@@ -191,7 +191,7 @@ export default function DriverDashboard() {
   };
 
   const handleProfilePress = () => {
-    router.push('/driver/profile-setup');
+    router.push('/driver/profile');
   };
 
   if (loading) {

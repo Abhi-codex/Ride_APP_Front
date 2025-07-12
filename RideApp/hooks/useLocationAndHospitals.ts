@@ -123,10 +123,22 @@ export function useLocationAndHospitals(): LocationState {
       if (response.ok) {
         const data = await response.json();
         console.log('Backend response data:', data);
+        console.log('Backend response status:', data.message);
+        console.log('Backend returned count:', data.count);
+        console.log('Backend returned totalFound:', data.totalFound);
         
-        if (data.hospitals && Array.isArray(data.hospitals) && data.hospitals.length > 0) {
+        if (data.hospitals && Array.isArray(data.hospitals)) {
           console.log('Backend returned emergency:', data.emergency);
           console.log('Backend returned hospitals count:', data.hospitals.length);
+          
+          if (data.hospitals.length === 0) {
+            console.warn('Backend returned empty hospital array!');
+            console.log('Search criteria:', data.searchCriteria);
+            console.log('Total found before filtering:', data.totalFound);
+            // Don't fall back immediately, set empty array and let user know
+            setHospitals([]);
+            return;
+          }
           
           const fetchedHospitals = data.hospitals.map((hospital: any) => {
             // Handle both backend format and Google Places format
@@ -147,9 +159,18 @@ export function useLocationAndHospitals(): LocationState {
               rating: hospital.rating,
               photoUrl: hospital.photoUrl || 'https://via.placeholder.com/80x80?text=H',
               emergencyServices: hospital.emergencyServices || [],
+              // Enhanced emergency capability fields
+              emergencyCapabilityScore: hospital.emergencyCapabilityScore,
+              emergencyFeatures: hospital.emergencyFeatures || [],
+              isEmergencyVerified: hospital.isEmergencyVerified || false,
+              recommendation: hospital.recommendation,
+              address: hospital.address,
+              isOpen: hospital.isOpen,
+              priceLevel: hospital.priceLevel,
+              placeId: hospital.placeId,
             };
             
-            console.log(`Hospital: ${processedHospital.name}, Services:`, processedHospital.emergencyServices);
+            console.log(`Hospital: ${processedHospital.name}, Score: ${processedHospital.emergencyCapabilityScore}, Services:`, processedHospital.emergencyServices);
             return processedHospital;
           }).filter(Boolean); // Remove null entries
           
@@ -157,10 +178,12 @@ export function useLocationAndHospitals(): LocationState {
           setHospitals(fetchedHospitals);
           return;
         } else {
-          console.log('Backend returned no hospitals, falling back to Google Places');
+          console.log('Backend returned no hospitals array, falling back to Google Places');
         }
       } else {
+        const errorText = await response.text();
         console.log('Backend response not ok, status:', response.status);
+        console.log('Backend error response:', errorText);
       }
       
       // Fallback to Google Places API if backend is not available

@@ -6,7 +6,6 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
-  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -187,13 +186,13 @@ export default function RideScreen() {
   }
 
   return (
-    <View style={[styles.flex1, styles.mt8, styles.bgGray50]}>
+    <View style={[styles.flex1, styles.mt8]}>
       {/* Emergency Header */}
       {emergency && (
         <View style={[
-          styles.px5,
-          styles.py3,
-          styles.bgWhite,
+          styles.px3,
+          styles.py2,
+          styles.bgGray100,
           styles.shadowSm,
           styles.borderB,
           { borderBottomColor: colors.gray[200] }
@@ -225,8 +224,10 @@ export default function RideScreen() {
             </View>
           </View>
           
-          <View style={[styles.flexRow, styles.alignCenter, styles.mt2]}>
-            <Text style={[styles.textLg, styles.mr2]}>{emergency.icon}</Text>
+          <View style={[styles.flexRow, styles.alignCenter, styles.mt1]}>
+            <Text style={[styles.textLg, styles.mr2]}>
+              {emergency.icon}
+            </Text>
             <View style={[styles.flex1]}>
               <Text style={[styles.textLg, styles.fontSemibold, styles.textGray800]}>
                 {emergencyName}
@@ -248,17 +249,11 @@ export default function RideScreen() {
         />
       </View>
 
-      <View style={[
-        styles.bgWhite,
-        styles.roundedTl3xl,
-        styles.roundedTr3xl,
-        styles.px5,
-        styles.pt4,
-        styles.pb4,
-        { 
-          height: !selectedHospital 
-            ? Dimensions.get('window').height * 0.55
-            : Dimensions.get('window').height * 0.58
+
+      <View style={[styles.bgGray100, styles.borderT, styles.borderGray200, styles.px3, styles.pt4, styles.pb4,
+        { height: !selectedHospital 
+            ? Dimensions.get('window').height * 0.60
+            : Dimensions.get('window').height * 0.63
         }
       ]}>
         {!selectedHospital ? (
@@ -270,7 +265,13 @@ export default function RideScreen() {
             emergencyContext={emergency ? {
               name: emergencyName,
               priority: priority,
-              requiredServices: requiredServices
+              requiredServices: requiredServices,
+              emergencyType: emergencyId
+            } : undefined}
+            searchCriteria={emergencyId ? {
+              emergencyType: emergencyId,
+              minimumEmergencyScore: emergency?.priority === 'critical' ? 70 : 
+                                   emergency?.priority === 'high' ? 50 : 30
             } : undefined}
           />
         ) : (
@@ -283,6 +284,7 @@ export default function RideScreen() {
               hospital={selectedHospital}
               onChangeHospital={handleChangeHospital}
               routeLoading={routeLoading}
+              emergencyType={emergencyId}
             />
 
             <AmbulanceTypeSelector
