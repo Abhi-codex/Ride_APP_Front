@@ -121,23 +121,34 @@ export function useRideBooking(): RideBookingState {
       console.log('Response data:', JSON.stringify(data, null, 2));
       
       if (response.ok) {
-        Alert.alert('Success', 'Ambulance booked successfully!');
-        router.push({
-          pathname: "/patient/ride/[rideId]",
-          params: {
-            rideId: data.ride._id,
-            hospitalName: data.ride.drop.address,
-            rideType: ambulanceType,
-            destination: data.ride.drop.address,
-            fare: data.ride.fare.toString(),
-            otp: data.ride.otp,
-            latitude: data.ride.drop.latitude.toString(),
-            longitude: data.ride.drop.longitude.toString(),
-            emergencyType: emergencyContext?.emergencyType || '',
-            emergencyName: emergencyContext?.emergencyName || '',
-            priority: emergencyContext?.priority || '',
-          },
-        });    } else {
+        Alert.alert(
+          'Ambulance Booked Successfully', 
+          `${hospital.name}\n\nKeep your phone accessible - the driver will contact you soon.`,
+          [{
+            text: 'Start Tracking',
+            onPress: () => {
+              router.push({
+                pathname: "/patient/tracking",
+                params: {
+                  rideId: data.ride._id,
+                  hospitalName: data.ride.drop.address,
+                  rideType: ambulanceType,
+                  destination: data.ride.drop.address,
+                  hospitalAddress: hospital.address || hospital.name,
+                  fare: data.ride.fare.toString(),
+                  otp: data.ride.otp,
+                  latitude: data.ride.drop.latitude.toString(),
+                  longitude: data.ride.drop.longitude.toString(),
+                  emergencyType: emergencyContext?.emergencyType || '',
+                  emergencyName: emergencyContext?.emergencyName || '',
+                  priority: emergencyContext?.priority || '',
+                  specialties: hospital.specialties ? hospital.specialties.join(', ') : '',
+                },
+              });
+            }
+          }]
+        )} 
+        else {
       console.log('Booking failed with status:', response.status);
       console.log('Response data:', JSON.stringify(data, null, 2));
       

@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Ride } from '../types/rider';
 
 interface UseRideSearchingProps {
@@ -26,14 +26,14 @@ export const useRideSearching = ({
   const [searchCycleCount, setSearchCycleCount] = useState(0);
   const [hasAvailableRides, setHasAvailableRides] = useState(false);
 
-  // Configurable search parameters
-  const searchConfig: SearchConfig = {
+  // Configurable search parameters - moved outside to prevent recreation
+  const searchConfig = React.useMemo(() => ({
     searchDuration: 30 * 1000,     // 30 seconds active search
     pauseDuration: 4.5 * 60 * 1000, // 4.5 minutes pause
     maxSearchTime: 15 * 60 * 1000   // 15 minutes total search time
-  };
+  }), []);
 
-  // Track when rides become available
+  // Track when rides become available - use stable references
   useEffect(() => {
     const ridesAvailable = availableRides.length > 0;
     setHasAvailableRides(ridesAvailable);
@@ -42,7 +42,7 @@ export const useRideSearching = ({
       setIsSearching(true);
       setLastSearchTime(new Date());
     }
-  }, [availableRides.length, online, acceptedRide]);
+  }, [availableRides.length, online, acceptedRide?._id]); // Use acceptedRide._id instead of the object
 
   const startSearchCycle = useCallback(() => {
     if (!online || acceptedRide) {
@@ -54,7 +54,6 @@ export const useRideSearching = ({
     if (searchStartTime) {
       const elapsed = Date.now() - searchStartTime.getTime();
       if (elapsed > searchConfig.maxSearchTime) {
-        console.log('Maximum search time exceeded, stopping search');
         setIsSearching(false);
         setSearchStartTime(null);
         setSearchCycleCount(0);
@@ -83,18 +82,18 @@ export const useRideSearching = ({
     }, searchConfig.searchDuration);
 
     return () => clearTimeout(searchTimeout);
-  }, [online, acceptedRide, hasAvailableRides, searchStartTime, searchConfig]);
+  }, [online, acceptedRide?._id, hasAvailableRides, searchStartTime, searchConfig]); // Use acceptedRide._id
 
-  // Reset search when driver goes offline or accepts a ride
+  // Reset search when driver goes offline or accepts a ride - use stable reference
   useEffect(() => {
     if (!online || acceptedRide) {
       setIsSearching(false);
       setSearchStartTime(null);
       setSearchCycleCount(0);
     }
-  }, [online, acceptedRide]);
+  }, [online, acceptedRide?._id]); // Use acceptedRide._id instead of the object
 
-  // Start search cycle when going online
+  // Start search cycle when going online - use stable references
   useEffect(() => {
     let cleanup: (() => void) | undefined;
 
@@ -110,7 +109,7 @@ export const useRideSearching = ({
     }
 
     return cleanup;
-  }, [online, acceptedRide, availableRides.length, loading, startSearchCycle]);
+  }, [online, acceptedRide?._id, availableRides.length, loading, startSearchCycle]); // Use acceptedRide._id
 
   // Calculate search statistics
   const getSearchStats = useCallback(() => {

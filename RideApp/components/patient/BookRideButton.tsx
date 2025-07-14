@@ -34,7 +34,7 @@ export default function BookRideButton({
       ) : (
         <View style={[styles.alignCenter]}>
           <Text style={[styles.textWhite, styles.textLg, styles.fontBold]}>
-            Book Ambulance
+            Book Emergency Ambulance
           </Text>
         </View>
       )}

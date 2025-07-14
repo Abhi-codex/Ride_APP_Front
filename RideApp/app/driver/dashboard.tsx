@@ -175,13 +175,23 @@ export default function DriverDashboard() {
   };
 
   const navigateToDriverMap = () => {
+    console.log('Navigating to driver map, online status:', isOnline);
     if (isOnline) {
       router.push('/driver/map');
     } else {
       Alert.alert(
         'Go Online First',
         'Please go online to start receiving ride requests.',
-        [{ text: 'OK' }]
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { 
+            text: 'Go Online', 
+            onPress: () => {
+              console.log('Going online from navigation alert');
+              toggleOnlineStatus();
+            }
+          }
+        ]
       );
     }
   };
@@ -296,8 +306,11 @@ export default function DriverDashboard() {
               </Text>
 
               <ActionCard
-                title="Start Driving"
-                subtitle="Go online and start accepting ride requests"
+                title={isOnline ? "Start Driving" : "Go Online First"}
+                subtitle={isOnline 
+                  ? "Go to map view and start accepting ride requests" 
+                  : "You must be online to accept emergency calls"
+                }
                 onPress={navigateToDriverMap}
               />
 

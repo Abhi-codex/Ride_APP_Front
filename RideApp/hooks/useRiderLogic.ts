@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { Alert } from 'react-native';
 import { 
   Ride, 
@@ -35,6 +35,10 @@ export const useRiderLogic = () => {
 
   // Auto-refresh intervals
   const [refreshInterval, setRefreshInterval] = useState<ReturnType<typeof setInterval> | null>(null);
+  
+  // Use ref to track loading state to avoid circular dependencies
+  const isLoadingRides = useRef(false);
+  const onlineStatusSet = useRef(false);
 
   useEffect(() => {
     fetchDriverProfile();
@@ -48,39 +52,56 @@ export const useRiderLogic = () => {
   }, []);
 
   useEffect(() => {
+    let cleanup: (() => void) | undefined;
+    
     if (online && !acceptedRide) {
-      fetchAvailableRides();
-      updateOnlineStatus(true);
-      
-      // Set up auto-refresh for available rides every 10 seconds
-      const interval = setInterval(() => {
-        if (online && !acceptedRide) {
-          fetchAvailableRides();
+      // Only fetch if we're not already loading and don't have an interval running
+      if (!isLoadingRides.current && !refreshInterval) {
+        // Fetch rides first
+        fetchAvailableRides();
+        
+        // Update online status only if not already set
+        if (!onlineStatusSet.current) {
+          updateOnlineStatus(true);
+          onlineStatusSet.current = true;
         }
-      }, 10000);
-      
-      setRefreshInterval(interval);
-      
-      return () => {
-        if (interval) clearInterval(interval);
-      };
-    } else if (!online) {
+        
+        // Set up auto-refresh for available rides every 10 seconds
+        const interval = setInterval(() => {
+          if (online && !acceptedRide && !isLoadingRides.current) {
+            fetchAvailableRides();
+          }
+        }, 10000);
+        
+        setRefreshInterval(interval);
+        
+        // Return cleanup function for this branch
+        cleanup = () => {
+          clearInterval(interval);
+        };
+      }
+    } else if (!online && onlineStatusSet.current) {
+      // Update online status
       updateOnlineStatus(false);
+      onlineStatusSet.current = false;
+      
+      // Clear interval
       if (refreshInterval) {
         clearInterval(refreshInterval);
         setRefreshInterval(null);
       }
     }
-  }, [online, acceptedRide]);
+    
+    // Return the cleanup function
+    return cleanup;
+  }, [online, acceptedRide?._id]); // Use acceptedRide?._id instead of acceptedRide object to prevent object reference changes
 
   const handleApiError = useCallback((error: any, context: string) => {
-    console.error(`${context} error:`, error);
-    
     if (error instanceof TypeError && error.message.includes('Network request failed')) {
       setError('Connection failed. Check your network and server.');
       Alert.alert(
         'Connection Error', 
-        'Cannot connect to server. Make sure:\n• Backend server is running\n• Using correct IP address\n• No firewall blocking connection'
+        'Cannot connect to server. Please check your network connection.'
       );
     } else if (error.message?.includes('401')) {
       setError('Authentication failed. Please login again.');
@@ -143,7 +164,6 @@ export const useRiderLogic = () => {
         return true;
       }
     } catch (error) {
-      console.error('Token refresh failed:', error);
       Alert.alert('Session Expired', 'Please login again');
     }
     return false;
@@ -156,26 +176,34 @@ export const useRiderLogic = () => {
         body: JSON.stringify({ isOnline }),
       });
       
-      // Update local profile state
-      if (driverProfile) {
-        setDriverProfile({ ...driverProfile, isOnline });
-      }
+      // Update local profile state using functional update to avoid dependency
+      setDriverProfile(prevProfile => {
+        if (prevProfile) {
+          return { ...prevProfile, isOnline };
+        }
+        return prevProfile;
+      });
     } catch (error) {
       handleApiError(error, 'Update online status');
     }
-  }, [driverProfile, makeAuthenticatedRequest, handleApiError]);
+  }, [makeAuthenticatedRequest, handleApiError]); // Remove driverProfile dependency
 
   const fetchAvailableRides = useCallback(async () => {
-    if (loading) return; // Prevent multiple simultaneous requests
+    if (isLoadingRides.current) {
+      return;
+    }
     
     try {
-      setLoading(true);
+      isLoadingRides.current = true;
       setError(null);
       
       const data: RideResponse = await makeAuthenticatedRequest(`${getServerUrl()}/ride/driverrides`);
       
       if (data.rides && Array.isArray(data.rides)) {
-        const searchingRides = data.rides.filter((ride: Ride) => ride.status === RideStatus.SEARCHING);
+        const searchingRides = data.rides.filter((ride: Ride) => {
+          return ride.status === RideStatus.SEARCHING;
+        });
+        
         setAvailableRides(searchingRides);
       } else {
         setAvailableRides([]);
@@ -184,9 +212,9 @@ export const useRiderLogic = () => {
       handleApiError(error, 'Fetch available rides');
       setAvailableRides([]);
     } finally {
-      setLoading(false);
+      isLoadingRides.current = false;
     }
-  }, [loading, makeAuthenticatedRequest, handleApiError]);
+  }, [makeAuthenticatedRequest, handleApiError]);
 
   const fetchRoute = async (
     origin: { latitude: number; longitude: number },
@@ -204,7 +232,6 @@ export const useRiderLogic = () => {
         setRouteCoords(coords);
       }
     } catch (error) {
-      console.error('Route fetch error:', error);
       Alert.alert('Navigation Error', 'Could not fetch route. Using direct path.');
     }
   };
@@ -229,7 +256,14 @@ export const useRiderLogic = () => {
       
       if (data.data) {
         setDriverProfile(data.data);
-        setOnline(data.data.isOnline); // Sync online state with backend
+        // Only sync online state if it's different to prevent re-render loops
+        const backendOnlineStatus = data.data.isOnline;
+        setOnline(prevOnline => {
+          if (prevOnline !== backendOnlineStatus) {
+            return backendOnlineStatus;
+          }
+          return prevOnline;
+        });
       }
     } catch (error) {
       handleApiError(error, 'Fetch driver profile');
@@ -291,8 +325,12 @@ export const useRiderLogic = () => {
           setRouteCoords([]);
           setTripStarted(false);
           
-          // Refresh everything after completion
-          fetchAvailableRides();
+          // Refresh everything after completion with delay to prevent re-render loops
+          setTimeout(() => {
+            if (!isLoadingRides.current) {
+              fetchAvailableRides();
+            }
+          }, 500);
           fetchDriverStats();
         } else if (status === RideStatus.START) {
           setTripStarted(true);
@@ -305,7 +343,7 @@ export const useRiderLogic = () => {
     } finally {
       setLoading(false);
     }
-  }, [makeAuthenticatedRequest, handleApiError, fetchAvailableRides, fetchDriverStats]);
+  }, [makeAuthenticatedRequest, handleApiError, fetchDriverStats]);
 
   const handleRejectRide = useCallback((rideId: string) => {
     setAvailableRides(prev => prev.filter(r => r._id !== rideId));
@@ -313,13 +351,19 @@ export const useRiderLogic = () => {
   }, []);
 
   const toggleOnline = useCallback(() => {
-    const newOnlineState = !online;
-    setOnline(newOnlineState);
-    
-    if (newOnlineState) {
-      checkAuthState();
-    }
-  }, [online]);
+    setOnline(prevOnline => {
+      const newOnlineState = !prevOnline;
+      
+      if (newOnlineState) {
+        // Don't call checkAuthState immediately to prevent re-render loops
+        setTimeout(() => {
+          checkAuthState();
+        }, 100);
+      }
+      
+      return newOnlineState;
+    });
+  }, []); // Remove online dependency to prevent re-creation
 
   const checkAuthState = useCallback(async () => {
     try {
@@ -330,11 +374,12 @@ export const useRiderLogic = () => {
         await makeAuthenticatedRequest(`${getServerUrl()}/driver/profile`);
       } else {
         Alert.alert('Not Logged In', 'Please login first to see available rides');
-        setOnline(false);
+        // Use functional update to prevent dependency issues
+        setOnline(prevOnline => prevOnline ? false : prevOnline);
       }
     } catch (error) {
-      console.error('Auth check error:', error);
-      setOnline(false);
+      // Use functional update to prevent dependency issues
+      setOnline(prevOnline => prevOnline ? false : prevOnline);
     }
   }, [makeAuthenticatedRequest]);
 

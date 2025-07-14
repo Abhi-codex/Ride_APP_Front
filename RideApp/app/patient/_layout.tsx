@@ -8,7 +8,6 @@ export default function PatientLayout() {
       <Stack.Screen name="index" options={{ headerShown: false, title: "Home" }} />
       <Stack.Screen name="emergency" options={{ headerShown: false, title: "Emergency Selection" }} />
       <Stack.Screen name="booking" options={{ headerShown: false, title: "Book Ride" }} />
-      <Stack.Screen name="ride" options={{ headerShown: false }} />
       <Stack.Screen name="tracking" options={{ headerShown: false, title: "Track Ride" }} />
       <Stack.Screen name="medicine" options={{ headerShown: false, title: "Medicine" }} />
       <Stack.Screen name="ai" options={{ headerShown: false, title: "AI Assistant" }} />

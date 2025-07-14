@@ -6,16 +6,11 @@ import { colors, styles } from "../../constants/TailwindStyles";
 import { useRiderLogic } from "../../hooks/useRiderLogic";
 import { useRideSearching } from "../../hooks/useRideSearching";
 import { 
-  getRideDurations, 
-  getCachedDirectionData,
-  formatDuration, 
-  formatDistance,
   getFallbackDistance,
   LatLng
 } from "../../utils/directions";
 import DriverDrawer from "@/components/driver/DriverDrawer";
 import DriverMap from "@/components/driver/DriverMap";
-import DriverFloatingToggle from "@/components/driver/DriverFloatingToggle";
 
 const { height: screenHeight } = Dimensions.get("window");
 
@@ -36,12 +31,39 @@ export default function DriverMapScreen() {
 
   const translateY = useSharedValue(SNAP_POINTS.MINIMIZED);
   const [currentSnapPoint, setCurrentSnapPoint] = useState< "MINIMIZED" | "PARTIAL" | "FULL" >("MINIMIZED");
-  const { routeCoords, destination, tripStarted, online, availableRides, acceptedRide,
-    handleAcceptRide, updateRideStatus, handleRejectRide, toggleOnline, } = useRiderLogic();
+  
+  const { 
+    routeCoords, 
+    destination, 
+    tripStarted, 
+    online, 
+    availableRides, 
+    acceptedRide,
+    handleAcceptRide, 
+    updateRideStatus, 
+    handleRejectRide, 
+    toggleOnline,
+    loading: riderLoading,
+    error: riderError
+  } = useRiderLogic();
+
+  // Auto-expand drawer when ride is accepted - use acceptedRide ID to prevent object reference issues
+  useEffect(() => {
+    if (acceptedRide?._id && currentSnapPoint === "MINIMIZED") {
+      translateY.value = withSpring(SNAP_POINTS.PARTIAL, {
+        damping: 20,
+        stiffness: 90,
+      });
+      setCurrentSnapPoint("PARTIAL");
+    }
+  }, [acceptedRide?._id, currentSnapPoint]);
 
   const { isSearching } = useRideSearching({ online, acceptedRide, availableRides });
-  const gestureHandler = useAnimatedGestureHandler({ onStart: (_, context: any) => 
-    { context.startY = translateY.value; },
+
+  const gestureHandler = useAnimatedGestureHandler({ 
+    onStart: (_, context: any) => { 
+      context.startY = translateY.value; 
+    },
     onActive: (event, context) => {
       translateY.value = context.startY + event.translationY;
     },
@@ -95,7 +117,7 @@ export default function DriverMapScreen() {
     etaMinutes: 0
   });
   
-  // Effect to calculate distance and ETA using Google Maps API
+  // Effect to calculate distance and ETA using Google Maps API - prevent infinite loops
   useEffect(() => {
     if (!driverLocation || !destination || !acceptedRide) {
       setRouteDetails({
@@ -105,49 +127,32 @@ export default function DriverMapScreen() {
       return;
     }
     
-    // Calculate using fallback method first for immediate display
-    const origin: LatLng = { 
-      latitude: driverLocation.latitude, 
-      longitude: driverLocation.longitude 
-    };
-    
-    const dest: LatLng = {
-      latitude: destination.latitude,
-      longitude: destination.longitude
-    };
-    
-    const fallbackDistance = getFallbackDistance(origin, dest);
-    const fallbackDistanceKm = fallbackDistance.toFixed(2);
-    
-    const fallbackEtaMinutes = Math.ceil(parseFloat(fallbackDistanceKm) / 0.666);
-    
-    setRouteDetails({
-      distanceKm: fallbackDistanceKm,
-      etaMinutes: fallbackEtaMinutes
-    });
-    
-    // Now get accurate distance and ETA from Google Maps API
-    const calculateGoogleMapsDistance = async () => {
-      try {
-        const result = await getRideDurations(
-          origin,
-          acceptedRide.pickup,
-          acceptedRide.drop
-        );
-        
-        // Update with more accurate data
-        setRouteDetails({
-          distanceKm: result.pickupDistance.toFixed(2),
-          etaMinutes: result.toPickup
-        });
-      } catch (error) {
-        console.warn("Error calculating Google Maps distance:", error);
-        // Fallback values already set above
-      }
-    };
-    
-    calculateGoogleMapsDistance();
-  }, [driverLocation, destination, acceptedRide]);
+      // Calculate route details using fallback method
+      const origin: LatLng = { 
+        latitude: driverLocation.latitude, 
+        longitude: driverLocation.longitude 
+      };
+      
+      const dest: LatLng = {
+        latitude: destination.latitude,
+        longitude: destination.longitude
+      };
+      
+      const fallbackDistance = getFallbackDistance(origin, dest);
+      const fallbackDistanceKm = fallbackDistance.toFixed(2);
+      const fallbackEtaMinutes = Math.ceil(parseFloat(fallbackDistanceKm) / 0.666);
+      
+      setRouteDetails({
+        distanceKm: fallbackDistanceKm,
+        etaMinutes: fallbackEtaMinutes
+      });
+  }, [
+    driverLocation?.latitude,
+    driverLocation?.longitude,
+    destination?.latitude,
+    destination?.longitude,
+    acceptedRide?._id
+  ]);
   
   // Use the values from state
   const distanceKm = routeDetails.distanceKm;
@@ -157,67 +162,68 @@ export default function DriverMapScreen() {
   const fare = driverLocation && destination 
     ? Math.ceil(parseFloat(distanceKm) * 15) 
     : 0;
-  useEffect(() => {
-    const initializeLocationTracking = async () => {
-      try {
-        const { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== "granted") {
-          Alert.alert(
-            "Location Permission Required",
-            "We need location access to help you navigate to patients and show your position on the map.",
-            [
-              { text: "Cancel", style: "cancel" },
-              { text: "Request Again", onPress: () => setLoading(false) },
-            ]
-          );
-          setLoading(false);
-          return;
-        }
-
-        const currentLocation = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.High,
-        });
-
-        const region = {
-          latitude: currentLocation.coords.latitude,
-          longitude: currentLocation.coords.longitude,
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01,
-        };
-
-        setDriverLocation(region);
-        setLoading(false);
-
-        const subscription = await Location.watchPositionAsync(
-          {
-            accuracy: Location.Accuracy.High,
-            timeInterval: 5000,
-            distanceInterval: 10,
-          },
-          (newLocation) => {
-            const newRegion = {
-              latitude: newLocation.coords.latitude,
-              longitude: newLocation.coords.longitude,
-              latitudeDelta: 0.01,
-              longitudeDelta: 0.01,
-            };
-            setDriverLocation(newRegion);
-          }
-        );
-
-        return () => subscription.remove();
-      } catch (error) {
-        console.error("Error getting location:", error);
+  // Memoize location initialization to prevent re-runs
+  const initializeLocationTracking = React.useCallback(async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
         Alert.alert(
-          "Location Error",
-          "Unable to get your current location. Please check your location settings."
+          "Location Permission Required",
+          "We need location access to help you navigate to patients and show your position on the map.",
+          [
+            { text: "Cancel", style: "cancel" },
+            { text: "Request Again", onPress: () => setLoading(false) },
+          ]
         );
         setLoading(false);
+        return;
       }
-    };
 
-    initializeLocationTracking();
+      const currentLocation = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+      });
+
+      const region = {
+        latitude: currentLocation.coords.latitude,
+        longitude: currentLocation.coords.longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      };
+
+      setDriverLocation(region);
+      setLoading(false);
+
+      const subscription = await Location.watchPositionAsync(
+        {
+          accuracy: Location.Accuracy.High,
+          timeInterval: 5000,
+          distanceInterval: 10,
+        },
+        (newLocation) => {
+          const newRegion = {
+            latitude: newLocation.coords.latitude,
+            longitude: newLocation.coords.longitude,
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.01,
+          };
+          setDriverLocation(newRegion);
+        }
+      );
+
+      return () => subscription.remove();
+    } catch (error) {
+      console.error("Error getting location:", error);
+      Alert.alert(
+        "Location Error",
+        "Unable to get your current location. Please check your location settings."
+      );
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    initializeLocationTracking();
+  }, [initializeLocationTracking]);
 
   if (loading) {
     return (
@@ -247,8 +253,6 @@ export default function DriverMapScreen() {
         )}
       </View>
 
-      <DriverFloatingToggle online={online} onToggle={toggleOnline} />
-
       <DriverDrawer
         translateY={translateY}
         currentSnapPoint={currentSnapPoint}
@@ -259,7 +263,14 @@ export default function DriverMapScreen() {
         driverLocation={driverLocation}
         destination={destination}
         tripStarted={tripStarted}
-        onAcceptRide={(rideId: string) => handleAcceptRide(rideId, driverLocation)}
+        onAcceptRide={(rideId: string) => {
+          if (!driverLocation) {
+            Alert.alert('Error', 'Driver location not available. Please wait for GPS to initialize.');
+            return;
+          }
+          
+          handleAcceptRide(rideId, driverLocation);
+        }}
         onRejectRide={handleRejectRide}
         onToggleOnline={toggleOnline}
         onUpdateRideStatus={updateRideStatus}

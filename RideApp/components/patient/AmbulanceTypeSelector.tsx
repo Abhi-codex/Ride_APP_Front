@@ -105,18 +105,6 @@ export default function AmbulanceTypeSelector({
           ))}
         </View>
       ))}
-      
-      {availableTypes && availableTypes.length < ALL_AMBULANCE_TYPES.length && (
-        <View style={[styles.mb2, styles.mt3]}>
-          <View style={[styles.flexRow, styles.py1, styles.px2, styles.rounded3xl, styles.border,
-            styles.alignCenter, styles.borderGray200]}>
-            <MaterialCommunityIcons name="information" size={14} color={colors.warning[600]} style={[styles.mr2]} />
-            <Text style={[styles.textXs, styles.textGray600]}>
-              Only suitable ambulance types are shown for this emergency
-            </Text>
-          </View>
-        </View>
-      )}
     </View>
   );
 }

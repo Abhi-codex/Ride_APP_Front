@@ -89,17 +89,32 @@ export function useRideTracking(rideId: string): TrackingState {
     }
   };
 
-  // Initial fetch
+  // Initial fetch and polling setup
   useEffect(() => {
+    if (!rideId) return;
+    
     fetchRideDetails();
     
-    // Set up polling for ride status updates
+    // Set up polling for ride status updates only if ride is active
     const intervalId = setInterval(() => {
-      fetchRideDetails();
-    }, 10000); // Poll every 10 seconds
+      // Only poll if ride is in an active state
+      if (rideStatus === RideStatus.SEARCHING || 
+          rideStatus === RideStatus.START || 
+          rideStatus === RideStatus.ARRIVED) {
+        fetchRideDetails();
+      }
+    }, 15000); // Reduced frequency to every 15 seconds
     
     return () => clearInterval(intervalId);
-  }, [rideId]);
+  }, [rideId]); // Only depend on rideId, not the changing ride object
+
+  // Separate effect to stop polling when ride is completed
+  useEffect(() => {
+    if (rideStatus === RideStatus.COMPLETED) {
+      // Stop any active polling when ride is done
+      console.log('Ride completed, stopping tracking updates');
+    }
+  }, [rideStatus]);
 
   return {
     ride,

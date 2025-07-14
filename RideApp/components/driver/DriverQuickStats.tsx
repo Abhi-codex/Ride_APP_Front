@@ -1,6 +1,7 @@
 import React from "react";
 import { Text, View } from "react-native";
-import { styles } from "../../constants/TailwindStyles";
+import { MaterialCommunityIcons, MaterialIcons, Octicons } from "@expo/vector-icons";
+import { styles, colors } from "../../constants/TailwindStyles";
 
 interface DriverQuickStatsProps {
   availableRidesCount: number;
@@ -14,46 +15,70 @@ export default function DriverQuickStats({
   todaysEarnings,
 }: DriverQuickStatsProps) {
   return (
-    <View style={[styles.flexRow, styles.justifyBetween, styles.mb6]}>
-      <View style={[styles.alignCenter]}>
-        <Text
-          style={[
-            styles.text2xl,
-            styles.fontBold,
-            styles.textPrimary600,
-          ]}
-        >
+    <View style={[styles.flexRow, styles.justifyBetween, styles.mb4]}>
+      {/* Available Rides Tile */}
+      <View style={[
+        styles.flex1,
+        styles.bgGray100,
+        styles.roundedLg,
+        styles.p3,
+        styles.mr2,
+        styles.shadowSm
+      ]}>
+        <View style={[styles.flexRow, styles.alignCenter, styles.mb2]}>
+          <Text style={[styles.textXs, styles.textGray600, styles.fontMedium]}>
+            Emergency Calls
+          </Text>
+        </View>
+        <Text style={[styles.textLg, styles.fontBold, styles.textGray800]}>
           {availableRidesCount}
         </Text>
-        <Text style={[styles.textSm, styles.textGray500]}>
-          Emergency Calls
+        <Text style={[styles.textXs, styles.textGray500]}>
+          Available now
         </Text>
       </View>
-      <View style={[styles.alignCenter]}>
-        <Text
-          style={[
-            styles.text2xl,
-            styles.fontBold,
-            styles.textSecondary600,
-          ]}
-        >
-          {rating}
+
+      {/* Rating Tile */}
+      <View style={[
+        styles.flex1,
+        styles.bgGray100,
+        styles.roundedLg,
+        styles.p3,
+        styles.mr2,
+        styles.shadowSm
+      ]}>
+        <View style={[styles.flexRow, styles.alignCenter, styles.mb2]}>
+          <Text style={[styles.textXs, styles.textGray600, styles.fontMedium]}>
+            Rating
+          </Text>
+        </View>
+        <Text style={[styles.textLg, styles.fontBold, styles.textGray800]}>
+          {rating || "N/A"}
         </Text>
-        <Text style={[styles.textSm, styles.textGray500]}>
-          Rating
+        <Text style={[styles.textXs, styles.textGray500]}>
+          Driver score
         </Text>
       </View>
-      <View style={[styles.alignCenter]}>
-        <Text
-          style={[
-            styles.text2xl,
-            styles.fontBold,
-            styles.textGray900,
-          ]}
-        >
+
+      {/* Earnings Tile */}
+      <View style={[
+        styles.flex1,
+        styles.bgGray100,
+        styles.roundedLg,
+        styles.p3,
+        styles.shadowSm
+      ]}>
+        <View style={[styles.flexRow, styles.alignCenter, styles.mb2]}>
+          <Text style={[styles.textXs, styles.textGray600, styles.fontMedium]}>
+            Today's Earnings
+          </Text>
+        </View>
+        <Text style={[styles.textLg, styles.fontBold, styles.textGray800]}>
           ₹{todaysEarnings}
         </Text>
-        <Text style={[styles.textSm, styles.textGray500]}> {"Today's Earnings"} </Text>
+        <Text style={[styles.textXs, styles.textGray500]}>
+          Total earned
+        </Text>
       </View>
     </View>
   );

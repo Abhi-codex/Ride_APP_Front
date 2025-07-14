@@ -1,15 +1,6 @@
-import { Ionicons } from "@expo/vector-icons";
-import React, { useEffect, useState, useMemo } from "react";
+import { Ionicons, MaterialCommunityIcons, MaterialIcons, Octicons } from "@expo/vector-icons";
+import React, { useEffect, useState, useMemo, memo } from "react";
 import { Text, View, ScrollView, TouchableOpacity, TextInput, Alert, ActivityIndicator } from "react-native";
-import { 
-  getRideDurations, 
-  getDirectionsCacheKey,
-  RideDirections, 
-  formatDuration, 
-  formatDistance,
-  CACHE_DURATION,
-  directionsCache
-} from "../../utils/directions";
 import { styles, colors } from "../../constants/TailwindStyles";
 import { Ride } from "../../types/rider";
 import { Linking } from "react-native";
@@ -19,8 +10,6 @@ interface AcceptedRideInfoProps {
   acceptedRide: Ride | null;
   driverLocation: { latitude: number; longitude: number } | null;
 }
-
-// Using centralized directionsCache and CACHE_DURATION from directions.ts
 
 // Utility function to calculate relative time for ride start
 const getRelativeTime = (createdAt: string | Date): string => {
@@ -42,31 +31,54 @@ const getRelativeTime = (createdAt: string | Date): string => {
   return `Started ${diffHours} hr ago`;
 };
 
-export default function AcceptedRideInfo({
+// Get ambulance type details
+const getAmbulanceTypeDetails = (type: string) => {
+  const types = {
+    'bls': { name: 'Basic Life Support', icon: 'medical-bag', color: colors.medical[600] },
+    'als': { name: 'Advanced Life Support', icon: 'heart-pulse', color: colors.emergency[600] },
+    'ccs': { name: 'Critical Care Support', icon: 'hospital', color: colors.primary[600] },
+    'neonatal': { name: 'Neonatal Transport', icon: 'baby-carriage', color: colors.warning[600] }
+  };
+  return types[type as keyof typeof types] || types.bls;
+};
+
+// Get status information
+const getStatusInfo = (status: string) => {
+  const statusMap = {
+    'START': { label: 'En Route to Patient', color: colors.warning[600], icon: 'car' },
+    'ARRIVED': { label: 'Arrived at Location', color: colors.primary[600], icon: 'map-marker-check' },
+    'COMPLETED': { label: 'Trip Completed', color: colors.medical[600], icon: 'check-circle' },
+    'SEARCHING': { label: 'Request Accepted', color: colors.emergency[600], icon: 'ambulance' }
+  };
+  return statusMap[status as keyof typeof statusMap] || statusMap.SEARCHING;
+};
+
+// Generate storage key for OTP verification state
+const generateOtpStorageKey = (rideId: string): string => {
+  return `otp_verified_${rideId}`;
+};
+
+function AcceptedRideInfo({
   acceptedRide,
   driverLocation,
 }: AcceptedRideInfoProps) {
-  const [directions, setDirections] = useState<RideDirections>({ 
-    toPickup: 0, 
-    toDropoff: 0,
-    pickupDistance: 0,
-    dropoffDistance: 0
-  });
-  const [loading, setLoading] = useState(true);
-  const [hasError, setHasError] = useState(false);
   const [relativeTime, setRelativeTime] = useState("");
   const [otpInput, setOtpInput] = useState("");
   const [isOtpVerified, setIsOtpVerified] = useState(false);
-  const [otpStorageKey, setOtpStorageKey] = useState<string>("");
+  const [otpStorageKey, setOtpStorageKey] = useState("");
 
-  // Generate storage key for OTP verification state
-  // This ensures each ride has its own persistent OTP verification state
-  const generateOtpStorageKey = (rideId: string) => {
-    return `otp_verified_${rideId}`;
-  };
+  // Early return if no accepted ride
+  if (!acceptedRide) {
+    return (
+      <View style={[styles.alignCenter, { paddingVertical: 32 }]}>
+        <Text style={[styles.textBase, styles.textGray600]}>
+          No accepted ride available
+        </Text>
+      </View>
+    );
+  }
 
   // Load OTP verification state from storage
-  // This allows the verification state to persist across drawer open/close cycles
   const loadOtpVerificationState = async (rideId: string) => {
     try {
       const storageKey = generateOtpStorageKey(rideId);
@@ -76,12 +88,11 @@ export default function AcceptedRideInfo({
       }
       setOtpStorageKey(storageKey);
     } catch (error) {
-      console.warn("Failed to load OTP verification state:", error);
+      // Failed to load OTP verification state
     }
   };
 
   // Save OTP verification state to storage
-  // This persists the verification state so it survives drawer minimization
   const saveOtpVerificationState = async (rideId: string, isVerified: boolean) => {
     try {
       const storageKey = generateOtpStorageKey(rideId);
@@ -91,57 +102,22 @@ export default function AcceptedRideInfo({
         await storage.removeItem(storageKey);
       }
     } catch (error) {
-      console.warn("Failed to save OTP verification state:", error);
+      // Failed to save OTP verification state
     }
   };
-
-  // Clean up old OTP verification entries (older than 24 hours)
-  const cleanupOldOtpEntries = async () => {
-    try {
-      // Clean up the current ride's entry when the ride is completed
-      if (acceptedRide && acceptedRide.status === "COMPLETED") {
-        await storage.removeItem(generateOtpStorageKey(acceptedRide._id));
-      }
-    } catch (error) {
-      console.warn("Failed to cleanup old OTP entries:", error);
-    }
-  };
-
-  // Utility function to manually clear OTP verification (for testing/debugging)
-  const clearOtpVerification = async () => {
-    if (acceptedRide) {
-      setIsOtpVerified(false);
-      setOtpInput("");
-      await saveOtpVerificationState(acceptedRide._id, false);
-    }
-  };
-
-  const cacheKey = useMemo(() => {
-    if (!driverLocation || !acceptedRide) return null;
-    return getDirectionsCacheKey(
-      { latitude: driverLocation.latitude, longitude: driverLocation.longitude },
-      acceptedRide.pickup,
-      acceptedRide.drop
-    );
-  }, [driverLocation, acceptedRide]);
 
   useEffect(() => {
     if (!acceptedRide) return;
     
-    // Load OTP verification state when ride changes
     loadOtpVerificationState(acceptedRide._id);
     
-    // Clean up old entries
-    cleanupOldOtpEntries();
-    
     const updateTime = () => setRelativeTime(getRelativeTime(acceptedRide.createdAt));
-    updateTime(); // Initial update
+    updateTime();
     
-    const interval = setInterval(updateTime, 30000); // Update every 30 seconds
+    const interval = setInterval(updateTime, 30000);
     return () => clearInterval(interval);
   }, [acceptedRide?._id, acceptedRide?.createdAt]);
 
-  // Reset OTP state when ride changes
   useEffect(() => {
     if (!acceptedRide) {
       setOtpInput("");
@@ -150,60 +126,10 @@ export default function AcceptedRideInfo({
     }
   }, [acceptedRide?._id]);
 
-  useEffect(() => {
-    if (!driverLocation || !acceptedRide || !cacheKey) {
-      setLoading(false);
-      setHasError(true);
-      return;
-    }
-
-    const apiKey = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY;
-    console.log('Google Maps API key available:', !!apiKey);
-    if (apiKey) {
-      console.log('API key starts with:', apiKey.substring(0, 10) + '...');
-    }
-
-    const cached = directionsCache.get(cacheKey);
-    if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-      setDirections(cached.directions);
-      setLoading(false);
-      setHasError(false);
-      return;
-    }
-
-    setLoading(true);
-    setHasError(false);
-
-    getRideDurations(driverLocation, acceptedRide.pickup, acceptedRide.drop)
-      .then((directionsResult) => {
-        console.log('Fetched directions:', directionsResult);
-        setDirections(directionsResult);
-        setHasError(false);
-        directionsCache.set(cacheKey, { 
-          directions: directionsResult, 
-          timestamp: Date.now() 
-        });
-      })
-      .catch((error) => {
-        console.error('Error fetching accepted ride data:', error);
-        setHasError(true);
-        const fallbackDirections: RideDirections = { 
-          toPickup: 5, 
-          toDropoff: 10, 
-          pickupDistance: 3.2, 
-          dropoffDistance: 6.8 
-        };
-        setDirections(fallbackDirections);
-      })
-      .finally(() => setLoading(false));
-  }, [cacheKey, acceptedRide?._id]);
-
-  // Using imported formatDuration and formatDistance from directions.ts
-
   const formatFare = (fare: number): number => {
     return Math.round(fare / 5) * 5;
   };
-  // OTP verification function
+
   const handleOtpVerification = async () => {
     if (!acceptedRide) return;
     
@@ -211,270 +137,343 @@ export default function AcceptedRideInfo({
       setIsOtpVerified(true);
       await saveOtpVerificationState(acceptedRide._id, true);
       Alert.alert("Success", "OTP verified successfully!");
+      setOtpInput("");
     } else {
       Alert.alert("Error", "Invalid OTP. Please try again.");
     }
   };
 
-  // Format vehicle type for display
-  const formatVehicleType = (vehicleType: string): string => {
-    return vehicleType.replace(/([A-Z])/g, ' $1').trim().toUpperCase();
+  const handlePhoneCall = () => {
+    if (!acceptedRide?.customer?.phone) return;
+    
+    const phoneUrl = `tel:${acceptedRide.customer.phone}`;
+    Linking.canOpenURL(phoneUrl)
+      .then((supported) => {
+        if (supported) {
+          return Linking.openURL(phoneUrl);
+        } else {
+          Alert.alert("Error", "Phone calls are not supported on this device");
+        }
+      })
+      .catch((err) => console.error('Error opening phone:', err));
+  };
+
+  const handleDirections = () => {
+    if (!acceptedRide) return;
+    
+    const { latitude, longitude } = acceptedRide.pickup;
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
+    
+    Linking.canOpenURL(url)
+      .then((supported) => {
+        if (supported) {
+          return Linking.openURL(url);
+        } else {
+          Alert.alert("Error", "Maps navigation is not supported on this device");
+        }
+      })
+      .catch((err) => console.error('Error opening maps:', err));
   };
 
   if (!acceptedRide) {
-    return null;
+    return (
+      <View style={[styles.py6, styles.alignCenter]}>
+        <Text style={[styles.textLg, styles.textGray500]}>No active ride</Text>
+      </View>
+    );
   }
 
+  const ambulanceDetails = getAmbulanceTypeDetails(acceptedRide.vehicle);
+  const statusInfo = getStatusInfo(acceptedRide.status);
+
   return (
-    <ScrollView style={[styles.flex1]} showsVerticalScrollIndicator={false}>
-      <View style={[styles.bgWhite, styles.roundedXl, styles.overflowHidden, styles.mb6, styles.shadowSm]}>
-        
-        {/* Header */}
-        <View style={[styles.px4, styles.py3, styles.bgGray800]}>
-          <View style={[styles.flexRow, styles.alignCenter, styles.justifyBetween]}>
-            <View style={[styles.flexRow, styles.alignCenter]}>
-              <Ionicons name="pulse" size={16} color={colors.medical[500]} />
-              <Text style={[styles.textWhite, styles.textSm, styles.ml2, styles.fontMedium]}>{relativeTime}</Text>
-            </View>
-            <View style={[styles.flexRow, styles.alignCenter]}>
-              <View style={[styles.w2, styles.h2, styles.roundedFull, styles.bgMedical500, styles.mr2]} />
-              <Text style={[styles.textWhite, styles.textSm, styles.fontMedium]}>
-                {acceptedRide.status === "START" ? "EN ROUTE" : 
-                 acceptedRide.status === "ARRIVED" ? "AT PICKUP" : 
-                 acceptedRide.status === "COMPLETED" ? "COMPLETED" : "ACTIVE"}
-              </Text>
-            </View>
+    <ScrollView 
+      style={[styles.flex1]} 
+      showsVerticalScrollIndicator={false}
+      bounces={false}
+    >
+      {/* Professional Header with Status */}
+      <View style={[
+        styles.mb4, 
+        styles.p4, 
+        styles.roundedLg, 
+        styles.border,
+        { backgroundColor: colors.emergency[50], borderColor: colors.emergency[200] }
+      ]}>
+        <View style={[styles.flexRow, styles.alignCenter, styles.justifyBetween, styles.mb3]}>
+          <View style={[styles.flexRow, styles.alignCenter]}>
+            <MaterialCommunityIcons 
+              name={statusInfo.icon as any} 
+              size={20} 
+              color={statusInfo.color} 
+              style={[styles.mr2]} 
+            />
+            <Text style={[styles.textLg, styles.fontBold, styles.textGray800]}>
+              Active Emergency
+            </Text>
+          </View>
+          <View style={[
+            styles.px3, 
+            styles.py1, 
+            styles.roundedFull,
+            { backgroundColor: statusInfo.color + '20' }
+          ]}>
+            <Text style={[
+              styles.textXs, 
+              styles.fontBold,
+              { color: statusInfo.color }
+            ]}>
+              {statusInfo.label.toUpperCase()}
+            </Text>
           </View>
         </View>
 
-        {/* Content */}
-        <View style={[styles.pb4, styles.mb6]}>
-          {/* Route Information */}
-          <View style={[styles.mb4, styles.p4, styles.roundedLg, styles.bgGray50]}>
-            {/* Pickup Location */}
-            <View style={[styles.flexRow, styles.alignCenter, styles.mb4]}>
-              <View style={[styles.w8, styles.h8, styles.roundedFull, styles.alignCenter, styles.justifyCenter, styles.mr3, styles.bgGray800]}>
-                <Ionicons name="location" size={16} color={colors.medical[500]} />
-              </View>
-              <View style={[styles.flex1]}>
-                <Text style={[styles.textSm, styles.textGray600, styles.fontMedium, styles.mb1]}>PICKUP LOCATION</Text>
-                <Text style={[styles.textBase, styles.textGray900, styles.fontMedium]} numberOfLines={2}>{acceptedRide.pickup.address}</Text>
-              </View>
-            </View>
-            
-            {/* Route Info */}
-            <View style={[styles.flexRow, styles.alignCenter, styles.mb4]}>
-              <View style={[styles.w8, styles.alignCenter]}>
-                <View style={[styles.w1, styles.h8, styles.bgGray400]} />
-              </View>
-              <View style={[styles.flex1, styles.ml3]}>
-                <View style={[styles.flexRow, styles.alignCenter, styles.mb1]}>
-                  <Ionicons name={loading ? "time" : "car"} size={16} color={hasError ? colors.danger[500] : colors.gray[800]} />
-                  <Text style={[styles.textSm, styles.textGray700, styles.ml2, styles.fontMedium]}>
-                    {loading ? "Calculating route..." : `Pickup: ${formatDuration(directions.toPickup)}, Dropoff: ${formatDuration(directions.toDropoff)}`}
-                  </Text>
-                </View>
-                <View style={[styles.flexRow, styles.alignCenter]}>
-                  <Ionicons name={loading ? "time" : "navigate"} size={16} color={hasError ? colors.danger[500] : colors.gray[800]} />
-                  <Text style={[styles.textSm, styles.textGray700, styles.ml2, styles.fontMedium]}>
-                    {loading ? "Calculating distance..." : `Pickup: ${formatDistance(directions.pickupDistance)}, Dropoff: ${formatDistance(directions.dropoffDistance)}`}
-                  </Text>
-                </View>
-              </View>
-            </View>
-            
-            {/* Drop Location */}
-            <View style={[styles.flexRow, styles.alignCenter]}>
-              <View style={[styles.w8, styles.h8, styles.roundedFull, styles.alignCenter, styles.justifyCenter, styles.mr3, styles.bgGray800]}>
-                <Ionicons name="medical" size={16} color={colors.medical[500]} />
-              </View>
-              <View style={[styles.flex1]}>
-                <Text style={[styles.textSm, styles.textGray600, styles.fontMedium, styles.mb1]}>DESTINATION HOSPITAL</Text>
-                <Text style={[styles.textBase, styles.textGray900, styles.fontMedium]} numberOfLines={2}>{acceptedRide.drop.address}</Text>
-              </View>
-            </View>
+        {/* Ambulance Type Info */}
+        <View style={[styles.flexRow, styles.alignCenter, styles.mb2]}>
+          <View style={[
+            styles.w10, 
+            styles.h10, 
+            styles.roundedLg, 
+            styles.mr3, 
+            styles.alignCenter, 
+            styles.justifyCenter,
+            { backgroundColor: colors.medical[100] }
+          ]}>
+            <MaterialCommunityIcons
+              name={ambulanceDetails.icon as any} 
+              size={20} 
+              color={ambulanceDetails.color} 
+            />
           </View>
-
-          {/* OTP Verification */}
-          <View style={[styles.mb4, styles.p4, styles.roundedLg, styles.bgGray50]}>
-            <View style={[styles.flexRow, styles.alignCenter, styles.mb3]}>
-            </View>
-            
-            <View style={[styles.flexRow, styles.alignCenter, styles.gap4]}>
-              <View style={[styles.flex1]}>
-                <Text style={[styles.textXs, styles.textGray500, styles.mb2]}>
-                  {isOtpVerified ? "Patient verified" : "Enter OTP provided by patient"}
-                </Text>
-                <TextInput
-                  style={[
-                    styles.p3, 
-                    styles.roundedLg, 
-                    styles.border, 
-                    styles.borderGray300, 
-                    styles.textCenter, 
-                    styles.textLg, 
-                    styles.fontBold, 
-                    isOtpVerified ? styles.bgGray100 : styles.bgWhite
-                  ]}
-                  placeholder="0000"
-                  value={isOtpVerified ? acceptedRide.otp : otpInput}
-                  onChangeText={setOtpInput}
-                  keyboardType="numeric"
-                  maxLength={4}
-                  editable={!isOtpVerified}
-                />
-              </View>
-              <TouchableOpacity
-                style={[styles.py3, styles.mt6, styles.px4, styles.roundedLg, isOtpVerified ? styles.bgMedical500 : styles.bgGray800, styles.alignCenter]}
-                onPress={handleOtpVerification}
-                disabled={otpInput.length !== 4 || isOtpVerified}
-              >
-                <Text style={[styles.textWhite, styles.textSm, styles.fontMedium]}>
-                  {isOtpVerified ? "VERIFIED" : "VERIFY"}
-                </Text>
-              </TouchableOpacity>
-            </View>
-            
-            {isOtpVerified && (
-              <View style={[styles.flexRow, styles.alignCenter, styles.justifyCenter, styles.mt3]}>
-                <Ionicons name="checkmark-circle" size={16} color={colors.medical[500]} />
-                <Text style={[styles.textSm, styles.textMedical500, styles.ml2, styles.fontMedium]}>Patient verified successfully</Text>
-              </View>
-            )}
-            
-            {/* Debug info for development - remove in production */}
-            {__DEV__ && (
-              <View style={[styles.mt3, styles.p2, styles.roundedLg, styles.bgGray200]}>
-                <Text style={[styles.textXs, styles.textGray600]}>Debug: Expected OTP = {acceptedRide.otp}</Text>
-                <Text style={[styles.textXs, styles.textGray600]}>Verification persisted: {isOtpVerified ? "Yes" : "No"}</Text>
-              </View>
-            )}
+          <View style={[styles.flex1]}>
+            <Text style={[styles.textBase, styles.fontBold, styles.textGray800]}>
+              {ambulanceDetails.name}
+            </Text>
+            <Text style={[styles.textSm, styles.textGray600]}>
+              Request ID: #{acceptedRide._id.slice(-6).toUpperCase()}
+            </Text>
           </View>
+        </View>
 
-          {/* Status Action Buttons */}
-          {acceptedRide.status === "START" && isOtpVerified && (
-            <View style={[styles.mb4]}>
-              <TouchableOpacity
-                style={[styles.py4, styles.px4, styles.roundedLg, styles.bgGray800, styles.alignCenter]}
-                onPress={() => {
-                  // TODO: Implement status update to ARRIVED
-                  console.log('Update status to ARRIVED');
-                }}
-              >
-                <Text style={[styles.textWhite, styles.textBase, styles.fontMedium]}>ARRIVED AT PICKUP LOCATION</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-
-          {acceptedRide.status === "ARRIVED" && isOtpVerified && (
-            <View style={[styles.mb4]}>
-              <TouchableOpacity
-                style={[styles.py4, styles.px4, styles.roundedLg, styles.bgMedical500, styles.alignCenter]}
-                onPress={async () => {
-                  // TODO: Implement status update to COMPLETED
-                  console.log('Update status to COMPLETED');
-                  
-                  // Clear OTP verification state when ride is completed
-                  if (acceptedRide) {
-                    await saveOtpVerificationState(acceptedRide._id, false);
-                  }
-                }}
-              >
-                <Text style={[styles.textWhite, styles.textBase, styles.fontMedium]}>COMPLETE EMERGENCY TRANSPORT</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-
-          {acceptedRide.status === "COMPLETED" && (
-            <View style={[styles.mb4, styles.p4, styles.roundedLg, styles.bgMedical50]}>
-              <View style={[styles.flexRow, styles.alignCenter, styles.justifyCenter]}>
-                <Ionicons name="checkmark-circle" size={20} color={colors.medical[500]} />
-                <Text style={[styles.textSm, styles.textMedical500, styles.ml2, styles.fontMedium]}>EMERGENCY TRANSPORT COMPLETED</Text>
-              </View>
-            </View>
-          )}
-
-          {/* OTP Required Message */}
-          {!isOtpVerified && acceptedRide.status !== "COMPLETED" && (
-            <View style={[styles.mb4, styles.p4, styles.roundedLg, styles.bgDanger50]}>
-              <View style={[styles.flexRow, styles.alignCenter, styles.justifyCenter]}>
-                <Ionicons name="information-circle" size={16} color={colors.danger[500]} />
-                <Text style={[styles.textSm, styles.textDanger500, styles.ml2, styles.fontMedium]}>
-                  Please verify OTP before proceeding
-                </Text>
-              </View>
-            </View>
-          )}          
+        {/* Time and Fare Info Pills */}
+        <View style={[styles.flexRow, styles.gap2, styles.flexWrap]}>
+          <View style={[styles.flexRow, styles.py1, styles.px3, styles.roundedFull, styles.border,
+            styles.alignCenter, styles.borderGray200, { backgroundColor: colors.gray[50] }]}>
+            <Octicons name="clock" size={12} color={colors.gray[600]} style={[styles.mr2]} />
+            <Text style={[styles.textXs, styles.textGray700, styles.fontMedium]}>
+              {relativeTime}
+            </Text>
+          </View>
           
-          {/* Patient Details */}
-          <View style={[styles.mb4, styles.p4, styles.roundedLg, styles.bgGray50]}>
-            
-            {/* Patient Name */}
-            <View style={[styles.flexRow, styles.alignCenter, styles.mb4]}>
-              <View style={[styles.w8, styles.h8, styles.roundedFull, styles.alignCenter, styles.justifyCenter, styles.mr3, styles.bgGray800]}>
-                <Ionicons name="person" size={16} color={colors.medical[500]} />
-              </View>
-              <View style={[styles.flex1]}>
-                <Text style={[styles.textXs, styles.textGray500, styles.mb1]}>Name</Text>
-                <Text style={[styles.textBase, styles.textGray900, styles.fontMedium]}>
-                  {acceptedRide.customer.name || "Name not provided"}
-                </Text>
-              </View>
-            </View>
-
-            {/* Phone Number */}
-            <View style={[styles.flexRow, styles.alignCenter, styles.mb4]}>
-              <View style={[styles.w8, styles.h8, styles.roundedFull, styles.alignCenter, styles.justifyCenter, styles.mr3, styles.bgGray800]}>
-                <Ionicons name="call" size={16} color={colors.medical[500]} />
-              </View>
-              <View style={[styles.flex1]}>
-                <Text style={[styles.textXs, styles.textGray500, styles.mb1]}>Contact Number</Text>
-                <View style={[styles.flexRow, styles.alignCenter]}>
-                  <Text style={[styles.textBase, styles.textGray900, styles.fontMedium, styles.flex1]}>
-                    {acceptedRide.customer.phone}
-                  </Text>
-                  <TouchableOpacity
-                    style={[styles.ml2, styles.py2, styles.px3, styles.roundedLg, styles.bgMedical500]}
-                    onPress={() => {
-                      if (acceptedRide.customer.phone) {
-                        const phoneNumber = `tel:${acceptedRide.customer.phone}`;
-                        Linking.openURL(phoneNumber);
-                      }
-                    }}
-                  >
-                    <Text style={[styles.textWhite, styles.textXs, styles.fontMedium]}>CALL</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </View>
-
-            {/* Patient ID */}
-            <View style={[styles.flexRow, styles.alignCenter]}>
-              <View style={[styles.w8, styles.h8, styles.roundedFull, styles.alignCenter, styles.justifyCenter, styles.mr3, styles.bgGray800]}>
-                <Ionicons name="id-card" size={16} color={colors.medical[500]} />
-              </View>
-              <View style={[styles.flex1]}>
-                <Text style={[styles.textXs, styles.textGray500, styles.mb1]}>Patient ID</Text>
-                <Text style={[styles.textBase, styles.textGray900, styles.fontMedium]}>
-                  {acceptedRide.customer._id.toUpperCase()}
-                </Text>
-              </View>
-            </View>
+          <View style={[styles.flexRow, styles.py1, styles.px3, styles.roundedFull, styles.border,
+            styles.alignCenter, styles.borderGray200, { backgroundColor: colors.gray[50] }]}>
+            <MaterialIcons name="attach-money" size={12} color={colors.warning[600]} style={[styles.mr2]} />
+            <Text style={[styles.textXs, styles.textGray700, styles.fontMedium]}>
+              ₹{formatFare(acceptedRide.fare)}
+            </Text>
           </View>
-
-          {/* Fare Info */}
-          <View style={[styles.mb4, styles.p4, styles.roundedLg, styles.bgGray50, styles.flexRow, styles.justifyBetween, styles.alignCenter]}>
-            <View style={[styles.flexRow, styles.alignCenter]}>
-              <View style={[styles.w8, styles.h8, styles.roundedFull, styles.alignCenter, styles.justifyCenter, styles.mr3, styles.bgGray800]}>
-                <Ionicons name="cash" size={16} color={colors.medical[500]} />
-              </View>
-              <Text style={[styles.textBase, styles.textGray700, styles.fontMedium]}>Emergency Transport Fare</Text>
-            </View>
-            <Text style={[styles.textXl, styles.fontBold, styles.textGray900]}>₹{formatFare(acceptedRide.fare)}</Text>
-          </View>
-
         </View>
       </View>
+
+      {/* Location Details */}
+      <View style={[styles.mb4]}>
+        <Text style={[styles.textLg, styles.fontBold, styles.textGray800, styles.mb3]}>
+          Trip Details
+        </Text>
+        
+        {/* Pickup Location */}
+        <View style={[
+          styles.p3, 
+          styles.roundedLg, 
+          styles.border, 
+          styles.mb2,
+          { backgroundColor: colors.primary[50], borderColor: colors.primary[200] }
+        ]}>
+          <View style={[styles.flexRow, styles.alignCenter, styles.mb2]}>
+            <MaterialCommunityIcons name="map-marker" size={16} color={colors.primary[600]} style={[styles.mr2]} />
+            <Text style={[styles.textSm, styles.fontBold, styles.textPrimary600]}>
+              PICKUP LOCATION
+            </Text>
+          </View>
+          <Text style={[styles.textBase, styles.textGray800, styles.mb1]} numberOfLines={2}>
+            {acceptedRide.pickup.address}
+          </Text>
+          <View style={[styles.flexRow, styles.alignCenter]}>
+            <MaterialCommunityIcons name="clock-outline" size={12} color={colors.gray[600]} style={[styles.mr1]} />
+            <Text style={[styles.textXs, styles.textGray600]}>
+              Pickup location • {relativeTime}
+            </Text>
+          </View>
+        </View>
+
+        {/* Hospital/Drop Location */}
+        <View style={[
+          styles.p3, 
+          styles.roundedLg, 
+          styles.border,
+          { backgroundColor: colors.medical[50], borderColor: colors.medical[200] }
+        ]}>
+          <View style={[styles.flexRow, styles.alignCenter, styles.mb2]}>
+            <MaterialCommunityIcons name="hospital-building" size={16} color={colors.medical[600]} style={[styles.mr2]} />
+            <Text style={[styles.textSm, styles.fontBold, styles.textMedical600]}>
+              DESTINATION HOSPITAL
+            </Text>
+          </View>
+          <Text style={[styles.textBase, styles.textGray800, styles.mb1]} numberOfLines={2}>
+            {acceptedRide.drop.address}
+          </Text>
+          <View style={[styles.flexRow, styles.alignCenter]}>
+            <MaterialCommunityIcons name="hospital-building" size={12} color={colors.gray[600]} style={[styles.mr1]} />
+            <Text style={[styles.textXs, styles.textGray600]}>
+              Destination hospital
+            </Text>
+          </View>
+        </View>
+      </View>
+
+      {/* OTP Verification Section */}
+      <View style={[styles.mb4]}>
+        <Text style={[styles.textLg, styles.fontBold, styles.textGray800, styles.mb3]}>
+          Patient Verification
+        </Text>
+        
+        {isOtpVerified ? (
+          <View style={[
+            styles.p4, 
+            styles.roundedLg, 
+            styles.border,
+            { backgroundColor: colors.medical[50], borderColor: colors.medical[300] }
+          ]}>
+            <View style={[styles.flexRow, styles.alignCenter, styles.justifyCenter]}>
+              <MaterialCommunityIcons name="check-circle" size={24} color={colors.medical[600]} style={[styles.mr2]} />
+              <Text style={[styles.textBase, styles.fontBold, styles.textMedical600]}>
+                Patient Verified ✓
+              </Text>
+            </View>
+            <Text style={[styles.textCenter, styles.textSm, styles.textGray600, styles.mt1]}>
+              OTP verification completed
+            </Text>
+          </View>
+        ) : (
+          <View style={[
+            styles.p4, 
+            styles.roundedLg, 
+            styles.border,
+            { backgroundColor: colors.warning[50], borderColor: colors.warning[200] }
+          ]}>
+            <View style={[styles.mb3]}>
+              <Text style={[styles.textSm, styles.fontMedium, styles.textGray700, styles.mb2]}>
+                Verify patient with 4-digit OTP:
+              </Text>
+              <View style={[styles.flexRow, styles.alignCenter, styles.gap2]}>
+                <TextInput
+                  style={[
+                    styles.flex1,
+                    styles.py3,
+                    styles.px4,
+                    styles.border,
+                    styles.borderGray300,
+                    styles.roundedLg,
+                    styles.textCenter,
+                    styles.textLg,
+                    styles.fontBold,
+                    { backgroundColor: colors.gray[50] }
+                  ]}
+                  value={otpInput}
+                  onChangeText={setOtpInput}
+                  placeholder="Enter OTP"
+                  keyboardType="numeric"
+                  maxLength={4}
+                  textAlign="center"
+                />
+                <TouchableOpacity
+                  style={[
+                    styles.py3,
+                    styles.px4,
+                    styles.roundedLg,
+                    { backgroundColor: colors.warning[500] }
+                  ]}
+                  onPress={handleOtpVerification}
+                  disabled={otpInput.length !== 4}
+                >
+                  <Text style={[styles.textBase, styles.fontBold, styles.textWhite]}>
+                    Verify
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+            <Text style={[styles.textXs, styles.textGray600, styles.textCenter]}>
+              Patient OTP: {acceptedRide.otp} (for testing)
+            </Text>
+          </View>
+        )}
+      </View>
+
+      {/* Quick Action Buttons */}
+      <View style={[styles.flexRow, styles.gap3, styles.mb4]}>
+        <TouchableOpacity
+          style={[
+            styles.flex1,
+            styles.py3,
+            styles.roundedLg,
+            styles.alignCenter,
+            styles.border,
+            styles.borderGray300,
+            { backgroundColor: colors.gray[50] }
+          ]}
+          onPress={handlePhoneCall}
+          activeOpacity={0.7}
+        >
+          <View style={[styles.flexRow, styles.alignCenter]}>
+            <MaterialIcons name="phone" size={18} color={colors.gray[700]} style={[styles.mr2]} />
+            <Text style={[styles.textSm, styles.fontMedium, styles.textGray700]}>
+              Call Patient
+            </Text>
+          </View>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.flex1,
+            styles.py3,
+            styles.roundedLg,
+            styles.alignCenter,
+            { backgroundColor: colors.primary[500] }
+          ]}
+          onPress={handleDirections}
+          activeOpacity={0.8}
+        >
+          <View style={[styles.flexRow, styles.alignCenter]}>
+            <MaterialCommunityIcons name="navigation" size={18} color="white" style={[styles.mr2]} />
+            <Text style={[styles.textSm, styles.fontBold, styles.textWhite]}>
+              Navigate
+            </Text>
+          </View>
+        </TouchableOpacity>
+      </View>
+
+      {/* Emergency Contact Info */}
+      {acceptedRide.customer?.phone && (
+        <View style={[
+          styles.p3, 
+          styles.roundedLg, 
+          styles.border,
+          { backgroundColor: colors.emergency[50], borderColor: colors.emergency[200] }
+        ]}>
+          <View style={[styles.flexRow, styles.alignCenter, styles.mb1]}>
+            <MaterialCommunityIcons name="phone-alert" size={16} color={colors.emergency[600]} style={[styles.mr2]} />
+            <Text style={[styles.textSm, styles.fontBold, styles.textEmergency600]}>
+              EMERGENCY CONTACT
+            </Text>
+          </View>
+          <Text style={[styles.textBase, styles.textGray800]}>
+            {acceptedRide.customer.phone}
+          </Text>
+        </View>
+      )}
     </ScrollView>
   );
 }
+
+// Memoize the component to prevent unnecessary re-renders
+export default memo(AcceptedRideInfo);
