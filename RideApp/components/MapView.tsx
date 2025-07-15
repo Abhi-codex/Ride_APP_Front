@@ -1,6 +1,6 @@
 import React from 'react';
 import { Platform, Text, View } from 'react-native';
-import { colors, styles as tailwindStyles } from '../constants/TailwindStyles';
+import { colors, styles as styles } from '../constants/TailwindStyles';
 
 let MapView: any;
 let Marker: any;
@@ -55,28 +55,14 @@ interface PolylineProps {
 
 const WebMapFallback: React.FC<MapViewWrapperProps> = ({ style, region, children, onPress }) => (
   <View 
-    style={[
-      style, 
-      tailwindStyles.bgGray100,
-      tailwindStyles.justifyCenter,
-      tailwindStyles.alignCenter,
-      tailwindStyles.border2,
-      tailwindStyles.borderGray300,
-      tailwindStyles.roundedLg,
-      tailwindStyles.p4
-    ]}
-    onTouchEnd={onPress}
-  >
-    <Text style={[
-      tailwindStyles.textBase,
-      tailwindStyles.textGray600,
-      tailwindStyles.textCenter,
-      tailwindStyles.fontMedium
-    ]}>
+    style={[ style, styles.bgGray100, styles.justifyCenter, styles.alignCenter,
+      styles.border2, styles.borderGray300, styles.roundedLg, styles.p4]}
+      onTouchEnd={onPress} >
+    <Text style={[ styles.textBase, styles.textGray600, styles.textCenter, styles.fontMedium ]}>
       🗺️ Map View (Web Preview)
     </Text>
     {region && (
-      <Text style={[tailwindStyles.textSm, tailwindStyles.textGray500, tailwindStyles.textCenter]}>
+      <Text style={[styles.textSm, styles.textGray500, styles.textCenter]}>
         Location: {region.latitude.toFixed(4)}, {region.longitude.toFixed(4)}
       </Text>
     )}
@@ -85,56 +71,24 @@ const WebMapFallback: React.FC<MapViewWrapperProps> = ({ style, region, children
 );
 
 const WebMarkerFallback: React.FC<MarkerProps> = ({ coordinate, title, pinColor, onPress, onCalloutPress }) => (
-  <View 
-    style={[
-      tailwindStyles.absolute,
-      tailwindStyles.p2,
-      tailwindStyles.roundedLg,
-      tailwindStyles.m1,
-      { backgroundColor: pinColor || colors.danger[500], maxWidth: 200 }
-    ]}
-    onTouchEnd={onPress}
-  >
-    <Text 
-      style={[
-        tailwindStyles.textWhite,
-        tailwindStyles.textXs,
-        tailwindStyles.fontBold,
-        tailwindStyles.textCenter
-      ]}
-      onPress={onCalloutPress}
-    >
+  <View style={[ styles.absolute, styles.p2, styles.roundedLg, styles.m1, 
+      { backgroundColor: pinColor || colors.danger[500], maxWidth: 200 } ]}
+      onTouchEnd={onPress}>
+    <Text style={[ styles.textWhite, styles.textXs, styles.fontBold, styles.textCenter ]} 
+    onPress={onCalloutPress}>
       📍 {title || 'Marker'}
     </Text>
-    <Text style={[
-      tailwindStyles.textWhite,
-      tailwindStyles.textXs,
-      tailwindStyles.textCenter
-    ]}>
+    <Text style={[ styles.textWhite, styles.textXs, styles.textCenter ]}>
       ({coordinate.latitude.toFixed(4)}, {coordinate.longitude.toFixed(4)})
     </Text>
   </View>
 );
 
 const WebPolylineFallback: React.FC<PolylineProps> = ({ coordinates, strokeColor }) => (
-  <View style={[
-    tailwindStyles.absolute,
-    tailwindStyles.bottom10,
-    tailwindStyles.left25,
-    tailwindStyles.right25,
-    tailwindStyles.p2,
-    tailwindStyles.bgWhite,
-    tailwindStyles.border2,
-    tailwindStyles.roundedLg,
-    tailwindStyles.shadowMd,
-    { borderColor: strokeColor || colors.primary[500], opacity: 0.9 }
-  ]}>
-    <Text style={[
-      tailwindStyles.textXs,
-      tailwindStyles.textGray700,
-      tailwindStyles.textCenter,
-      tailwindStyles.fontMedium
-    ]}>
+  <View style={[ styles.absolute, styles.bottom10, styles.left25, styles.right25, styles.p2,
+    styles.bgWhite, styles.border2, styles.roundedLg, styles.shadowMd, 
+    { borderColor: strokeColor || colors.primary[500], opacity: 0.9 }]}>
+    <Text style={[ styles.textXs, styles.textGray700, styles.textCenter, styles.fontMedium]}>
       🛣️ Route ({coordinates.length} points)
     </Text>
   </View>
@@ -149,7 +103,6 @@ export const MapViewWrapper: React.FC<MapViewWrapperProps> = (props) => {
   }
   
   console.log('MapViewWrapper - Using native MapView');
-  // For mobile platforms (iOS/Android), use the actual MapView
   return (
     <MapView
       style={props.style}

@@ -1,11 +1,7 @@
 import React from "react";
 import { Dimensions, View } from "react-native";
 import { PanGestureHandler } from "react-native-gesture-handler";
-import Animated, {
-  Extrapolate,
-  interpolate,
-  useAnimatedStyle,
-} from "react-native-reanimated";
+import Animated, { Extrapolate, interpolate, useAnimatedStyle } from "react-native-reanimated";
 import { styles } from "../../constants/TailwindStyles";
 import { Ride } from "../../types/rider";
 import DriverDrawerContent from "./DriverDrawerContent";
@@ -73,33 +69,12 @@ export default function DriverDrawer({
   });
   return (
     <Animated.View
-      style={[
-        styles.absolute,
-        styles.left1,
-        styles.right1,
-        styles.bgWhite,
-        styles.rounded2xl,
-        styles.shadowLg,
-        styles.z999,
-        styles.roundedTl3xl,
-        styles.roundedTr3xl,
-        {
-          height: screenHeight,
-          top: 0,
-        },
-        drawerStyle,
-      ]}
-    >
+      style={[ styles.absolute, styles.left1, styles.right1, styles.bgWhite, styles.rounded2xl, 
+        styles.shadowLg, styles.z999, styles.roundedTl3xl, styles.roundedTr3xl,
+        { height: screenHeight, top: 0 }, drawerStyle ]}>
       <PanGestureHandler onGestureEvent={gestureHandler}>
         <Animated.View
-          style={[
-            styles.alignCenter,
-            styles.py3,
-            styles.borderB1,
-            styles.borderGray100,
-            handleStyle,
-          ]}
-        >
+          style={[ styles.alignCenter, styles.py3, styles.borderB1, styles.borderGray100, handleStyle ]}>
           <View
             style={[styles.w12, styles.h1, styles.bgGray300, styles.rounded]}
           />
@@ -111,6 +86,7 @@ export default function DriverDrawer({
           availableRidesCount={availableRides.length}
           online={online}
           todaysEarnings="125"
+          ongoingRide={acceptedRide}
         />
       ) : (
         <DriverDrawerContent

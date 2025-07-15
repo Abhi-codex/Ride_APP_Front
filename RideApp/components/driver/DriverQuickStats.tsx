@@ -1,7 +1,6 @@
 import React from "react";
 import { Text, View } from "react-native";
-import { MaterialCommunityIcons, MaterialIcons, Octicons } from "@expo/vector-icons";
-import { styles, colors } from "../../constants/TailwindStyles";
+import { styles } from "../../constants/TailwindStyles";
 
 interface DriverQuickStatsProps {
   availableRidesCount: number;
@@ -17,14 +16,7 @@ export default function DriverQuickStats({
   return (
     <View style={[styles.flexRow, styles.justifyBetween, styles.mb4]}>
       {/* Available Rides Tile */}
-      <View style={[
-        styles.flex1,
-        styles.bgGray100,
-        styles.roundedLg,
-        styles.p3,
-        styles.mr2,
-        styles.shadowSm
-      ]}>
+      <View style={[styles.flex1, styles.bgGray100, styles.roundedLg, styles.p3, styles.mr2, styles.shadowSm]}>
         <View style={[styles.flexRow, styles.alignCenter, styles.mb2]}>
           <Text style={[styles.textXs, styles.textGray600, styles.fontMedium]}>
             Emergency Calls
@@ -39,14 +31,7 @@ export default function DriverQuickStats({
       </View>
 
       {/* Rating Tile */}
-      <View style={[
-        styles.flex1,
-        styles.bgGray100,
-        styles.roundedLg,
-        styles.p3,
-        styles.mr2,
-        styles.shadowSm
-      ]}>
+      <View style={[styles.flex1, styles.bgGray100, styles.roundedLg, styles.p3, styles.mr2, styles.shadowSm]}>
         <View style={[styles.flexRow, styles.alignCenter, styles.mb2]}>
           <Text style={[styles.textXs, styles.textGray600, styles.fontMedium]}>
             Rating
@@ -61,13 +46,7 @@ export default function DriverQuickStats({
       </View>
 
       {/* Earnings Tile */}
-      <View style={[
-        styles.flex1,
-        styles.bgGray100,
-        styles.roundedLg,
-        styles.p3,
-        styles.shadowSm
-      ]}>
+      <View style={[styles.flex1, styles.bgGray100, styles.roundedLg, styles.p3, styles.shadowSm]}>
         <View style={[styles.flexRow, styles.alignCenter, styles.mb2]}>
           <Text style={[styles.textXs, styles.textGray600, styles.fontMedium]}>
             Today's Earnings

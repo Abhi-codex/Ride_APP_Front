@@ -22,14 +22,12 @@ interface DriverMapProps {
 function DriverMap({
   driverLocation,
   acceptedRide,
-  destination,
   routeCoords,
   online = true,
   availableRides = [],
   isSearching = false,
 }: DriverMapProps) {
 
-  // Cleanup on unmount
   const mountedRef = useRef(true);
   useEffect(() => {
     return () => {
@@ -111,7 +109,7 @@ function DriverMap({
     return (
       <View style={[styles.flex1, styles.alignCenter, styles.justifyCenter, styles.bgGray100]}>
         <Text style={[styles.textBase, styles.textGray600]}>
-          📍 Waiting for location...
+          Waiting for location...
         </Text>
       </View>
     );
@@ -161,7 +159,6 @@ function DriverMap({
           </>
         )}
 
-        {/* Available rides markers (when not on accepted ride) */}
         {!stableAcceptedRide && online && stableAvailableRides.map((ride, index) => (
           <Marker
             key={ride._id}
@@ -171,28 +168,8 @@ function DriverMap({
           />
         ))}
       </MapView>
-
-      {/* Status overlay */}
-      {isSearching && !stableAcceptedRide && (
-        <View style={[
-          styles.absolute,
-          styles.top10,
-          styles.left1,
-          styles.right1,
-          styles.py2,
-          styles.px4,
-          styles.roundedLg,
-          styles.alignCenter,
-          { backgroundColor: colors.primary[500] + 'E6' }
-        ]}>
-          <Text style={[styles.textBase, styles.fontBold, styles.textWhite]}>
-            🔍 Searching for Emergency Calls...
-          </Text>
-        </View>
-      )}
     </View>
   );
 }
 
-// Memoize the component to prevent unnecessary re-renders
 export default memo(DriverMap);

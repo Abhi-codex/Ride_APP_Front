@@ -1,14 +1,11 @@
 import * as Location from "expo-location";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { ActivityIndicator, Alert, Dimensions, StatusBar, Text, View } from "react-native";
 import { runOnJS, useAnimatedGestureHandler, useSharedValue, withSpring } from "react-native-reanimated";
 import { colors, styles } from "../../constants/TailwindStyles";
 import { useRiderLogic } from "../../hooks/useRiderLogic";
 import { useRideSearching } from "../../hooks/useRideSearching";
-import { 
-  getFallbackDistance,
-  LatLng
-} from "../../utils/directions";
+import { getFallbackDistance, LatLng } from "../../utils/directions";
 import DriverDrawer from "@/components/driver/DriverDrawer";
 import DriverMap from "@/components/driver/DriverMap";
 
@@ -21,56 +18,40 @@ const SNAP_POINTS = {
 };
 
 export default function DriverMapScreen() {
-  const [driverLocation, setDriverLocation] = useState<{
-    latitude: number;
-    longitude: number;
-    latitudeDelta: number;
-    longitudeDelta: number;
-  } | null>(null);
+  const [driverLocation, setDriverLocation] = useState<{latitude: number; longitude: number;
+    latitudeDelta: number; longitudeDelta: number; } | null>(null);
   const [loading, setLoading] = useState(true);
 
   const translateY = useSharedValue(SNAP_POINTS.MINIMIZED);
   const [currentSnapPoint, setCurrentSnapPoint] = useState< "MINIMIZED" | "PARTIAL" | "FULL" >("MINIMIZED");
   
-  const { 
-    routeCoords, 
-    destination, 
-    tripStarted, 
-    online, 
-    availableRides, 
-    acceptedRide,
-    handleAcceptRide, 
-    updateRideStatus, 
-    handleRejectRide, 
-    toggleOnline,
-    loading: riderLoading,
-    error: riderError
-  } = useRiderLogic();
+  const autoExpandedRideId = useRef<string | null>(null);
+  
+  const { routeCoords, destination, tripStarted, online, availableRides, acceptedRide,
+    handleAcceptRide, updateRideStatus, handleRejectRide, toggleOnline } = useRiderLogic();
 
-  // Auto-expand drawer when ride is accepted - use acceptedRide ID to prevent object reference issues
   useEffect(() => {
-    if (acceptedRide?._id && currentSnapPoint === "MINIMIZED") {
+    if (acceptedRide?._id && autoExpandedRideId.current !== acceptedRide._id) {
       translateY.value = withSpring(SNAP_POINTS.PARTIAL, {
         damping: 20,
         stiffness: 90,
       });
       setCurrentSnapPoint("PARTIAL");
+      autoExpandedRideId.current = acceptedRide._id;
+    } 
+    else if (!acceptedRide?._id) {
+      autoExpandedRideId.current = null;
     }
-  }, [acceptedRide?._id, currentSnapPoint]);
+  }, [acceptedRide?._id]);
 
   const { isSearching } = useRideSearching({ online, acceptedRide, availableRides });
 
   const gestureHandler = useAnimatedGestureHandler({ 
-    onStart: (_, context: any) => { 
-      context.startY = translateY.value; 
-    },
-    onActive: (event, context) => {
-      translateY.value = context.startY + event.translationY;
-    },
-    onEnd: (event) => {
+    onStart: (_, context: any) => { context.startY = translateY.value; },
+    onActive: (event, context) => { translateY.value = context.startY + event.translationY; },
+    onEnd: (event) => { 
       const { velocityY } = event;
       let destSnapPoint = SNAP_POINTS.MINIMIZED;
-
       const currentY = translateY.value;
 
       if (currentY < SNAP_POINTS.FULL + 100) {
@@ -111,48 +92,27 @@ export default function DriverMapScreen() {
     },
   });
 
-  // State for Google Maps API-based distance and ETA
   const [routeDetails, setRouteDetails] = useState({
     distanceKm: "0",
     etaMinutes: 0
   });
   
-  // Effect to calculate distance and ETA using Google Maps API - prevent infinite loops
   useEffect(() => {
     if (!driverLocation || !destination || !acceptedRide) {
-      setRouteDetails({
-        distanceKm: "0",
-        etaMinutes: 0
-      });
+      setRouteDetails({ distanceKm: "0", etaMinutes: 0 });
       return;
     }
     
-      // Calculate route details using fallback method
-      const origin: LatLng = { 
-        latitude: driverLocation.latitude, 
-        longitude: driverLocation.longitude 
-      };
-      
-      const dest: LatLng = {
-        latitude: destination.latitude,
-        longitude: destination.longitude
-      };
+      const origin: LatLng = { latitude: driverLocation.latitude, longitude: driverLocation.longitude };
+      const dest: LatLng = { latitude: destination.latitude, longitude: destination.longitude };
       
       const fallbackDistance = getFallbackDistance(origin, dest);
       const fallbackDistanceKm = fallbackDistance.toFixed(2);
       const fallbackEtaMinutes = Math.ceil(parseFloat(fallbackDistanceKm) / 0.666);
       
-      setRouteDetails({
-        distanceKm: fallbackDistanceKm,
-        etaMinutes: fallbackEtaMinutes
-      });
-  }, [
-    driverLocation?.latitude,
-    driverLocation?.longitude,
-    destination?.latitude,
-    destination?.longitude,
-    acceptedRide?._id
-  ]);
+      setRouteDetails({ distanceKm: fallbackDistanceKm, etaMinutes: fallbackEtaMinutes });
+  }, 
+  [ driverLocation?.latitude, driverLocation?.longitude, destination?.latitude, destination?.longitude, acceptedRide?._id ]);
   
   // Use the values from state
   const distanceKm = routeDetails.distanceKm;
@@ -211,7 +171,8 @@ export default function DriverMapScreen() {
       );
 
       return () => subscription.remove();
-    } catch (error) {
+    } 
+    catch (error) {
       console.error("Error getting location:", error);
       Alert.alert(
         "Location Error",
