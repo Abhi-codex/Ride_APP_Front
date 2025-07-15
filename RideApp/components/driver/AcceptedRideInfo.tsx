@@ -1,6 +1,6 @@
-import { Ionicons, MaterialCommunityIcons, MaterialIcons, Octicons } from "@expo/vector-icons";
-import React, { useEffect, useState, useMemo, memo } from "react";
-import { Text, View, ScrollView, TouchableOpacity, TextInput, Alert, ActivityIndicator } from "react-native";
+import { MaterialCommunityIcons, MaterialIcons, Octicons } from "@expo/vector-icons";
+import React, { useEffect, useState, memo } from "react";
+import { Text, View, ScrollView, TouchableOpacity, TextInput, Alert } from "react-native";
 import { styles, colors } from "../../constants/TailwindStyles";
 import { Ride } from "../../types/rider";
 import { Linking } from "react-native";
@@ -10,8 +10,6 @@ interface AcceptedRideInfoProps {
   acceptedRide: Ride | null;
   driverLocation: { latitude: number; longitude: number } | null;
 }
-
-// Utility function to calculate relative time for ride start
 const getRelativeTime = (createdAt: string | Date): string => {
   const now = new Date();
   const created = new Date(createdAt);
@@ -60,12 +58,11 @@ const generateOtpStorageKey = (rideId: string): string => {
 
 function AcceptedRideInfo({
   acceptedRide,
-  driverLocation,
 }: AcceptedRideInfoProps) {
   const [relativeTime, setRelativeTime] = useState("");
   const [otpInput, setOtpInput] = useState("");
   const [isOtpVerified, setIsOtpVerified] = useState(false);
-  const [otpStorageKey, setOtpStorageKey] = useState("");
+  const [, setOtpStorageKey] = useState("");
 
   // Early return if no accepted ride
   if (!acceptedRide) {
@@ -88,11 +85,12 @@ function AcceptedRideInfo({
       }
       setOtpStorageKey(storageKey);
     } catch (error) {
-      // Failed to load OTP verification state
+      console.error("Failed to load OTP verification state:", error);
+      setIsOtpVerified(false);
+      setOtpStorageKey(generateOtpStorageKey(rideId));
     }
   };
 
-  // Save OTP verification state to storage
   const saveOtpVerificationState = async (rideId: string, isVerified: boolean) => {
     try {
       const storageKey = generateOtpStorageKey(rideId);
@@ -102,8 +100,7 @@ function AcceptedRideInfo({
         await storage.removeItem(storageKey);
       }
     } catch (error) {
-      // Failed to save OTP verification state
-    }
+      console.error("Failed to save OTP verification state:", error);}
   };
 
   useEffect(() => {
@@ -187,42 +184,19 @@ function AcceptedRideInfo({
   const statusInfo = getStatusInfo(acceptedRide.status);
 
   return (
-    <ScrollView 
-      style={[styles.flex1]} 
-      showsVerticalScrollIndicator={false}
-      bounces={false}
-    >
+    <ScrollView style={[styles.flex1]} showsVerticalScrollIndicator={false} bounces={false}>
       {/* Professional Header with Status */}
-      <View style={[
-        styles.mb4, 
-        styles.p4, 
-        styles.roundedLg, 
-        styles.border,
-        { backgroundColor: colors.emergency[50], borderColor: colors.emergency[200] }
-      ]}>
+      <View style={[styles.mb4, styles.p4, styles.roundedLg, styles.border,
+        { backgroundColor: colors.emergency[50], borderColor: colors.emergency[200] }]}>
         <View style={[styles.flexRow, styles.alignCenter, styles.justifyBetween, styles.mb3]}>
           <View style={[styles.flexRow, styles.alignCenter]}>
-            <MaterialCommunityIcons 
-              name={statusInfo.icon as any} 
-              size={20} 
-              color={statusInfo.color} 
-              style={[styles.mr2]} 
-            />
+            <MaterialCommunityIcons name={statusInfo.icon as any} size={20} color={statusInfo.color} style={[styles.mr2]} />
             <Text style={[styles.textLg, styles.fontBold, styles.textGray800]}>
               Active Emergency
             </Text>
           </View>
-          <View style={[
-            styles.px3, 
-            styles.py1, 
-            styles.roundedFull,
-            { backgroundColor: statusInfo.color + '20' }
-          ]}>
-            <Text style={[
-              styles.textXs, 
-              styles.fontBold,
-              { color: statusInfo.color }
-            ]}>
+          <View style={[styles.px3, styles.py1, styles.roundedFull, { backgroundColor: statusInfo.color + '20' }]}>
+            <Text style={[styles.textXs, styles.fontBold, { color: statusInfo.color }]}>
               {statusInfo.label.toUpperCase()}
             </Text>
           </View>
@@ -230,20 +204,9 @@ function AcceptedRideInfo({
 
         {/* Ambulance Type Info */}
         <View style={[styles.flexRow, styles.alignCenter, styles.mb2]}>
-          <View style={[
-            styles.w10, 
-            styles.h10, 
-            styles.roundedLg, 
-            styles.mr3, 
-            styles.alignCenter, 
-            styles.justifyCenter,
-            { backgroundColor: colors.medical[100] }
-          ]}>
-            <MaterialCommunityIcons
-              name={ambulanceDetails.icon as any} 
-              size={20} 
-              color={ambulanceDetails.color} 
-            />
+          <View style={[styles.w10, styles.h10, styles.roundedLg, styles.mr3, styles.alignCenter, 
+            styles.justifyCenter, { backgroundColor: colors.medical[100] }]}>
+            <MaterialCommunityIcons name={ambulanceDetails.icon as any} size={20} color={ambulanceDetails.color} />
           </View>
           <View style={[styles.flex1]}>
             <Text style={[styles.textBase, styles.fontBold, styles.textGray800]}>
@@ -347,7 +310,7 @@ function AcceptedRideInfo({
             <View style={[styles.flexRow, styles.alignCenter, styles.justifyCenter]}>
               <MaterialCommunityIcons name="check-circle" size={24} color={colors.medical[600]} style={[styles.mr2]} />
               <Text style={[styles.textBase, styles.fontBold, styles.textMedical600]}>
-                Patient Verified ✓
+                Patient Verified
               </Text>
             </View>
             <Text style={[styles.textCenter, styles.textSm, styles.textGray600, styles.mt1]}>
@@ -355,30 +318,15 @@ function AcceptedRideInfo({
             </Text>
           </View>
         ) : (
-          <View style={[
-            styles.p4, 
-            styles.roundedLg, 
-            styles.border,
-            { backgroundColor: colors.warning[50], borderColor: colors.warning[200] }
-          ]}>
+          <View style={[styles.p4, styles.roundedLg, styles.border,
+            { backgroundColor: colors.warning[50], borderColor: colors.warning[200] }]}>
             <View style={[styles.mb3]}>
               <Text style={[styles.textSm, styles.fontMedium, styles.textGray700, styles.mb2]}>
                 Verify patient with 4-digit OTP:
               </Text>
               <View style={[styles.flexRow, styles.alignCenter, styles.gap2]}>
-                <TextInput
-                  style={[
-                    styles.flex1,
-                    styles.py3,
-                    styles.px4,
-                    styles.border,
-                    styles.borderGray300,
-                    styles.roundedLg,
-                    styles.textCenter,
-                    styles.textLg,
-                    styles.fontBold,
-                    { backgroundColor: colors.gray[50] }
-                  ]}
+                <TextInput style={[styles.flex1, styles.py3, styles.px4, styles.border, styles.borderGray300,
+                styles.roundedLg, styles.textCenter, styles.textLg, styles.fontBold, { backgroundColor: colors.gray[50]}]}
                   value={otpInput}
                   onChangeText={setOtpInput}
                   placeholder="Enter OTP"
@@ -386,16 +334,10 @@ function AcceptedRideInfo({
                   maxLength={4}
                   textAlign="center"
                 />
-                <TouchableOpacity
-                  style={[
-                    styles.py3,
-                    styles.px4,
-                    styles.roundedLg,
-                    { backgroundColor: colors.warning[500] }
-                  ]}
+                <TouchableOpacity style={[styles.py3, styles.px4, styles.roundedLg,
+                    { backgroundColor: colors.warning[500] }]}
                   onPress={handleOtpVerification}
-                  disabled={otpInput.length !== 4}
-                >
+                  disabled={otpInput.length !== 4}>
                   <Text style={[styles.textBase, styles.fontBold, styles.textWhite]}>
                     Verify
                   </Text>
@@ -411,19 +353,9 @@ function AcceptedRideInfo({
 
       {/* Quick Action Buttons */}
       <View style={[styles.flexRow, styles.gap3, styles.mb4]}>
-        <TouchableOpacity
-          style={[
-            styles.flex1,
-            styles.py3,
-            styles.roundedLg,
-            styles.alignCenter,
-            styles.border,
-            styles.borderGray300,
-            { backgroundColor: colors.gray[50] }
-          ]}
-          onPress={handlePhoneCall}
-          activeOpacity={0.7}
-        >
+        <TouchableOpacity style={[styles.flex1, styles.py3, styles.roundedLg, styles.alignCenter,
+            styles.border, styles.borderGray300, { backgroundColor: colors.gray[50] }]}
+          onPress={handlePhoneCall} activeOpacity={0.7}>
           <View style={[styles.flexRow, styles.alignCenter]}>
             <MaterialIcons name="phone" size={18} color={colors.gray[700]} style={[styles.mr2]} />
             <Text style={[styles.textSm, styles.fontMedium, styles.textGray700]}>
@@ -432,17 +364,8 @@ function AcceptedRideInfo({
           </View>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[
-            styles.flex1,
-            styles.py3,
-            styles.roundedLg,
-            styles.alignCenter,
-            { backgroundColor: colors.primary[500] }
-          ]}
-          onPress={handleDirections}
-          activeOpacity={0.8}
-        >
+        <TouchableOpacity style={[styles.flex1, styles.py3, styles.roundedLg, styles.alignCenter,
+            { backgroundColor: colors.primary[500] }]} onPress={handleDirections} activeOpacity={0.8}>
           <View style={[styles.flexRow, styles.alignCenter]}>
             <MaterialCommunityIcons name="navigation" size={18} color="white" style={[styles.mr2]} />
             <Text style={[styles.textSm, styles.fontBold, styles.textWhite]}>
@@ -454,12 +377,8 @@ function AcceptedRideInfo({
 
       {/* Emergency Contact Info */}
       {acceptedRide.customer?.phone && (
-        <View style={[
-          styles.p3, 
-          styles.roundedLg, 
-          styles.border,
-          { backgroundColor: colors.emergency[50], borderColor: colors.emergency[200] }
-        ]}>
+        <View style={[styles.p3, styles.roundedLg, styles.border,
+          { backgroundColor: colors.emergency[50], borderColor: colors.emergency[200] }]}>
           <View style={[styles.flexRow, styles.alignCenter, styles.mb1]}>
             <MaterialCommunityIcons name="phone-alert" size={16} color={colors.emergency[600]} style={[styles.mr2]} />
             <Text style={[styles.textSm, styles.fontBold, styles.textEmergency600]}>
@@ -475,5 +394,4 @@ function AcceptedRideInfo({
   );
 }
 
-// Memoize the component to prevent unnecessary re-renders
 export default memo(AcceptedRideInfo);

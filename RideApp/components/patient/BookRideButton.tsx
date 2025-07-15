@@ -17,18 +17,9 @@ export default function BookRideButton({
 }: BookRideButtonProps) {
   return (
     <TouchableOpacity
-      style={[
-        styles.py4,
-        styles.justifyBetween,
-        styles.alignCenter,
-        styles.rounded3xl,
-        styles.shadowMd,
-        { backgroundColor: colors.primary[600] },
-        disabled && { opacity: 0.7 }
-      ]}
-      onPress={onPress}
-      disabled={isLoading || disabled}
-    >
+      style={[styles.py4, styles.justifyBetween, styles.alignCenter, styles.rounded3xl, styles.shadowMd,
+        { backgroundColor: colors.primary[600] }, disabled && { opacity: 0.7 }]}
+      onPress={onPress} disabled={isLoading || disabled}>
       {isLoading ? (
         <ActivityIndicator color={colors.white} />
       ) : (

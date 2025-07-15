@@ -128,19 +128,12 @@ function AvailableRidesList({
     };
 
     const ambulanceDetails = getAmbulanceTypeDetails(ride.vehicle);
-    const priorityColor = colors.emergency[500]; // Default to emergency color
+    const priorityColor = colors.emergency[500]; 
 
     return (
-      <View style={[
-        styles.bgGray100, 
-        styles.py2, 
-        styles.roundedLg, 
-        styles.px3, 
-        styles.shadowSm, 
-        styles.mb3,
-        { backgroundColor: colors.emergency[50], borderColor: colors.emergency[200] },
-        styles.border
-      ]}>
+      <View style={[styles.bgGray100, styles.py2, styles.roundedLg, styles.px3, styles.shadowSm, 
+        styles.mb3, { backgroundColor: colors.emergency[50], borderColor: colors.emergency[200] },
+        styles.border]}>
         {/* Header Row with Emergency Type and Priority */}
         <View style={[styles.flexRow, styles.alignStart, styles.justifyBetween, styles.mb2]}>
           <View style={[styles.flex1, styles.mr2]}>
@@ -157,17 +150,8 @@ function AvailableRidesList({
           
           {/* Priority Badge */}
           <View style={[styles.flexRow, styles.alignCenter, styles.py1]}>
-            <View style={[
-              styles.px2, 
-              styles.py1, 
-              styles.roundedFull,
-              { backgroundColor: priorityColor + '20' }
-            ]}>
-              <Text style={[
-                styles.textXs, 
-                styles.fontBold,
-                { color: priorityColor }
-              ]}>
+            <View style={[styles.px2, styles.py1, styles.roundedFull, { backgroundColor: priorityColor + '20' }]}>
+              <Text style={[styles.textXs, styles.fontBold, { color: priorityColor }]}>
                 HIGH PRIORITY
               </Text>
             </View>
@@ -236,19 +220,9 @@ function AvailableRidesList({
         {/* Action Buttons */}
         <View style={[styles.flexRow, styles.gap2]}>
           <TouchableOpacity 
-            style={[
-              styles.flex1, 
-              styles.py2, 
-              styles.px3, 
-              styles.roundedLg, 
-              styles.alignCenter,
-              styles.border,
-              styles.borderGray300,
-              { backgroundColor: colors.gray[50] }
-            ]}
-            onPress={() => handleRejectRide(ride._id)} 
-            activeOpacity={0.7}
-          >
+            style={[styles.flex1, styles.py2, styles.px3, styles.roundedLg, styles.alignCenter,
+              styles.border, styles.borderGray300, { backgroundColor: colors.gray[50] }]}
+            onPress={() => handleRejectRide(ride._id)} activeOpacity={0.7}>
             <View style={[styles.flexRow, styles.alignCenter]}>
               <Octicons name="x" size={14} color={colors.gray[600]} style={[styles.mr1]} />
               <Text style={[styles.textSm, styles.fontMedium, styles.textGray700]}>
@@ -257,19 +231,9 @@ function AvailableRidesList({
             </View>
           </TouchableOpacity>
           
-          <TouchableOpacity 
-            style={[
-              styles.flex2, 
-              styles.py2, 
-              styles.px3, 
-              styles.roundedLg, 
-              styles.alignCenter,
-              styles.shadowMd,
-              { backgroundColor: colors.emergency[500] }
-            ]}
-            onPress={() => handleAcceptRide(ride._id)} 
-            activeOpacity={0.8}
-          >
+          <TouchableOpacity style={[styles.flex2, styles.py2, styles.px3, styles.roundedLg, 
+              styles.alignCenter, styles.shadowMd, { backgroundColor: colors.emergency[500] }]}
+            onPress={() => handleAcceptRide(ride._id)} activeOpacity={0.8}>
             <View style={[styles.flexRow, styles.alignCenter]}>
               <MaterialCommunityIcons name="ambulance" size={16} color="white" style={[styles.mr2]} />
               <Text style={[styles.textSm, styles.fontBold, styles.textWhite]}>
@@ -291,28 +255,20 @@ function AvailableRidesList({
             Emergency Requests
           </Text>
         </View>
-        <View style={[
-          styles.px3, 
-          styles.py1, 
-          styles.roundedFull,
-          { backgroundColor: colors.emergency[100] }
-        ]}>
+        <View style={[styles.px3, styles.py1, styles.roundedFull, { backgroundColor: colors.emergency[100] }]}>
           <Text style={[styles.textSm, styles.fontBold, { color: colors.emergency[700] }]}>
             {availableRides.length} Available
           </Text>
         </View>
       </View>
 
-      {/* Rides List */}
       {availableRides.map((ride, index) => (
         <RideItem key={ride._id} ride={ride} index={index} />
       ))}
       
-      {/* End Spacer */}
       <View style={{ height: 20 }} />
     </ScrollView>
   );
 }
 
-// Memoize the component to prevent unnecessary re-renders
 export default memo(AvailableRidesList);

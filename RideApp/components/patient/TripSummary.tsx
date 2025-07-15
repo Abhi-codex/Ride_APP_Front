@@ -93,56 +93,25 @@ export default function TripSummary({
   const ambulanceDetails = getAmbulanceTypeDetails(ambulanceType);
 
   return (
-    <ScrollView style={[
-      styles.absolute,
-      styles.bottom0,
-      styles.left0,
-      styles.right0,
-      styles.bgWhite,
-      styles.roundedTl3xl,
-      styles.roundedTr3xl,
-      styles.shadowLg,
-      styles.border,
-      styles.borderGray200,
-      styles.pb8,
-      { maxHeight: screenHeight * 0.5 }
-    ]}>
+    <ScrollView style={[ styles.absolute, styles.bottom0, styles.left0, styles.right0, styles.bgWhite,
+      styles.roundedTl3xl, styles.roundedTr3xl, styles.shadowLg, styles.border, styles.borderGray200,
+      styles.pb8, { maxHeight: screenHeight * 0.5 } ]}>
       {/* Handle Bar */}
       <TouchableOpacity 
         style={[styles.alignCenter, styles.py3]}
         onPress={() => setIsExpanded(!isExpanded)}
         activeOpacity={0.7}
       >
-        <View style={[
-          styles.w12,
-          styles.h1,
-          styles.bgGray300,
-          styles.rounded2xl
-        ]} />
+        <View style={[styles.w12, styles.h1, styles.bgGray300, styles.rounded2xl]} />
       </TouchableOpacity>
 
       {/* Main Status Header */}
       <View style={[styles.px4, styles.pb3]}>
-        <View style={[
-          styles.flexRow,
-          styles.alignCenter,
-          styles.justifyBetween,
-          styles.py3,
-          styles.px3,
-          styles.roundedXl,
-          styles.mb3,
-          { backgroundColor: statusInfo.bgColor }
-        ]}>
+        <View style={[styles.flexRow, styles.alignCenter, styles.justifyBetween, styles.py3,
+          styles.px3, styles.roundedXl, styles.mb3, { backgroundColor: statusInfo.bgColor }]}>
           <View style={[styles.flexRow, styles.alignCenter]}>
-            <View style={[
-              styles.w10,
-              styles.h10,
-              styles.roundedFull,
-              styles.alignCenter,
-              styles.justifyCenter,
-              styles.mr3,
-              { backgroundColor: statusInfo.color }
-            ]}>
+            <View style={[styles.w10, styles.h10, styles.roundedFull, styles.alignCenter, 
+            styles.justifyCenter, styles.mr3, { backgroundColor: statusInfo.color }]}>
               <Octicons name={statusInfo.icon as any} size={16} color="white" />
             </View>
             <View>
@@ -204,14 +173,7 @@ export default function TripSummary({
 
         {/* OTP Display - Always Visible if Available */}
         {otp && (
-          <View style={[
-            styles.bgWarning50,
-            styles.roundedLg,
-            styles.p3,
-            styles.mb3,
-            styles.border,
-            styles.borderWarning200
-          ]}>
+          <View style={[styles.bgWarning50, styles.roundedLg, styles.p3, styles.mb3, styles.border, styles.borderWarning200]}>
             <View style={[styles.flexRow, styles.alignCenter, styles.justifyCenter]}>
               <MaterialIcons name="vpn-key" size={18} color={colors.warning[600]} style={[styles.mr2]} />
               <Text style={[styles.textSm, styles.textGray700, styles.fontMedium]}>
@@ -246,17 +208,8 @@ export default function TripSummary({
               {priority && (
                 <View style={[styles.flexRow, styles.alignCenter]}>
                   <Text style={[styles.textXs, styles.textGray600]}>Priority: </Text>
-                  <View style={[
-                    styles.px2,
-                    styles.py1,
-                    styles.roundedFull,
-                    { backgroundColor: getPriorityColor(priority) + '20' }
-                  ]}>
-                    <Text style={[
-                      styles.textXs,
-                      styles.fontBold,
-                      { color: getPriorityColor(priority) }
-                    ]}>
+                  <View style={[styles.px2, styles.py1, styles.roundedFull, { backgroundColor: getPriorityColor(priority) + '20' }]}>
+                    <Text style={[ styles.textXs, styles.fontBold, { color: getPriorityColor(priority) }]}>
                       {priority.toUpperCase()}
                     </Text>
                   </View>
@@ -268,12 +221,7 @@ export default function TripSummary({
           {/* Ambulance Type Info */}
           <View style={[styles.bgGray50, styles.roundedLg, styles.p3, styles.mb3]}>
             <View style={[styles.flexRow, styles.alignCenter, styles.mb2]}>
-              <MaterialCommunityIcons 
-                name={ambulanceDetails.icon as any} 
-                size={16} 
-                color={colors.emergency[600]} 
-                style={[styles.mr2]} 
-              />
+              <MaterialCommunityIcons name={ambulanceDetails.icon as any} size={16} color={colors.emergency[600]} style={[styles.mr2]} />
               <Text style={[styles.textSm, styles.fontBold, styles.textGray800]}>
                 {ambulanceDetails.name}
               </Text>

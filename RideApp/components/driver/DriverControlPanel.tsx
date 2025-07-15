@@ -62,25 +62,8 @@ export default function DriverControlPanel({
 
   return (
     <View style={[styles.mt4]}>
-      <View
-        style={[
-          styles.bgWhite,
-          styles.roundedXl,
-          styles.p4,
-          styles.border,
-          styles.borderGray200,
-          styles.shadowMd,
-        ]}
-      >
-        <Text
-          style={[
-            styles.textLg,
-            styles.fontBold,
-            styles.textGray900,
-            styles.mb4,
-            styles.textCenter,
-          ]}
-        >
+      <View style={[styles.bgWhite, styles.roundedXl, styles.p4, styles.border, styles.borderGray200, styles.shadowMd]}>
+        <Text style={[styles.textLg, styles.fontBold, styles.textGray900, styles.mb4, styles.textCenter]}>
           🚑 Active Emergency Trip
         </Text>
 
@@ -109,15 +92,7 @@ export default function DriverControlPanel({
           </View>
         </View>
 
-        <View
-          style={[
-            styles.bgGray50,
-            styles.roundedLg,
-            styles.p3,
-            styles.mb4,
-            styles.alignCenter,
-          ]}
-        >
+        <View style={[styles.bgGray50, styles.roundedLg, styles.p3, styles.mb4, styles.alignCenter]}>
           <Text style={[styles.textSm, styles.fontMedium, styles.textGray600]}>
             {acceptedRide.status === RideStatus.START
               ? "En Route to Patient"
@@ -127,19 +102,11 @@ export default function DriverControlPanel({
           </Text>
         </View>
 
-        <TouchableOpacity
-          style={[
-            acceptedRide.status === RideStatus.ARRIVED
+        <TouchableOpacity style={[acceptedRide.status === RideStatus.ARRIVED
               ? styles.bgSecondary500
               : styles.bgPrimary500,
-            styles.py4,
-            styles.roundedXl,
-            styles.alignCenter,
-            styles.shadowMd,
-          ]}
-          onPress={handleRideAction}
-          activeOpacity={0.8}
-        >
+            styles.py4, styles.roundedXl, styles.alignCenter, styles.shadowMd, ]}
+          onPress={handleRideAction} activeOpacity={0.8}>
           <Text style={[styles.textWhite, styles.fontBold, styles.textBase]}>
             {acceptedRide.status === RideStatus.START
               ? "Mark as Arrived"
