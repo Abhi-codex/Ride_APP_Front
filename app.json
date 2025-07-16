@@ -14,8 +14,10 @@
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "This app uses location to show your position on the map and to help you find rides nearby."
-      }
+        "NSLocationWhenInUseUsageDescription": "This app uses location to show your position on the map and to help you find rides nearby.",
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "bundleIdentifier": "com.dhruva12.RideApp"
     },
     "android": {
       "adaptiveIcon": {
