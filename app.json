@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "RideApp",
-    "slug": "RideApp",
+    "name": "InstaAid",
+    "slug": "InstaAid",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "rideapp",
+    "scheme": "instaaid",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "developmentClient": {
@@ -17,7 +17,7 @@
         "NSLocationWhenInUseUsageDescription": "This app uses location to show your position on the map and to help you find rides nearby.",
         "ITSAppUsesNonExemptEncryption": false
       },
-      "bundleIdentifier": "com.dhruva12.RideApp"
+      "bundleIdentifier": "com.dhruva12.InstaAid"
     },
     "android": {
       "adaptiveIcon": {
@@ -31,7 +31,7 @@
         "INTERNET",
         "ACCESS_NETWORK_STATE"
       ],
-      "package": "com.dhruva12.RideApp"
+      "package": "com.dhruva12.InstaAid"
     },
     "web": {
       "bundler": "metro",
