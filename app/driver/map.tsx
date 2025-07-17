@@ -1,13 +1,13 @@
+import DriverDrawer from "@/components/driver/DriverDrawer";
+import DriverMap from "@/components/driver/DriverMap";
 import * as Location from "expo-location";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Alert, Dimensions, StatusBar, Text, View } from "react-native";
 import { runOnJS, useAnimatedGestureHandler, useSharedValue, withSpring } from "react-native-reanimated";
 import { colors, styles } from "../../constants/TailwindStyles";
 import { useRiderLogic } from "../../hooks/useRiderLogic";
 import { useRideSearching } from "../../hooks/useRideSearching";
 import { getFallbackDistance, LatLng } from "../../utils/directions";
-import DriverDrawer from "@/components/driver/DriverDrawer";
-import DriverMap from "@/components/driver/DriverMap";
 
 const { height: screenHeight } = Dimensions.get("window");
 
@@ -27,8 +27,9 @@ export default function DriverMapScreen() {
   
   const autoExpandedRideId = useRef<string | null>(null);
   
+  // Pass driverLocation to useRiderLogic for correct ride filtering
   const { routeCoords, destination, tripStarted, online, availableRides, acceptedRide,
-    handleAcceptRide, updateRideStatus, handleRejectRide, toggleOnline } = useRiderLogic();
+    handleAcceptRide, updateRideStatus, handleRejectRide, toggleOnline } = useRiderLogic(driverLocation ? { latitude: driverLocation.latitude, longitude: driverLocation.longitude } : undefined);
 
   useEffect(() => {
     if (acceptedRide?._id && autoExpandedRideId.current !== acceptedRide._id) {

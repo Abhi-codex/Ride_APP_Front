@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useCallback, useRef, memo } from "react";
+import React, { memo, useEffect, useMemo, useRef } from "react";
 import { Text, View } from "react-native";
 import { colors, styles } from "../../constants/TailwindStyles";
 import { Ride } from "../../types/rider";
@@ -25,7 +25,6 @@ function DriverMap({
   routeCoords,
   online = true,
   availableRides = [],
-  isSearching = false,
 }: DriverMapProps) {
 
   const mountedRef = useRef(true);

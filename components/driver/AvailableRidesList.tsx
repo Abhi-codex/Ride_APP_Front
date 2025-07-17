@@ -1,7 +1,7 @@
-import { Ionicons, MaterialCommunityIcons, MaterialIcons, Octicons } from "@expo/vector-icons";
-import React, { useEffect, useState, useCallback, memo } from "react";
-import { Alert, Text, TouchableOpacity, View, ScrollView } from "react-native";
-import { styles, colors } from "../../constants/TailwindStyles";
+import { MaterialCommunityIcons, MaterialIcons, Octicons } from "@expo/vector-icons";
+import React, { memo, useEffect, useState } from "react";
+import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { colors, styles } from "../../constants/TailwindStyles";
 import { Ride } from "../../types/rider";
 
 interface AvailableRidesListProps {
@@ -140,7 +140,7 @@ function AvailableRidesList({
             <View style={[styles.flexRow, styles.alignCenter, styles.mb1]}>
               <MaterialCommunityIcons name="ambulance" size={16} color={colors.emergency[600]} style={[styles.mr2]} />
               <Text style={[styles.textBase, styles.fontBold, styles.textGray800]}>
-                Emergency Request #{index + 1}
+                Emergency Request: {index + 1}
               </Text>
             </View>
             <Text style={[styles.textXs, styles.textPrimary600, styles.fontMedium, styles.mt1]}>
@@ -206,15 +206,6 @@ function AvailableRidesList({
               Hospital: {ride.drop.address}
             </Text>
           </View>
-
-          {/* Time Info */}
-          <View style={[styles.flexRow, styles.py1, styles.px2, styles.rounded3xl, styles.border,
-            styles.alignCenter, styles.borderGray200]}>
-            <MaterialCommunityIcons name="clock-outline" size={12} color={colors.warning[600]} style={[styles.mr2]} />
-            <Text style={[styles.textXs, styles.textGray600]}>
-              Pickup requested • {relativeTime}
-            </Text>
-          </View>
         </View>
 
         {/* Action Buttons */}
@@ -247,21 +238,6 @@ function AvailableRidesList({
   };
   return (
     <ScrollView style={[styles.flex1]} showsVerticalScrollIndicator={false}>
-      {/* Header */}
-      <View style={[styles.flexRow, styles.alignCenter, styles.justifyBetween, styles.mb3, styles.px1]}>
-        <View style={[styles.flexRow, styles.alignCenter]}>
-          <MaterialCommunityIcons name="ambulance" size={20} color={colors.emergency[600]} style={[styles.mr2]} />
-          <Text style={[styles.textLg, styles.fontBold, styles.textGray800]}>
-            Emergency Requests
-          </Text>
-        </View>
-        <View style={[styles.px3, styles.py1, styles.roundedFull, { backgroundColor: colors.emergency[100] }]}>
-          <Text style={[styles.textSm, styles.fontBold, { color: colors.emergency[700] }]}>
-            {availableRides.length} Available
-          </Text>
-        </View>
-      </View>
-
       {availableRides.map((ride, index) => (
         <RideItem key={ride._id} ride={ride} index={index} />
       ))}
