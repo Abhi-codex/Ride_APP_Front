@@ -10,9 +10,8 @@
       "android": {
         "buildType": "apk"
       },
-      "ios": {},
       "env": {
-        "EXPO_PUBLIC_GOOGLE_MAPS_API_KEY": "AIzaSyAERM44Mxqwz42ywZPPnQ8-ltHa63kuGmQ"
+        "EXPO_PUBLIC_GOOGLE_MAPS_API_KEY": "your_api_key_here"
       }
     },
     "preview": {
@@ -20,18 +19,16 @@
       "android": {
         "buildType": "apk"
       },
-      "ios": {},
       "env": {
-        "EXPO_PUBLIC_GOOGLE_MAPS_API_KEY": "AIzaSyAERM44Mxqwz42ywZPPnQ8-ltHa63kuGmQ"
+        "EXPO_PUBLIC_GOOGLE_MAPS_API_KEY": "your_api_key_here"
       }
     },
     "production": {
       "android": {
         "buildType": "app-bundle"
       },
-      "ios": {},
       "env": {
-        "EXPO_PUBLIC_GOOGLE_MAPS_API_KEY": "AIzaSyAERM44Mxqwz42ywZPPnQ8-ltHa63kuGmQ"
+        "EXPO_PUBLIC_GOOGLE_MAPS_API_KEY": "your_api_key_here"
       }
     }
   },

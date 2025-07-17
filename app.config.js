@@ -33,7 +33,12 @@ export default {
         "INTERNET",
         "ACCESS_NETWORK_STATE"
       ],
-      package: "com.dhruva12.InstaAid"
+      package: "com.dhruva12.InstaAid",
+      config: {
+        googleMaps: {
+          apiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY
+        }
+      }
     },
     web: {
       bundler: "metro",
