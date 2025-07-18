@@ -1,3 +1,4 @@
+import { FontAwesome5 } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import React, { useRef, useState } from "react";
@@ -124,49 +125,20 @@ export default function PatientLoginScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={[styles.flex1]}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
-      <ScrollView
-        style={[styles.flex1, { backgroundColor: colors.gray[50] }]}
-        contentContainerStyle={[styles.flexGrow, styles.justifyCenter]}
-        keyboardShouldPersistTaps="handled"
-      >
+    <KeyboardAvoidingView style={[styles.flex1]} behavior={Platform.OS === "ios" ? "padding" : "height"}>
+      <ScrollView style={[styles.flex1, styles.bgGray100]}
+                  contentContainerStyle={[styles.flexGrow, styles.justifyCenter]}
+                  keyboardShouldPersistTaps="handled">
         <View style={[styles.px5, styles.py6]}>
           {/* Header */}
           <View style={[styles.alignCenter, styles.mb6]}>
-            <View
-              style={{
-                backgroundColor: colors.primary[600],
-                width: 80,
-                height: 80,
-                borderRadius: 40,
-                alignItems: "center",
-                justifyContent: "center",
-                marginBottom: 20,
-              }}
-            >
-              <Text style={{ fontSize: 40, color: colors.white }}>🏥</Text>
+            <View style={{ alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
+              <FontAwesome5 name="ambulance" size={64} color={colors.emergency[600]} />
             </View>
-            <Text
-              style={[
-                styles.text3xl,
-                styles.fontBold,
-                styles.textGray900,
-                styles.textCenter,
-              ]}
-            >
-              Patient Login
+            <Text style={[styles.text3xl, styles.fontBold, styles.textGray900, styles.textCenter]}>
+              Patient Portal
             </Text>
-            <Text
-              style={[
-                styles.textBase,
-                styles.textGray600,
-                styles.textCenter,
-                styles.mt2,
-              ]}
-            >
+            <Text style={[styles.textBase, styles.textGray600, styles.textCenter, styles.mt2]}>
               Book an ambulance for immediate medical assistance
             </Text>
           </View>
@@ -178,38 +150,18 @@ export default function PatientLoginScreen() {
             </Text>
 
             {/* Phone Number Boxes */}
-            <View style={[styles.flexRow, styles.justifyCenter, { gap: 6 }]}>
+            <View style={[styles.flexRow, styles.justifyCenter, { gap: 6 }]}> 
               {phoneDigits.map((digit, index) => (
                 <TextInput
                   key={index}
-                  ref={(ref) => {
-                    inputRefs.current[index] = ref;
-                  }}
-                  style={[
-                    {
-                      width: 32,
-                      height: 40,
-                      borderWidth: 1,
-                      borderColor: digit
-                        ? colors.primary[600]
-                        : colors.gray[300],
-                      borderRadius: 8,
-                      textAlign: "center",
-                      fontSize: 16,
-                      fontWeight: "600",
-                      backgroundColor: colors.white,
-                      color: colors.gray[900],
-                    },
-                    digit && {
-                      borderColor: colors.primary[600],
-                      backgroundColor: colors.primary[50],
-                    },
-                  ]}
+                  ref={(ref) => { inputRefs.current[index] = ref; }}
+                  style={[{width: 32, height: 40, borderWidth: 1, borderColor: digit ? colors.emergency[500] : colors.gray[300],
+                      borderRadius: 8, textAlign: "center", fontSize: 16, fontWeight: "600", backgroundColor: colors.white,
+                      color: colors.gray[900]}, digit && 
+                      { borderColor: colors.emergency[500], backgroundColor: colors.emergency[50] }]}
                   value={digit}
                   onChangeText={(value) => handleDigitChange(index, value)}
-                  onKeyPress={({ nativeEvent }) =>
-                    handleKeyPress(index, nativeEvent.key)
-                  }
+                  onKeyPress={({ nativeEvent }) => handleKeyPress(index, nativeEvent.key)}
                   keyboardType="numeric"
                   maxLength={1}
                   autoComplete="off"
@@ -221,26 +173,10 @@ export default function PatientLoginScreen() {
           </View>
 
           {/* Login Button */}
-          <TouchableOpacity
-            style={[
-              styles.wFull,
-              styles.py4,
-              styles.alignCenter,
-              styles.roundedLg,
-              {
-                backgroundColor: loading || !validatePhone()
-                  ? colors.gray[300]
-                  : colors.primary[600],
-                shadowColor: colors.black,
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.1,
-                shadowRadius: 4,
-                elevation: 3,
-              },
-            ]}
-            onPress={handlePatientLogin}
-            disabled={loading || !validatePhone()}
-          >
+          <TouchableOpacity style={[styles.wFull, styles.py4, styles.alignCenter, styles.roundedLg, 
+              {backgroundColor: loading || !validatePhone() ? colors.gray[300] : colors.emergency[500],
+                shadowColor: colors.black, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1,
+                shadowRadius: 4, elevation: 3}]} onPress={handlePatientLogin} disabled={loading || !validatePhone()}>
             {loading ? (
               <ActivityIndicator color={colors.white} size="small" />
             ) : (
@@ -251,65 +187,32 @@ export default function PatientLoginScreen() {
           </TouchableOpacity>
 
           {/* Emergency Info Card */}
-          <View
-            style={[
-              styles.mt6,
-              styles.p4,
-              styles.roundedLg,
-              { backgroundColor: colors.emergency[50], borderColor: colors.emergency[200], borderWidth: 1 },
-            ]}
-          >
-            <Text
-              style={[
-                styles.textSm,
-                styles.fontMedium,
-                { color: colors.emergency[800] },
-                styles.mb2,
-              ]}
-            >
+          <View style={[styles.mt6, styles.p4, styles.rounded3xl, styles.bgEmergency50, styles.borderEmergency200, { borderWidth: 1 }]}> 
+            <Text style={[styles.textSm, styles.fontMedium, { color: colors.emergency[800] }, styles.mb2]}>
               Emergency Services Available:
             </Text>
             <Text style={[styles.textXs, { color: colors.emergency[700] }, styles.mb1]}>
-              1. Basic Life Support Ambulance
+              1.  BLS - Basic Life Support
             </Text>
             <Text style={[styles.textXs, { color: colors.emergency[700] }, styles.mb1]}>
-              2. Advanced Life Support (ALS)
+              2.  ALS - Advanced Life Support
             </Text>
             <Text style={[styles.textXs, { color: colors.emergency[700] }, styles.mb1]}>
-              3. ICU Ambulance with Ventilator
+              3.  CCS - Critical Care Support
             </Text>
-            <Text style={[styles.textXs, { color: colors.emergency[700] }]}>
-              4. Air Ambulance for Critical Cases
-            </Text>
-          </View>
-
-          {/* Emergency Number */}
-          <View
-            style={[
-              styles.mt4,
-              styles.p3,
-              styles.roundedLg,
-              styles.bgGray100,
-              styles.alignCenter,
-            ]}
-          >
-            <Text style={[styles.textXs, styles.textGray600, styles.mb1]}>
-              For immediate emergency, call:
-            </Text>
-            <Text style={[styles.textBase, styles.fontBold, styles.textGray900]}>
-              📞 108 | 🚑 102
+            <Text style={[styles.textXs, { color: colors.emergency[700] }, styles.mb1]}>
+              4.  Auto Ambulance (Specially Designed)
+              </Text>
+            <Text style={[styles.textXs, { color: colors.emergency[700] }, styles.mb1]}>
+              5.  Bike Safety Unit (Specially Designed)
             </Text>
           </View>
 
           {/* Back to Driver Login */}
-          <TouchableOpacity
-            style={[styles.alignCenter, styles.mt6]}
-            onPress={() => router.replace("/")}
-            disabled={loading}
-          >
+          <TouchableOpacity style={[styles.alignCenter, styles.mt6]} onPress={() => router.replace("/driver/login")} disabled={loading}>
             <Text style={[styles.textSm, styles.textGray600]}>
               Are you a driver?{" "}
-              <Text style={[styles.textPrimary600, styles.fontMedium]}>
+              <Text style={[styles.textEmergency500, styles.fontMedium]}>
                 Driver Portal
               </Text>
             </Text>

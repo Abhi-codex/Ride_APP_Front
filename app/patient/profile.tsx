@@ -1,18 +1,10 @@
+import DropdownField from '@/components/DropdownField';
+import InputField from '@/components/InputField';
+import { Fontisto } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-import { Picker } from '@react-native-picker/picker';
+import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { colors, styles } from '../../constants/TailwindStyles';
 import { getServerUrl } from '../../utils/network';
 
@@ -187,31 +179,14 @@ export default function PatientProfileSetupScreen() {
   };
 
   return (
-    <KeyboardAvoidingView 
-      style={[styles.flex1]} 
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <ScrollView 
-        style={[styles.flex1, { backgroundColor: colors.gray[50] }]}
-        contentContainerStyle={styles.flexGrow}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
+    <KeyboardAvoidingView style={[styles.flex1]} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <ScrollView style={[styles.flex1, { backgroundColor: colors.gray[50] }]} contentContainerStyle={styles.flexGrow}
+        keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <View style={[styles.px5, styles.mt6, styles.py6]}>
           {/* Header */}
           <View style={[styles.alignCenter, styles.mb6]}>
-            <View
-              style={{
-                backgroundColor: colors.primary[600],
-                width: 60,
-                height: 60,
-                borderRadius: 30,
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginBottom: 16,
-              }}
-            >
-              <Text style={{ fontSize: 30, color: colors.white }}>🧑🏻‍🦰</Text>
+            <View style={{ alignItems: 'center', justifyContent: 'center', marginBottom: 16,}}>
+              <Fontisto name="person" size={64} color={colors.black} />
             </View>
             <Text style={[styles.text2xl, styles.fontBold, styles.textGray900, styles.textCenter]}>
               Complete Your Profile
@@ -219,6 +194,12 @@ export default function PatientProfileSetupScreen() {
             <Text style={[styles.textSm, styles.textGray600, styles.textCenter, styles.mt2]}>
               Help us provide better emergency care by completing your profile
             </Text>
+            {/* Skip Button */}
+          <TouchableOpacity style={[styles.alignCenter, styles.py2]} onPress={() => router.replace('/patient')} disabled={loading}>
+            <Text style={[styles.textSm, styles.py2, styles.px3, styles.bgBlack, styles.textWhite, styles.rounded2xl]}>
+              Skip for now
+            </Text>
+          </TouchableOpacity>
           </View>
 
           {/* Personal Information */}
@@ -228,132 +209,63 @@ export default function PatientProfileSetupScreen() {
             </Text>
 
             {/* Name */}
-            <View style={[styles.mb4]}>
-              <Text style={[styles.textSm, styles.fontMedium, styles.textGray700, styles.mb2]}>
-                Full Name *
-              </Text>
-              <TextInput
-                style={[
-                  styles.wFull,
-                  styles.px4,
-                  styles.py3,
-                  styles.borderGray300,
-                  styles.roundedLg,
-                  styles.textBase,
-                  styles.bgWhite,
-                  { borderWidth: 1 },
-                ]}
-                placeholder="Enter your full name"
-                placeholderTextColor={colors.gray[400]}
-                value={formData.name}
-                onChangeText={(value) => updateFormData('name', value)}
-                editable={!loading}
-              />
-            </View>
+            <InputField
+              label="Full Name"
+              required
+              placeholder="Enter your full name"
+              value={formData.name}
+              onChangeText={(value) => updateFormData('name', value)}
+              editable={!loading}
+            />
 
             {/* Email */}
-            <View style={[styles.mb4]}>
-              <Text style={[styles.textSm, styles.fontMedium, styles.textGray700, styles.mb2]}>
-                Email Address (Optional)
-              </Text>
-              <TextInput
-                style={[
-                  styles.wFull,
-                  styles.px4,
-                  styles.py3,
-                  styles.borderGray300,
-                  styles.roundedLg,
-                  styles.textBase,
-                  styles.bgWhite,
-                  { borderWidth: 1 },
-                ]}
-                placeholder="Enter your email"
-                placeholderTextColor={colors.gray[400]}
-                value={formData.email}
-                onChangeText={(value) => updateFormData('email', value)}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                editable={!loading}
-              />
-            </View>
+            <InputField
+              label="Email Address (Optional)"
+              placeholder="Enter your email"
+              value={formData.email}
+              onChangeText={(value) => updateFormData('email', value)}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              editable={!loading}
+            />
 
             {/* Age and Gender Row */}
             <View style={[styles.flexRow, { gap: 12 }, styles.mb4]}>
               <View style={[styles.flex1]}>
-                <Text style={[styles.textSm, styles.fontMedium, styles.textGray700, styles.mb2]}>
-                  Age *
-                </Text>
-                <TextInput
-                  style={[
-                    styles.wFull,
-                    styles.px4,
-                    styles.py3,
-                    styles.borderGray300,
-                    styles.roundedLg,
-                    styles.textBase,
-                    styles.bgWhite,
-                    { borderWidth: 1 },
-                  ]}
+                <InputField
+                  label="Age"
+                  required
                   placeholder="Age"
-                  placeholderTextColor={colors.gray[400]}
                   value={formData.age}
                   onChangeText={(value) => updateFormData('age', value)}
                   keyboardType="numeric"
                   editable={!loading}
+                  containerStyle={{ marginBottom: 0 }}
+                  labelStyle={{ marginBottom: 8 }}
                 />
               </View>
 
               <View style={[styles.flex1]}>
-                <Text style={[styles.textSm, styles.fontMedium, styles.textGray700, styles.mb2]}>
-                  Gender *
-                </Text>
-                <View
-                  style={[
-                    styles.borderGray300,
-                    styles.roundedLg,
-                    styles.bgWhite,
-                    { borderWidth: 1, overflow: 'hidden' },
-                  ]}
-                >
-                  <Picker
-                    selectedValue={formData.gender}
-                    onValueChange={(value) => updateFormData('gender', value)}
-                    enabled={!loading}
-                    style={{ height: 50 }}
-                  >
-                    {genders.map((gender) => (
-                      <Picker.Item key={gender.value} label={gender.label} value={gender.value} />
-                    ))}
-                  </Picker>
-                </View>
+                <DropdownField
+                  label="Gender"
+                  required
+                  value={formData.gender}
+                  onValueChange={(value) => updateFormData('gender', value)}
+                  options={genders}
+                  enabled={!loading}
+                />
               </View>
             </View>
 
             {/* Blood Group */}
-            <View style={[styles.mb4]}>
-              <Text style={[styles.textSm, styles.fontMedium, styles.textGray700, styles.mb2]}>
-                Blood Group *
-              </Text>
-              <View
-                style={[
-                  styles.borderGray300,
-                  styles.roundedLg,
-                  styles.bgWhite,
-                  { borderWidth: 1, overflow: 'hidden' },
-                ]}
-              >
-                <Picker
-                  selectedValue={formData.bloodGroup}
-                  onValueChange={(value) => updateFormData('bloodGroup', value)}
-                  enabled={!loading}
-                  style={{ height: 50 }}
-                >
-                  {bloodGroups.map((group) => (
-                    <Picker.Item key={group.value} label={group.label} value={group.value} />
-                  ))}
-                </Picker>
-              </View>
-            </View>
+            <DropdownField
+              label="Blood Group"
+              required
+              value={formData.bloodGroup}
+              onValueChange={(value) => updateFormData('bloodGroup', value)}
+              options={bloodGroups}
+              enabled={!loading}
+            />
           </View>
 
           {/* Emergency Information */}
@@ -363,126 +275,57 @@ export default function PatientProfileSetupScreen() {
             </Text>
 
             {/* Emergency Contact */}
-            <View style={[styles.mb4]}>
-              <Text style={[styles.textSm, styles.fontMedium, styles.textGray700, styles.mb2]}>
-                Emergency Contact Number *
-              </Text>
-              <TextInput
-                style={[
-                  styles.wFull,
-                  styles.px4,
-                  styles.py3,
-                  styles.borderGray300,
-                  styles.roundedLg,
-                  styles.textBase,
-                  styles.bgWhite,
-                  { borderWidth: 1 },
-                ]}
-                placeholder="Emergency contact number"
-                placeholderTextColor={colors.gray[400]}
-                value={formData.emergencyContact}
-                onChangeText={(value) => updateFormData('emergencyContact', value)}
-                keyboardType="phone-pad"
-                editable={!loading}
-              />
-            </View>
+            <InputField
+              label="Emergency Contact Number"
+              required
+              placeholder="Emergency contact number"
+              value={formData.emergencyContact}
+              onChangeText={(value) => updateFormData('emergencyContact', value)}
+              keyboardType="phone-pad"
+              editable={!loading}
+            />
 
             {/* Medical Conditions */}
-            <View style={[styles.mb4]}>
-              <Text style={[styles.textSm, styles.fontMedium, styles.textGray700, styles.mb2]}>
-                Medical Conditions (Optional)
-              </Text>
-              <TextInput
-                style={[
-                  styles.wFull,
-                  styles.px4,
-                  styles.py3,
-                  styles.borderGray300,
-                  styles.roundedLg,
-                  styles.textBase,
-                  styles.bgWhite,
-                  { borderWidth: 1, minHeight: 80 },
-                ]}
-                placeholder="Any chronic conditions, medications, etc."
-                placeholderTextColor={colors.gray[400]}
-                value={formData.medicalConditions}
-                onChangeText={(value) => updateFormData('medicalConditions', value)}
-                multiline
-                numberOfLines={3}
-                textAlignVertical="top"
-                editable={!loading}
-              />
-            </View>
+            <InputField
+              label="Medical Conditions (Optional)"
+              placeholder="Any chronic conditions, medications, etc."
+              value={formData.medicalConditions}
+              onChangeText={(value) => updateFormData('medicalConditions', value)}
+              multiline
+              numberOfLines={3}
+              textAlignVertical="top"
+              editable={!loading}
+              inputStyle={{ minHeight: 80 }}
+            />
 
             {/* Allergies */}
-            <View style={[styles.mb4]}>
-              <Text style={[styles.textSm, styles.fontMedium, styles.textGray700, styles.mb2]}>
-                Allergies (Optional)
-              </Text>
-              <TextInput
-                style={[
-                  styles.wFull,
-                  styles.px4,
-                  styles.py3,
-                  styles.borderGray300,
-                  styles.roundedLg,
-                  styles.textBase,
-                  styles.bgWhite,
-                  { borderWidth: 1 },
-                ]}
-                placeholder="Drug allergies, food allergies, etc."
-                placeholderTextColor={colors.gray[400]}
-                value={formData.allergies}
-                onChangeText={(value) => updateFormData('allergies', value)}
-                editable={!loading}
-              />
-            </View>
+            <InputField
+              label="Allergies (Optional)"
+              placeholder="Drug allergies, food allergies, etc."
+              value={formData.allergies}
+              onChangeText={(value) => updateFormData('allergies', value)}
+              editable={!loading}
+            />
 
             {/* Address */}
-            <View style={[styles.mb4]}>
-              <Text style={[styles.textSm, styles.fontMedium, styles.textGray700, styles.mb2]}>
-                Address *
-              </Text>
-              <TextInput
-                style={[
-                  styles.wFull,
-                  styles.px4,
-                  styles.py3,
-                  styles.borderGray300,
-                  styles.roundedLg,
-                  styles.textBase,
-                  styles.bgWhite,
-                  { borderWidth: 1, minHeight: 80 },
-                ]}
-                placeholder="Complete address for emergency services"
-                placeholderTextColor={colors.gray[400]}
-                value={formData.address}
-                onChangeText={(value) => updateFormData('address', value)}
-                multiline
-                numberOfLines={3}
-                textAlignVertical="top"
-                editable={!loading}
-              />
-            </View>
+            <InputField
+              label="Address"
+              required
+              placeholder="Complete address for emergency services"
+              value={formData.address}
+              onChangeText={(value) => updateFormData('address', value)}
+              multiline
+              numberOfLines={3}
+              textAlignVertical="top"
+              editable={!loading}
+              inputStyle={{ minHeight: 80 }}
+            />
           </View>
 
           {/* Submit Button */}
           <TouchableOpacity
-            style={[
-              styles.wFull,
-              styles.py4,
-              styles.alignCenter,
-              styles.roundedLg,
-              styles.mb4,
-              {
-                backgroundColor: loading ? colors.gray[300] : colors.primary[600],
-                shadowColor: colors.black,
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.1,
-                shadowRadius: 4,
-                elevation: 3,
-              },
-            ]}
+            style={[styles.wFull, styles.py4, styles.alignCenter, styles.roundedLg, styles.mb4,
+              {backgroundColor: loading ? colors.gray[300] : colors.black }]}
             onPress={handleSubmit}
             disabled={loading}
           >
@@ -493,17 +336,6 @@ export default function PatientProfileSetupScreen() {
                 Save Profile
               </Text>
             )}
-          </TouchableOpacity>
-
-          {/* Skip Button */}
-          <TouchableOpacity
-            style={[styles.alignCenter, styles.py2]}
-            onPress={() => router.replace('/patient')}
-            disabled={loading}
-          >
-            <Text style={[styles.textSm, styles.textGray600]}>
-              Skip for now
-            </Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

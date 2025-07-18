@@ -2,6 +2,7 @@ import { MaterialCommunityIcons, MaterialIcons, Octicons } from "@expo/vector-ic
 import React, { memo, useEffect, useState } from "react";
 import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { colors, styles } from "../../constants/TailwindStyles";
+import { EMERGENCY_TYPES } from "../../types/emergency";
 import { Ride } from "../../types/rider";
 
 interface AvailableRidesListProps {
@@ -127,8 +128,14 @@ function AvailableRidesList({
       return Math.round(fare / 5) * 5;
     };
 
+    let emergencyId = (ride as any).emergencyType || (ride as any).emergency?.type || (ride as any).emergency_id || (ride as any).emergencyId;
+    // Fallback: try ride.emergency?.id
+    if (!emergencyId && (ride as any).emergency && (ride as any).emergency.id) emergencyId = (ride as any).emergency.id;
+    const emergencyDetails = emergencyId ? EMERGENCY_TYPES.find(e => e.id === emergencyId) : undefined;
+    const priority = emergencyDetails?.priority || (ride as any).priority || 'unknown';
+    const category = emergencyDetails?.category || (ride as any).category || 'unknown';
+    const priorityColor = getPriorityColor(priority);
     const ambulanceDetails = getAmbulanceTypeDetails(ride.vehicle);
-    const priorityColor = colors.emergency[500]; 
 
     return (
       <View style={[styles.bgGray100, styles.py2, styles.roundedLg, styles.px3, styles.shadowSm, 
@@ -148,11 +155,16 @@ function AvailableRidesList({
             </Text>
           </View>
           
-          {/* Priority Badge */}
-          <View style={[styles.flexRow, styles.alignCenter, styles.py1]}>
-            <View style={[styles.px2, styles.py1, styles.roundedFull, { backgroundColor: priorityColor + '20' }]}>
-              <Text style={[styles.textXs, styles.fontBold, { color: priorityColor }]}>
-                HIGH PRIORITY
+          {/* Priority & Category Badge */}
+          <View style={[styles.flexRow, styles.alignCenter, styles.py1, styles.gap2]}>
+            <View style={[styles.px2, styles.py1, styles.roundedFull, { backgroundColor: priorityColor + '20' }]}> 
+              <Text style={[styles.textXs, styles.fontBold, { color: priorityColor }]}> 
+                {priority.toUpperCase()} PRIORITY
+              </Text>
+            </View>
+            <View style={[styles.px2, styles.py1, styles.roundedFull, { backgroundColor: colors.primary[100] }]}> 
+              <Text style={[styles.textXs, styles.fontMedium, { color: colors.primary[700] }]}> 
+                {category.toUpperCase()}
               </Text>
             </View>
           </View>

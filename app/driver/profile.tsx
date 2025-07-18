@@ -1,18 +1,10 @@
+import DropdownField from '@/components/DropdownField';
+import InputField from '@/components/InputField';
+import { FontAwesome5 } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-import { Picker } from '@react-native-picker/picker';
+import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { colors, styles } from '../../constants/TailwindStyles';
 import { getServerUrl } from '../../utils/network';
 
@@ -266,249 +258,112 @@ export default function DriverProfileSetupScreen() {
         <View style={[styles.px5, styles.mt5, styles.py6]}>
           {/* Header */}
           <View style={[styles.alignCenter, styles.mb6]}>
-            <View
-              style={{
-                backgroundColor: colors.emergency[500],
-                width: 60,
-                height: 60,
-                borderRadius: 30,
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginBottom: 16,
-              }}
-            >
-              <Text style={{ fontSize: 30, color: colors.white }}>👨‍⚕️</Text>
+            <View style={{ alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+              <FontAwesome5 name="user-md" size={64} color={styles.textGray900.color || "#111"} />
             </View>
-            <Text style={[styles.text2xl, styles.fontBold, styles.textGray900, styles.textCenter]}>
-              Complete Your Driver Profile
-            </Text>
-            <Text style={[styles.textSm, styles.textGray600, styles.textCenter, styles.mt2]}>
-              Provide your details to start accepting emergency calls
-            </Text>
+            <Text style={[styles.text2xl, styles.fontBold, styles.textGray900, styles.textCenter]}>Complete Your Driver Profile</Text>
+            <Text style={[styles.textSm, styles.textGray600, styles.textCenter, styles.mt2]}>Provide your details to start accepting emergency calls</Text>
           </View>
 
           {/* Personal Information Section */}
           <View style={[styles.mb6]}>
-            <Text style={[styles.textLg, styles.fontBold, styles.textGray900, styles.mb3]}>
-              Personal Information
-            </Text>
+            <Text style={[styles.textLg, styles.fontBold, styles.textGray900, styles.mb3]}>Personal Information</Text>
 
             {/* Name Input */}
-            <View style={[styles.mb4]}>
-              <Text style={[styles.textSm, styles.fontMedium, styles.textGray700, styles.mb2]}>
-                Full Name *
-              </Text>
-              <TextInput
-                style={[
-                  styles.wFull,
-                  styles.px4,
-                  styles.py3,
-                  styles.borderGray300,
-                  styles.roundedLg,
-                  styles.textBase,
-                  styles.bgWhite,
-                  { borderWidth: 1 },
-                ]}
-                placeholder="Enter your full name"
-                placeholderTextColor={colors.gray[400]}
-                value={formData.name}
-                onChangeText={(value) => updateFormData('name', value)}
-                editable={!loading}
-              />
-            </View>
+            <InputField
+              label="Full Name"
+              required
+              placeholder="Enter your full name"
+              value={formData.name}
+              onChangeText={(value) => updateFormData('name', value)}
+              editable={!loading}
+            />
 
             {/* Email Input */}
-            <View style={[styles.mb4]}>
-              <Text style={[styles.textSm, styles.fontMedium, styles.textGray700, styles.mb2]}>
-                Email Address (Optional)
-              </Text>
-              <TextInput
-                style={[
-                  styles.wFull,
-                  styles.px4,
-                  styles.py3,
-                  styles.borderGray300,
-                  styles.roundedLg,
-                  styles.textBase,
-                  styles.bgWhite,
-                  { borderWidth: 1 },
-                ]}
-                placeholder="Enter your email address"
-                placeholderTextColor={colors.gray[400]}
-                value={formData.email}
-                onChangeText={(value) => updateFormData('email', value)}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                editable={!loading}
-              />
-            </View>
+            <InputField
+              label="Email Address (Optional)"
+              placeholder="Enter your email address"
+              value={formData.email}
+              onChangeText={(value) => updateFormData('email', value)}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              editable={!loading}
+            />
           </View>
 
           {/* Vehicle Information Section */}
           <View style={[styles.mb6]}>
-            <Text style={[styles.textLg, styles.fontBold, styles.textGray900, styles.mb3]}>
-              Ambulance Information
-            </Text>
+            <Text style={[styles.textLg, styles.fontBold, styles.textGray900, styles.mb3]}>Ambulance Information</Text>
 
             {/* Vehicle Type Picker */}
-            <View style={[styles.mb4]}>
-              <Text style={[styles.textSm, styles.fontMedium, styles.textGray700, styles.mb2]}>
-                Ambulance Type *
-              </Text>
-              <View
-                style={[
-                  styles.borderGray300,
-                  styles.roundedLg,
-                  styles.bgWhite,
-                  { borderWidth: 1, overflow: 'hidden' },
-                ]}
-              >
-                <Picker
-                  selectedValue={formData.vehicleType}
-                  onValueChange={(value) => updateFormData('vehicleType', value)}
-                  enabled={!loading}
-                  style={{ height: 50 }}
-                >
-                  {vehicleTypes.map((type) => (
-                    <Picker.Item key={type.value} label={type.label} value={type.value} />
-                  ))}
-                </Picker>
-              </View>
-            </View>
+            <DropdownField
+              label="Ambulance Type"
+              required
+              value={formData.vehicleType}
+              onValueChange={(value) => updateFormData('vehicleType', value)}
+              options={vehicleTypes}
+              enabled={!loading}
+            />
 
             {/* Plate Number Input */}
-            <View style={[styles.mb4]}>
-              <Text style={[styles.textSm, styles.fontMedium, styles.textGray700, styles.mb2]}>
-                License Plate Number *
-              </Text>
-              <TextInput
-                style={[
-                  styles.wFull,
-                  styles.px4,
-                  styles.py3,
-                  styles.borderGray300,
-                  styles.roundedLg,
-                  styles.textBase,
-                  styles.bgWhite,
-                  { borderWidth: 1 },
-                ]}
-                placeholder="e.g., AMB1234"
-                placeholderTextColor={colors.gray[400]}
-                value={formData.plateNumber}
-                onChangeText={(value) => updateFormData('plateNumber', value)}
-                autoCapitalize="characters"
-                editable={!loading}
-              />
-            </View>
+            <InputField
+              label="License Plate Number"
+              required
+              placeholder="e.g., AMB1234"
+              value={formData.plateNumber}
+              onChangeText={(value) => updateFormData('plateNumber', value)}
+              autoCapitalize="characters"
+              editable={!loading}
+            />
 
             {/* Vehicle Model Input */}
-            <View style={[styles.mb4]}>
-              <Text style={[styles.textSm, styles.fontMedium, styles.textGray700, styles.mb2]}>
-                Vehicle Model *
-              </Text>
-              <TextInput
-                style={[
-                  styles.wFull,
-                  styles.px4,
-                  styles.py3,
-                  styles.borderGray300,
-                  styles.roundedLg,
-                  styles.textBase,
-                  styles.bgWhite,
-                  { borderWidth: 1 },
-                ]}
-                placeholder="e.g., Mercedes Sprinter"
-                placeholderTextColor={colors.gray[400]}
-                value={formData.model}
-                onChangeText={(value) => updateFormData('model', value)}
-                editable={!loading}
-              />
-            </View>
+            <InputField
+              label="Vehicle Model"
+              required
+              placeholder="e.g., Mercedes Sprinter"
+              value={formData.model}
+              onChangeText={(value) => updateFormData('model', value)}
+              editable={!loading}
+            />
           </View>
 
           {/* Certification Section */}
           <View style={[styles.mb6]}>
-            <Text style={[styles.textLg, styles.fontBold, styles.textGray900, styles.mb3]}>
-              EMT Certification
-            </Text>
+            <Text style={[styles.textLg, styles.fontBold, styles.textGray900, styles.mb3]}>EMT Certification</Text>
 
             {/* License Number Input */}
-            <View style={[styles.mb4]}>
-              <Text style={[styles.textSm, styles.fontMedium, styles.textGray700, styles.mb2]}>
-                EMT License Number *
-              </Text>
-              <TextInput
-                style={[
-                  styles.wFull,
-                  styles.px4,
-                  styles.py3,
-                  styles.borderGray300,
-                  styles.roundedLg,
-                  styles.textBase,
-                  styles.bgWhite,
-                  { borderWidth: 1 },
-                ]}
-                placeholder="Enter your EMT license number"
-                placeholderTextColor={colors.gray[400]}
-                value={formData.licenseNumber}
-                onChangeText={(value) => updateFormData('licenseNumber', value)}
-                editable={!loading}
-              />
-            </View>
+            <InputField
+              label="EMT License Number"
+              required
+              placeholder="Enter your EMT license number"
+              value={formData.licenseNumber}
+              onChangeText={(value) => updateFormData('licenseNumber', value)}
+              editable={!loading}
+            />
 
             {/* Certification Level Picker */}
-            <View style={[styles.mb4]}>
-              <Text style={[styles.textSm, styles.fontMedium, styles.textGray700, styles.mb2]}>
-                Certification Level *
-              </Text>
-              <View
-                style={[
-                  styles.borderGray300,
-                  styles.roundedLg,
-                  styles.bgWhite,
-                  { borderWidth: 1, overflow: 'hidden' },
-                ]}
-              >
-                <Picker
-                  selectedValue={formData.certificationLevel}
-                  onValueChange={(value) => updateFormData('certificationLevel', value)}
-                  enabled={!loading}
-                  style={{ height: 50 }}
-                >
-                  {certificationLevels.map((level) => (
-                    <Picker.Item key={level.value} label={level.label} value={level.value} />
-                  ))}
-                </Picker>
-              </View>
-            </View>
+            <DropdownField
+              label="Certification Level"
+              required
+              value={formData.certificationLevel}
+              onValueChange={(value) => updateFormData('certificationLevel', value)}
+              options={certificationLevels}
+              enabled={!loading}
+            />
           </View>
 
           {/* Hospital Affiliation Section */}
           <View style={[styles.mb6]}>
-            <Text style={[styles.textLg, styles.fontBold, styles.textGray900, styles.mb3]}>
-              Hospital Affiliation
-            </Text>
+            <Text style={[styles.textLg, styles.fontBold, styles.textGray900, styles.mb3]}>Hospital Affiliation</Text>
 
             {/* Affiliation Toggle */}
             <View style={[styles.mb4]}>
-              <Text style={[styles.textSm, styles.fontMedium, styles.textGray700, styles.mb2]}>
-                Driver Type *
-              </Text>
+            <Text style={[styles.textSm, styles.fontMedium, styles.textGray700, styles.mb2]}>Driver Type *</Text>
               <View style={[styles.flexRow, styles.justifyBetween]}>
-                <TouchableOpacity
-                  style={[
-                    styles.flex1,
-                    styles.py3,
-                    styles.px4,
-                    styles.roundedLg,
-                    styles.alignCenter,
-                    styles.mr2,
-                    styles.border,
-                    !formData.hospitalAffiliation.isAffiliated
-                      ? [styles.bgPrimary600, styles.borderPrimary600]
-                      : [styles.bgWhite, styles.borderGray300],
-                  ]}
-                  onPress={() => updateHospitalAffiliation({
+                <TouchableOpacity style={[styles.flex1, styles.py3, styles.px4, styles.roundedLg,
+                    styles.alignCenter, styles.mr2, styles.border, !formData.hospitalAffiliation.isAffiliated
+                      ? [styles.bgBlack, styles.borderBlack] : [styles.bgWhite, styles.borderGray300]]}
+                  onPress={() => updateHospitalAffiliation({ 
                     isAffiliated: false,
                     hospitalName: '',
                     hospitalId: '',
@@ -517,46 +372,16 @@ export default function DriverProfileSetupScreen() {
                   })}
                   disabled={loading}
                 >
-                  <Text
-                    style={[
-                      styles.textSm,
-                      styles.fontMedium,
-                      !formData.hospitalAffiliation.isAffiliated
-                        ? styles.textWhite
-                        : styles.textGray700,
-                    ]}
-                  >
+                  <Text style={[styles.textSm, styles.fontMedium, !formData.hospitalAffiliation.isAffiliated ? styles.textWhite : styles.textGray700]}>
                     Independent Driver
                   </Text>
                 </TouchableOpacity>
                 
-                <TouchableOpacity
-                  style={[
-                    styles.flex1,
-                    styles.py3,
-                    styles.px4,
-                    styles.roundedLg,
-                    styles.alignCenter,
-                    styles.ml2,
-                    styles.border,
-                    formData.hospitalAffiliation.isAffiliated
-                      ? [styles.bgPrimary600, styles.borderPrimary600]
-                      : [styles.bgWhite, styles.borderGray300],
-                  ]}
-                  onPress={() => updateHospitalAffiliation({
-                    isAffiliated: true,
-                  })}
-                  disabled={loading}
-                >
-                  <Text
-                    style={[
-                      styles.textSm,
-                      styles.fontMedium,
-                      formData.hospitalAffiliation.isAffiliated
-                        ? styles.textWhite
-                        : styles.textGray700,
-                    ]}
-                  >
+                <TouchableOpacity style={[styles.flex1, styles.py3, styles.px4, styles.roundedLg,
+                    styles.alignCenter, styles.ml2, styles.border, formData.hospitalAffiliation.isAffiliated
+                      ? [styles.bgBlack, styles.borderBlack] : [styles.bgWhite, styles.borderGray300]]}
+                      onPress={() => updateHospitalAffiliation({isAffiliated: true})} disabled={loading}>
+                  <Text style={[styles.textSm, styles.fontMedium, formData.hospitalAffiliation.isAffiliated ? styles.textWhite : styles.textGray700]}>
                     Hospital Affiliated
                   </Text>
                 </TouchableOpacity>
@@ -566,112 +391,45 @@ export default function DriverProfileSetupScreen() {
             {/* Hospital Details (only if affiliated) */}
             {formData.hospitalAffiliation.isAffiliated && (
               <>
-                <View style={[styles.mb4]}>
-                  <Text style={[styles.textSm, styles.fontMedium, styles.textGray700, styles.mb2]}>
-                    Hospital Name *
-                  </Text>
-                  <TextInput
-                    style={[
-                      styles.wFull,
-                      styles.px4,
-                      styles.py3,
-                      styles.borderGray300,
-                      styles.roundedLg,
-                      styles.textBase,
-                      styles.bgWhite,
-                      { borderWidth: 1 },
-                    ]}
-                    placeholder="e.g., City General Hospital"
-                    placeholderTextColor={colors.gray[400]}
-                    value={formData.hospitalAffiliation.hospitalName}
-                    onChangeText={(value) => updateHospitalAffiliation({
-                      hospitalName: value,
-                    })}
-                    editable={!loading}
-                  />
-                </View>
+                <InputField
+                  label="Hospital Name"
+                  required
+                  placeholder="e.g., City General Hospital"
+                  value={formData.hospitalAffiliation.hospitalName}
+                  onChangeText={(value) => updateHospitalAffiliation({ hospitalName: value })}
+                  editable={!loading}
+                />
 
-                <View style={[styles.mb4]}>
-                  <Text style={[styles.textSm, styles.fontMedium, styles.textGray700, styles.mb2]}>
-                    Hospital ID *
-                  </Text>
-                  <TextInput
-                    style={[
-                      styles.wFull,
-                      styles.px4,
-                      styles.py3,
-                      styles.borderGray300,
-                      styles.roundedLg,
-                      styles.textBase,
-                      styles.bgWhite,
-                      { borderWidth: 1 },
-                    ]}
-                    placeholder="e.g., CGH001"
-                    placeholderTextColor={colors.gray[400]}
-                    value={formData.hospitalAffiliation.hospitalId}
-                    onChangeText={(value) => updateHospitalAffiliation({
-                      hospitalId: value,
-                    })}
-                    editable={!loading}
-                  />
-                </View>
+                <InputField
+                  label="Hospital ID"
+                  required
+                  placeholder="e.g., CGH001"
+                  value={formData.hospitalAffiliation.hospitalId}
+                  onChangeText={(value) => updateHospitalAffiliation({ hospitalId: value })}
+                  editable={!loading}
+                />
 
-                <View style={[styles.mb4]}>
-                  <Text style={[styles.textSm, styles.fontMedium, styles.textGray700, styles.mb2]}>
-                    Hospital Address
-                  </Text>
-                  <TextInput
-                    style={[
-                      styles.wFull,
-                      styles.px4,
-                      styles.py3,
-                      styles.borderGray300,
-                      styles.roundedLg,
-                      styles.textBase,
-                      styles.bgWhite,
-                      { borderWidth: 1 },
-                    ]}
-                    placeholder="Hospital address"
-                    placeholderTextColor={colors.gray[400]}
-                    value={formData.hospitalAffiliation.hospitalAddress}
-                    onChangeText={(value) => updateHospitalAffiliation({
-                      hospitalAddress: value,
-                    })}
-                    editable={!loading}
-                    multiline
-                    numberOfLines={2}
-                  />
-                </View>
+                <InputField
+                  label="Hospital Address"
+                  placeholder="Hospital address"
+                  value={formData.hospitalAffiliation.hospitalAddress}
+                  onChangeText={(value) => updateHospitalAffiliation({ hospitalAddress: value })}
+                  editable={!loading}
+                  multiline
+                  numberOfLines={2}
+                />
 
-                <View style={[styles.mb4]}>
-                  <Text style={[styles.textSm, styles.fontMedium, styles.textGray700, styles.mb2]}>
-                    Employee ID *
-                  </Text>
-                  <TextInput
-                    style={[
-                      styles.wFull,
-                      styles.px4,
-                      styles.py3,
-                      styles.borderGray300,
-                      styles.roundedLg,
-                      styles.textBase,
-                      styles.bgWhite,
-                      { borderWidth: 1 },
-                    ]}
-                    placeholder="e.g., EMP789"
-                    placeholderTextColor={colors.gray[400]}
-                    value={formData.hospitalAffiliation.employeeId}
-                    onChangeText={(value) => updateHospitalAffiliation({
-                      employeeId: value,
-                    })}
-                    editable={!loading}
-                  />
-                </View>
+                <InputField
+                  label="Employee ID"
+                  required
+                  placeholder="e.g., EMP789"
+                  value={formData.hospitalAffiliation.employeeId}
+                  onChangeText={(value) => updateHospitalAffiliation({ employeeId: value })}
+                  editable={!loading}
+                />
 
                 <View style={[styles.p4, styles.bgGray100, styles.roundedLg, styles.mb4]}>
-                  <Text style={[styles.textSm, styles.textGray700, styles.fontMedium]}>
-                    Note: Hospital-affiliated drivers will use their hospital's custom fare structure instead of the platform's standard rates.
-                  </Text>
+                    <Text style={[styles.textSm, styles.textGray700, styles.fontMedium]}>Note: Hospital-affiliated drivers will use their hospital's custom fare structure instead of the platform's standard rates.</Text>
                 </View>
               </>
             )}
@@ -679,42 +437,20 @@ export default function DriverProfileSetupScreen() {
 
           {/* Submit Button */}
           <TouchableOpacity
-            style={[
-              styles.wFull,
-              styles.py4,
-              styles.alignCenter,
-              styles.roundedLg,
-              styles.mb4,
-              {
-                backgroundColor: loading ? colors.gray[300] : colors.emergency[500],
-                shadowColor: colors.black,
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.1,
-                shadowRadius: 4,
-                elevation: 3,
-              },
-            ]}
+            style={[styles.wFull, styles.py4, styles.alignCenter, styles.roundedLg, styles.mb4, styles.bgBlack]}
             onPress={handleSubmit}
             disabled={loading}
           >
             {loading ? (
               <ActivityIndicator color={colors.white} size="small" />
             ) : (
-              <Text style={[styles.textWhite, styles.textLg, styles.fontBold]}>
-                Complete Profile
-              </Text>
+              <Text style={[styles.textWhite, styles.textLg, styles.fontBold]}>Complete Profile</Text>
             )}
           </TouchableOpacity>
 
           {/* Back Button */}
-          <TouchableOpacity
-            style={[styles.alignCenter, styles.py2]}
-            onPress={() => router.back()}
-            disabled={loading}
-          >
-            <Text style={[styles.textSm, styles.textGray600]}>
-              Back to Login
-            </Text>
+          <TouchableOpacity style={[styles.alignCenter, styles.py2]} onPress={() => router.back()} disabled={loading}>
+            <Text style={[styles.textSm, styles.textGray600]}>Back to Login</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

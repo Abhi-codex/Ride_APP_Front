@@ -208,6 +208,7 @@ export const styles = StyleSheet.create({
   w36: { width: 144 },
   w40: { width: 160 },
   w48: { width: 192 },
+  w56: { width: 224 },
   w64: { width: 256 },
   
   // Width Percentages
@@ -247,6 +248,7 @@ export const styles = StyleSheet.create({
   h32: { height: 128 },
   h40: { height: 160 },
   h48: { height: 192 },
+  h56: { height:224 },
   h64: { height: 256 },
   hFull: { height: '100%' },
   
@@ -495,6 +497,7 @@ export const styles = StyleSheet.create({
   bgDanger900: { backgroundColor: colors.danger[900] },
   
   // Emergency Backgrounds
+  bgEmergency50: { backgroundColor: colors.emergency[50] },
   bgEmergency500: { backgroundColor: colors.emergency[500] },
   bgEmergency600: { backgroundColor: colors.emergency[600] },
   
@@ -605,7 +608,9 @@ export const styles = StyleSheet.create({
   borderGray300: { borderColor: colors.gray[300] },
   borderGray400: { borderColor: colors.gray[400] },
   borderGray500: { borderColor: colors.gray[500] },
-  
+
+  borderBlack: { borderColor: colors.black },
+
   // Border Colors - Primary
   borderPrimary100: { borderColor: colors.primary[100] },
   borderPrimary200: { borderColor: colors.primary[200] },
@@ -657,6 +662,7 @@ export const styles = StyleSheet.create({
   borderDanger800: { borderColor: colors.danger[800] },
   
   // Border Colors - Emergency
+  borderEmergency200: { borderColor: colors.emergency[200] },
   borderEmergency500: { borderColor: colors.emergency[500] },
   
   // Border Radius
