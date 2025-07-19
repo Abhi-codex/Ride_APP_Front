@@ -1,111 +1,60 @@
+import { FontAwesome5, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
-import {
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
-import { colors, styles as tailwindStyles } from "../constants/TailwindStyles";
+import { Image, Text, TouchableOpacity, View } from "react-native";
+import LoginImage from "../assets/images/login.png";
+import { styles } from "../constants/TailwindStyles";
 
 export default function WelcomeScreen() {
   const router = useRouter();
 
   return (
-    <View
-      style={[
-        tailwindStyles.flex1,
-        tailwindStyles.justifyCenter,
-        tailwindStyles.alignCenter,
-        { backgroundColor: colors.gray[50] },
-      ]}
-    >
+    <View style={[styles.flex1, styles.justifyCenter, styles.alignCenter, styles.bgGray50]}>
       {/* Header */}
-      <View style={[tailwindStyles.alignCenter, tailwindStyles.mb6]}>
-        <View
-          style={{
-            backgroundColor: colors.emergency[500],
-            width: 100,
-            height: 100,
-            borderRadius: 50,
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginBottom: 20,
-            shadowColor: colors.black,
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.15,
-            shadowRadius: 8,
-            elevation: 6,
-          }}
-        >
-          <Text style={{ fontSize: 50, color: colors.white }}>🚑</Text>
+      <View style={[styles.alignCenter, styles.mb6]}>
+        <View style={[styles.alignCenter, styles.justifyCenter]}>
+          <Image
+            source={LoginImage}
+            style={[styles.w64, styles.h64, styles.roundedFull]}
+            resizeMode="cover"
+            accessibilityLabel="Ambulance Login Icon"
+          />
         </View>
-        <Text style={[tailwindStyles.text3xl, tailwindStyles.fontBold, tailwindStyles.textGray900, tailwindStyles.textCenter]}>
-          Insta Aid
-        </Text>
-        <Text style={[tailwindStyles.textBase, tailwindStyles.textGray600, tailwindStyles.textCenter, tailwindStyles.mt2]}>
+        <Text style={[styles.textSm, styles.textGray600, styles.textCenter]}>
           Professional ambulance services at your fingertips
         </Text>
       </View>
 
-      <View style={[tailwindStyles.px5, tailwindStyles.wFull]}>
+      <View style={[styles.px5, styles.wFull]}>
         <TouchableOpacity
-          style={[
-            tailwindStyles.wFull,
-            tailwindStyles.py4,
-            tailwindStyles.alignCenter,
-            tailwindStyles.roundedXl,
-            tailwindStyles.mb4,
-            {
-              backgroundColor: colors.emergency[500],
-              shadowColor: colors.black,
-              shadowOffset: { width: 0, height: 3 },
-              shadowOpacity: 0.2,
-              shadowRadius: 6,
-              elevation: 4,
-            },
-          ]}
-          onPress={() => router.push("/driver/login")}
+          style={[styles.wFull, styles.py4, styles.alignCenter, styles.roundedXl, styles.mb4, styles.bgEmergency500, styles.shadowMd]}
+          onPress={() => router.push("/patient/login")}
         >
-          <View style={[tailwindStyles.flexRow, tailwindStyles.alignCenter]}>
-            <Text style={{ fontSize: 24, marginRight: 24 }}>🧑🏻‍⚕️</Text>
+          <View style={[styles.flexRow, styles.alignCenter]}>
+            <MaterialCommunityIcons name="ambulance" size={36} color="#fff" style={styles.mr4} />
             <View>
-              <Text style={[tailwindStyles.textWhite, tailwindStyles.textLg, tailwindStyles.fontBold]}>
-                Driver Portal
+              <Text style={[styles.textWhite, styles.textLg, styles.fontBold]}>
+                Book an Ambulance
               </Text>
-              <Text style={[tailwindStyles.textWhite, tailwindStyles.textSm, { opacity: 0.9 }]}>
-                For ambulance drivers and EMTs
+              <Text style={[styles.textWhite, styles.textSm]}>
+                For patients and family members
               </Text>
             </View>
           </View>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[
-            tailwindStyles.wFull,
-            tailwindStyles.py4,
-            tailwindStyles.alignCenter,
-            tailwindStyles.roundedXl,
-            tailwindStyles.borderGray300,
-            tailwindStyles.bgWhite,
-            {
-              borderWidth: 2,
-              shadowColor: colors.black,
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.1,
-              shadowRadius: 4,
-              elevation: 2,
-            },
-          ]}
-          onPress={() => router.push("/patient/login")}
+          style={[styles.wFull, styles.py4, styles.alignCenter, styles.roundedXl, styles.borderGray300, styles.bgWhite, styles.shadowSm, styles.border2]}
+          onPress={() => router.push("/driver/login")}
         >
-          <View style={[tailwindStyles.flexRow, tailwindStyles.alignCenter]}>
-            <Text style={{ fontSize: 24, marginRight: 24 }}>🏥</Text>
+          <View style={[styles.flexRow, styles.alignCenter]}>
+            <FontAwesome5 name="user-md" size={34} color={styles.textGray900.color || "#111"} style={styles.mr4} />
             <View>
-              <Text style={[tailwindStyles.textGray900, tailwindStyles.textLg, tailwindStyles.fontBold]}>
-                Book an Ambulance
+              <Text style={[styles.textGray900, styles.textLg, styles.fontBold]}>
+                Driver Portal
               </Text>
-              <Text style={[tailwindStyles.textGray600, tailwindStyles.textSm]}>
-                For patients and family members
+              <Text style={[styles.textGray600, styles.textSm]}>
+                For ambulance drivers and EMTs
               </Text>
             </View>
           </View>
@@ -113,21 +62,13 @@ export default function WelcomeScreen() {
       </View>
 
       {/* Footer Info */}
-      <View style={[tailwindStyles.mt6, tailwindStyles.px5]}>
-        <View
-          style={[
-            tailwindStyles.p4,
-            tailwindStyles.roundedLg,
-            tailwindStyles.bgGray100,
-            tailwindStyles.borderGray200,
-            { borderWidth: 1 },
-          ]}
-        >
-          <Text style={[tailwindStyles.textSm, tailwindStyles.fontMedium, tailwindStyles.textGray800, tailwindStyles.textCenter, tailwindStyles.mb2]}>
+      <View style={[styles.mt6, styles.px5]}>
+        <View style={[styles.p4]}> 
+          <Text style={[styles.textSm, styles.fontMedium, styles.textGray800, styles.textCenter, styles.mb2]}>
            Emergency Services Available 24/7
           </Text>
-          <Text style={[tailwindStyles.textXs, tailwindStyles.textGray600, tailwindStyles.textCenter]}>
-            Professional medical transport • Certified EMT drivers • Real-time tracking
+          <Text style={[styles.textXs, styles.textGray600, styles.textCenter]}>
+            Certified EMTs • Real-time tracking
           </Text>
         </View>
       </View>

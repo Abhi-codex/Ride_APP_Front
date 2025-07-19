@@ -1,17 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert } from 'react-native';
-import { 
-  Ride, 
-  RideStatus, 
-  Driver, 
-  DriverStats, 
-  ApiResponse, 
-  RideResponse 
-} from '../types/rider';
+import { ApiResponse, Driver, DriverStats, Ride, RideResponse, RideStatus } from '../types/rider';
 import { getServerUrl } from '../utils/network';
 
-export const useRiderLogic = () => {
+export const useRiderLogic = (driverLocation?: { latitude: number; longitude: number }) => {
   const [routeCoords, setRouteCoords] = useState([]);
   const [destination, setDestination] = useState<{ latitude: number; longitude: number } | null>(null);
   const [tripStarted, setTripStarted] = useState(false);
@@ -188,23 +181,63 @@ export const useRiderLogic = () => {
     }
   }, [makeAuthenticatedRequest, handleApiError]); // Remove driverProfile dependency
 
+  // Helper to calculate distance between two lat/lng points in km
+  function getDistanceFromLatLonInKm(lat1: number, lon1: number, lat2: number, lon2: number) {
+    const R = 6371; // Radius of the earth in km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }
+
+  // Accept driverLocation as a dependency and use it for filtering
   const fetchAvailableRides = useCallback(async () => {
     if (isLoadingRides.current) {
       return;
     }
-    
     try {
       isLoadingRides.current = true;
       setError(null);
-      
+
       const data: RideResponse = await makeAuthenticatedRequest(`${getServerUrl()}/ride/driverrides`);
-      
+
       if (data.rides && Array.isArray(data.rides)) {
-        const searchingRides = data.rides.filter((ride: Ride) => {
-          return ride.status === RideStatus.SEARCHING;
-        });
-        
-        setAvailableRides(searchingRides);
+        const searchingRides = data.rides.filter((ride: Ride) => ride.status === RideStatus.SEARCHING);
+
+        // Filter by 10km radius if driverLocation is available, and skip invalid coordinates
+        let filteredRides = searchingRides;
+        if (driverLocation && typeof driverLocation.latitude === 'number' && typeof driverLocation.longitude === 'number') {
+          filteredRides = searchingRides.filter((ride: Ride) => {
+            if (!ride.pickup ||
+                typeof ride.pickup.latitude !== 'number' ||
+                typeof ride.pickup.longitude !== 'number' ||
+                // skip if coordinates are 0 or out of valid range
+                Math.abs(ride.pickup.latitude) > 90 ||
+                Math.abs(ride.pickup.longitude) > 180 ||
+                ride.pickup.latitude === 0 ||
+                ride.pickup.longitude === 0
+            ) {
+              console.warn('Skipping ride due to invalid pickup coordinates:', ride);
+              return false;
+            }
+            const dist = getDistanceFromLatLonInKm(
+              driverLocation.latitude,
+              driverLocation.longitude,
+              ride.pickup.latitude,
+              ride.pickup.longitude
+            );
+            if (dist > 10) {
+              // Optionally log rides out of range for debugging
+              // console.info('Ride out of 10km range:', ride, 'Distance:', dist);
+            }
+            return dist <= 10;
+          });
+        }
+        setAvailableRides(filteredRides);
       } else {
         setAvailableRides([]);
       }
@@ -214,7 +247,7 @@ export const useRiderLogic = () => {
     } finally {
       isLoadingRides.current = false;
     }
-  }, [makeAuthenticatedRequest, handleApiError]);
+  }, [makeAuthenticatedRequest, handleApiError, driverLocation]);
 
   const fetchRoute = async (
     origin: { latitude: number; longitude: number },

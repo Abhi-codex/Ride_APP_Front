@@ -1,15 +1,7 @@
+import { fetchGeminiResponse } from '@/utils/gemini';
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  FlatList,
-  StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
-  ActivityIndicator,
-} from 'react-native';
+import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { colors, styles } from '../../constants/TailwindStyles';
 
 interface Message {
   id: string;
@@ -22,11 +14,16 @@ export default function AIChatScreen() {
   const [inputText, setInputText] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // For Gemini API: maintain a history of user/ai messages for context
+  const [history, setHistory] = useState<{role: string, parts: {text: string}[]}[]>([]);
+
   const sendMessage = async () => {
     if (!inputText.trim() || loading) return;
 
+    // Use timestamp + random for unique ID
+    const userMessageId = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     const userMessage: Message = {
-      id: Date.now().toString(),
+      id: userMessageId,
       text: inputText,
       sender: 'user',
     };
@@ -36,29 +33,38 @@ export default function AIChatScreen() {
     setLoading(true);
 
     try {
-      // Simulate AI response
-      setTimeout(() => {
-        const aiMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          text: `I understand you said: "${userMessage.text}". How can I help you with your medical needs today?`,
-          sender: 'ai',
-        };
-        setMessages(prev => [aiMessage, ...prev]);
-        setLoading(false);
-      }, 1000);
+      // Add user message to history for Gemini context
+      const newHistory = [...history, { role: 'user', parts: [{ text: inputText }] }];
+      setHistory(newHistory);
+
+      // Fetch Gemini response
+      const aiText = await fetchGeminiResponse(inputText, newHistory);
+      const aiMessageId = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+      const aiMessage: Message = {
+        id: aiMessageId,
+        text: aiText,
+        sender: 'ai',
+      };
+      setMessages(prev => [aiMessage, ...prev]);
+      setHistory([...newHistory, { role: 'model', parts: [{ text: aiText }] }]);
     } catch (error) {
+      // Log the error for debugging
+      console.error('Gemini API error:', error);
+      const aiMessageId = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+      setMessages(prev => [{
+        id: aiMessageId,
+        text: 'Sorry, there was a problem getting a response. Please try again.',
+        sender: 'ai',
+      }, ...prev]);
+    } finally {
       setLoading(false);
     }
   };
 
+  // Use getBubbleStyle and getTextStyle for message rendering
   const renderItem = ({ item }: { item: Message }) => (
-    <View
-      style={[
-        styles.messageBubble,
-        item.sender === 'user' ? styles.userBubble : styles.aiBubble,
-      ]}
-    >
-      <Text style={item.sender === 'user' ? styles.userText : styles.aiText}>
+    <View style={getBubbleStyle(item.sender)}>
+      <Text style={getTextStyle(item.sender)}>
         {item.text}
       </Text>
     </View>
@@ -66,89 +72,67 @@ export default function AIChatScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.select({ ios: 'padding', android: undefined })}
-    >
+      style={[styles.flex1, styles.pt8, styles.bgGray100]}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
+      >
       <FlatList
         data={messages}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
-        contentContainerStyle={styles.messageList}
+        contentContainerStyle={[styles.p4, styles.flexGrow,styles.justifyEnd]}
         inverted
+        keyboardShouldPersistTaps="handled"
       />
 
-      {loading && <ActivityIndicator size="large" color="#007AFF" style={{ marginBottom: 10 }} />}
+      {loading && <ActivityIndicator size="large" color={colors.primary[600]} style={[styles.mb3]} />}
 
-      <View style={styles.inputContainer}>
+      <View style={[styles.flexRow, styles.px4, styles.alignCenter]}>
         <TextInput
-          style={styles.input}
-          placeholder="Ask me anything..."
+          style={[styles.flex1, styles.inputDefault, styles.bgGray100, styles.roundedFull, styles.textBase, styles.mr2]}
+          placeholder="Type your message..."
           value={inputText}
           onChangeText={setInputText}
           onSubmitEditing={sendMessage}
           returnKeyType="send"
           editable={!loading}
+          blurOnSubmit={false}
         />
-        <TouchableOpacity style={styles.sendButton} onPress={sendMessage} disabled={loading}>
-          <Text style={styles.sendButtonText}>Send</Text>
+        <TouchableOpacity
+          style={[styles.buttonPrimary, styles.px4, styles.py2, styles.roundedFull, styles.shadowSm, loading && styles.opacity50]}
+          onPress={sendMessage}
+          disabled={loading}
+        >
+          <Text style={[styles.textWhite, styles.fontSemibold, styles.textBase]}>Send</Text>
         </TouchableOpacity>
       </View>
+      <View style={[styles.pb8]}/>
     </KeyboardAvoidingView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f0f0f0' },
-  messageList: {
-    padding: 10,
-    flexGrow: 1,
-    justifyContent: 'flex-end',
-  },
-  messageBubble: {
-    maxWidth: '75%',
-    padding: 12,
-    borderRadius: 20,
-    marginBottom: 10,
-  },
-  userBubble: {
-    backgroundColor: '#007AFF',
-    alignSelf: 'flex-end',
-    borderTopRightRadius: 0,
-  },
-  aiBubble: {
-    backgroundColor: '#E5E5EA',
-    alignSelf: 'flex-start',
-    borderTopLeftRadius: 0,
-  },
-  userText: {
-    color: 'white',
-    fontSize: 16,
-  },
-  aiText: {
-    color: 'black',
-    fontSize: 16,
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    padding: 10,
-    borderTopColor: '#ddd',
-    borderTopWidth: 1,
-    backgroundColor: '#fff',
-  },
-  input: {
-    flex: 1,
-    backgroundColor: '#eee',
-    borderRadius: 20,
-    paddingHorizontal: 15,
-    fontSize: 16,
-  },
-  sendButton: {
-    justifyContent: 'center',
-    paddingHorizontal: 15,
-  },
-  sendButtonText: {
-    color: '#007AFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-});
+
+const getBubbleStyle = (sender: 'user' | 'ai') => [
+  { maxWidth: 320 },
+  styles.p3,
+  styles.rounded2xl,
+  styles.mb3,
+  sender === 'user'
+    ? { backgroundColor: colors.primary[600], alignSelf: 'flex-end' as const, borderTopRightRadius: 0 }
+    : { backgroundColor: colors.white, borderWidth: 1, borderColor: colors.primary[100], alignSelf: 'flex-start' as const, borderTopLeftRadius: 0 },
+];
+
+const getTextStyle = (sender: 'user' | 'ai') => [
+  sender === 'user'
+    ? [styles.textWhite, styles.textBase]
+    : [styles.textGray900, styles.textBase],
+];
+
+// Patch renderItem to use new bubble/text styles
+const renderItem = ({ item }: { item: Message }) => (
+  <View style={getBubbleStyle(item.sender)}>
+    <Text style={getTextStyle(item.sender)}>
+      {item.text}
+    </Text>
+  </View>
+);

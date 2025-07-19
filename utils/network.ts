@@ -1,15 +1,5 @@
-import { Platform } from 'react-native';
-
 export const getServerUrl = () => {
-  if (Platform.OS === 'web') {
-    return 'http://localhost:3000';
-  } 
-  else if (Platform.OS === 'android' || Platform.OS === 'ios') {
-    return 'http://192.168.31.49:3000'; 
-  } 
-  else {
-    return 'http://localhost:3000';
-  }
+  return 'https://ambulancebackend.onrender.com';
 };
 
 export const makeRequest = async (url: string, options: RequestInit) => {

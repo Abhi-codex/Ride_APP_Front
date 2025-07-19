@@ -1,7 +1,8 @@
-import { Ionicons, MaterialCommunityIcons, MaterialIcons, Octicons } from "@expo/vector-icons";
-import React, { useEffect, useState, useCallback, memo } from "react";
-import { Alert, Text, TouchableOpacity, View, ScrollView } from "react-native";
-import { styles, colors } from "../../constants/TailwindStyles";
+import { MaterialCommunityIcons, MaterialIcons, Octicons } from "@expo/vector-icons";
+import React, { memo, useEffect, useState } from "react";
+import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { colors, styles } from "../../constants/TailwindStyles";
+import { EMERGENCY_TYPES } from "../../types/emergency";
 import { Ride } from "../../types/rider";
 
 interface AvailableRidesListProps {
@@ -127,8 +128,14 @@ function AvailableRidesList({
       return Math.round(fare / 5) * 5;
     };
 
+    let emergencyId = (ride as any).emergencyType || (ride as any).emergency?.type || (ride as any).emergency_id || (ride as any).emergencyId;
+    // Fallback: try ride.emergency?.id
+    if (!emergencyId && (ride as any).emergency && (ride as any).emergency.id) emergencyId = (ride as any).emergency.id;
+    const emergencyDetails = emergencyId ? EMERGENCY_TYPES.find(e => e.id === emergencyId) : undefined;
+    const priority = emergencyDetails?.priority || (ride as any).priority || 'unknown';
+    const category = emergencyDetails?.category || (ride as any).category || 'unknown';
+    const priorityColor = getPriorityColor(priority);
     const ambulanceDetails = getAmbulanceTypeDetails(ride.vehicle);
-    const priorityColor = colors.emergency[500]; 
 
     return (
       <View style={[styles.bgGray100, styles.py2, styles.roundedLg, styles.px3, styles.shadowSm, 
@@ -140,7 +147,7 @@ function AvailableRidesList({
             <View style={[styles.flexRow, styles.alignCenter, styles.mb1]}>
               <MaterialCommunityIcons name="ambulance" size={16} color={colors.emergency[600]} style={[styles.mr2]} />
               <Text style={[styles.textBase, styles.fontBold, styles.textGray800]}>
-                Emergency Request #{index + 1}
+                Emergency Request: {index + 1}
               </Text>
             </View>
             <Text style={[styles.textXs, styles.textPrimary600, styles.fontMedium, styles.mt1]}>
@@ -148,11 +155,16 @@ function AvailableRidesList({
             </Text>
           </View>
           
-          {/* Priority Badge */}
-          <View style={[styles.flexRow, styles.alignCenter, styles.py1]}>
-            <View style={[styles.px2, styles.py1, styles.roundedFull, { backgroundColor: priorityColor + '20' }]}>
-              <Text style={[styles.textXs, styles.fontBold, { color: priorityColor }]}>
-                HIGH PRIORITY
+          {/* Priority & Category Badge */}
+          <View style={[styles.flexRow, styles.alignCenter, styles.py1, styles.gap2]}>
+            <View style={[styles.px2, styles.py1, styles.roundedFull, { backgroundColor: priorityColor + '20' }]}> 
+              <Text style={[styles.textXs, styles.fontBold, { color: priorityColor }]}> 
+                {priority.toUpperCase()} PRIORITY
+              </Text>
+            </View>
+            <View style={[styles.px2, styles.py1, styles.roundedFull, { backgroundColor: colors.primary[100] }]}> 
+              <Text style={[styles.textXs, styles.fontMedium, { color: colors.primary[700] }]}> 
+                {category.toUpperCase()}
               </Text>
             </View>
           </View>
@@ -206,15 +218,6 @@ function AvailableRidesList({
               Hospital: {ride.drop.address}
             </Text>
           </View>
-
-          {/* Time Info */}
-          <View style={[styles.flexRow, styles.py1, styles.px2, styles.rounded3xl, styles.border,
-            styles.alignCenter, styles.borderGray200]}>
-            <MaterialCommunityIcons name="clock-outline" size={12} color={colors.warning[600]} style={[styles.mr2]} />
-            <Text style={[styles.textXs, styles.textGray600]}>
-              Pickup requested • {relativeTime}
-            </Text>
-          </View>
         </View>
 
         {/* Action Buttons */}
@@ -247,21 +250,6 @@ function AvailableRidesList({
   };
   return (
     <ScrollView style={[styles.flex1]} showsVerticalScrollIndicator={false}>
-      {/* Header */}
-      <View style={[styles.flexRow, styles.alignCenter, styles.justifyBetween, styles.mb3, styles.px1]}>
-        <View style={[styles.flexRow, styles.alignCenter]}>
-          <MaterialCommunityIcons name="ambulance" size={20} color={colors.emergency[600]} style={[styles.mr2]} />
-          <Text style={[styles.textLg, styles.fontBold, styles.textGray800]}>
-            Emergency Requests
-          </Text>
-        </View>
-        <View style={[styles.px3, styles.py1, styles.roundedFull, { backgroundColor: colors.emergency[100] }]}>
-          <Text style={[styles.textSm, styles.fontBold, { color: colors.emergency[700] }]}>
-            {availableRides.length} Available
-          </Text>
-        </View>
-      </View>
-
       {availableRides.map((ride, index) => (
         <RideItem key={ride._id} ride={ride} index={index} />
       ))}
