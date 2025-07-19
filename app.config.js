@@ -37,6 +37,9 @@ export default {
       config: {
         googleMaps: {
           apiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY
+        },
+        gemini: {
+          apiKey: process.env.EXPO_PUBLIC_GEMINI_API_KEY
         }
       }
     },
@@ -64,7 +67,8 @@ export default {
     extra: {
       router: {},
       eas: {"projectId": "23de7421-7980-423d-9c0e-b6487e58ba41"},
-      EXPO_PUBLIC_GOOGLE_MAPS_API_KEY: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY
+      EXPO_PUBLIC_GOOGLE_MAPS_API_KEY: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY,
+      EXPO_PUBLIC_GEMINI_API_KEY: process.env.EXPO_PUBLIC_GEMINI_API_KEY
     }
   }
 };

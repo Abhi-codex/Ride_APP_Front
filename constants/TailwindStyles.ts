@@ -856,8 +856,6 @@ export const styles = StyleSheet.create({
   // Common Button Pattern
   buttonPrimary: {
     backgroundColor: colors.primary[600],
-    paddingHorizontal: 20,
-    paddingVertical: 12,
     borderRadius: 12,
     alignItems: 'center' as 'center',
     justifyContent: 'center' as 'center',

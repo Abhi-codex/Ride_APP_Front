@@ -206,6 +206,7 @@ export default function DriverProfileSetupScreen() {
       console.log('Profile update response:', data);
 
       if (response.ok) {
+        await AsyncStorage.setItem("profile_complete", "true");
         Alert.alert(
           'Success!',
           'Your driver profile has been completed successfully. You can now start accepting emergency calls.',

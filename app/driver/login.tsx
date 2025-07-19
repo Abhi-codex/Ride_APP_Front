@@ -83,7 +83,16 @@ export default function DriverLoginScreen() {
                                  data.user.vehicle.plateNumber && 
                                  data.user.vehicle.licenseNumber;
 
-        if (!isProfileComplete) {
+        if (isProfileComplete) {
+          await AsyncStorage.setItem("profile_complete", "true");
+          Alert.alert("Success", "Login successful!", [
+            {
+              text: "Continue",
+              onPress: () => router.replace("/driver/dashboard"),
+            },
+          ]);
+        } else {
+          await AsyncStorage.removeItem("profile_complete");
           Alert.alert(
             "Welcome!",
             data.message === "User created successfully"
@@ -96,13 +105,6 @@ export default function DriverLoginScreen() {
               },
             ]
           );
-        } else {
-          Alert.alert("Success", "Login successful!", [
-            {
-              text: "Continue",
-              onPress: () => router.replace("/driver/dashboard"),
-            },
-          ]);
         }
       } else {
         Alert.alert(

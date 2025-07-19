@@ -12,7 +12,8 @@
       },
       "ios": {},
       "env": {
-        "EXPO_PUBLIC_GOOGLE_MAPS_API_KEY": "AIzaSyAERM44Mxqwz42ywZPPnQ8-ltHa63kuGmQ"
+        "EXPO_PUBLIC_GOOGLE_MAPS_API_KEY": "AIzaSyAERM44Mxqwz42ywZPPnQ8-ltHa63kuGmQ",
+        "EXPO_PUBLIC_GEMINI_API_KEY": "AIzaSyCDtS55sL2Lf-17TBEECmP-eVmy9afqJHg"
       }
     },
     "preview": {
@@ -22,7 +23,8 @@
       },
       "ios": {},
       "env": {
-        "EXPO_PUBLIC_GOOGLE_MAPS_API_KEY": "AIzaSyAERM44Mxqwz42ywZPPnQ8-ltHa63kuGmQ"
+        "EXPO_PUBLIC_GOOGLE_MAPS_API_KEY": "AIzaSyAERM44Mxqwz42ywZPPnQ8-ltHa63kuGmQ",
+        "EXPO_PUBLIC_GEMINI_API_KEY": "AIzaSyCDtS55sL2Lf-17TBEECmP-eVmy9afqJHg"
       }
     },
     "production": {
@@ -31,7 +33,8 @@
       },
       "ios": {},
       "env": {
-        "EXPO_PUBLIC_GOOGLE_MAPS_API_KEY": "AIzaSyAERM44Mxqwz42ywZPPnQ8-ltHa63kuGmQ"
+        "EXPO_PUBLIC_GOOGLE_MAPS_API_KEY": "AIzaSyAERM44Mxqwz42ywZPPnQ8-ltHa63kuGmQ",
+        "EXPO_PUBLIC_GEMINI_API_KEY": "AIzaSyCDtS55sL2Lf-17TBEECmP-eVmy9afqJHg"
       }
     }
   },

@@ -6,11 +6,24 @@ import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView, T
 import { colors, styles } from "../../constants/TailwindStyles";
 import { getServerUrl } from "../../utils/network";
 
+
 export default function PatientLoginScreen() {
   const router = useRouter();
   const [phoneDigits, setPhoneDigits] = useState<string[]>(Array(10).fill(""));
   const [loading, setLoading] = useState(false);
   const inputRefs = useRef<(TextInput | null)[]>(Array(10).fill(null));
+
+  // On mount, check if user is authenticated AND profile_complete is set. If so, skip login and go to /patient
+  React.useEffect(() => {
+    const checkAuthAndProfile = async () => {
+      const accessToken = await AsyncStorage.getItem("access_token");
+      const profileComplete = await AsyncStorage.getItem("profile_complete");
+      if (accessToken && profileComplete === "true") {
+        router.replace("/patient");
+      }
+    };
+    checkAuthAndProfile();
+  }, []);
 
   const handleDigitChange = (index: number, value: string) => {
     if (value && !/^\d$/.test(value)) return;
@@ -84,7 +97,16 @@ export default function PatientLoginScreen() {
                                  data.user.bloodGroup && 
                                  data.user.emergencyContact;
 
-        if (!isProfileComplete) {
+        if (isProfileComplete) {
+          await AsyncStorage.setItem("profile_complete", "true");
+          Alert.alert("Success", "Login successful!", [
+            {
+              text: "Continue",
+              onPress: () => router.replace("/patient"),
+            },
+          ]);
+        } else {
+          await AsyncStorage.removeItem("profile_complete");
           // Redirect to profile completion
           Alert.alert(
             'Welcome!',
@@ -98,14 +120,6 @@ export default function PatientLoginScreen() {
               },
             ]
           );
-        } else {
-          // Profile is complete, go to patient home/index
-          Alert.alert("Success", "Login successful!", [
-            {
-              text: "Continue",
-              onPress: () => router.replace("/patient"),
-            },
-          ]);
         }
       } else {
         Alert.alert(

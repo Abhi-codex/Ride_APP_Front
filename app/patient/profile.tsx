@@ -150,6 +150,7 @@ export default function PatientProfileSetupScreen() {
       console.log('Profile update response:', data);
 
       if (response.ok) {
+        await AsyncStorage.setItem("profile_complete", "true");
         Alert.alert(
           'Success!',
           'Your profile has been updated successfully.',
