@@ -1,9 +1,9 @@
-import React, { useState, useMemo } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, SafeAreaView, FlatList } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { FontAwesome, FontAwesome5, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import React, { useMemo, useState } from 'react';
+import { FlatList, SafeAreaView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { colors, styles } from '../../constants/TailwindStyles';
-import { EMERGENCY_CATEGORIES, EMERGENCY_TYPES, EmergencyType, EmergencyCategory } from '../../types/emergency';
+import { EMERGENCY_CATEGORIES, EMERGENCY_TYPES, EmergencyCategory, EmergencyType } from '../../types/emergency';
 
 export default function EmergencySelectionScreen() {
   const router = useRouter();
@@ -42,68 +42,49 @@ export default function EmergencySelectionScreen() {
     });
   };
 
+  // Helper to render the correct icon component
+  const renderIcon = (iconObj: { name: string; library: string }, size = 28, color = '#ef4444') => {
+    if (!iconObj) return null;
+    const { name, library } = iconObj;
+    switch (library) {
+      case 'FontAwesome5':
+        return <FontAwesome5 name={name as any} size={size} color={color} />;
+      case 'FontAwesome':
+        return <FontAwesome name={name as any} size={size} color={color} />;
+      case 'MaterialCommunityIcons':
+        return <MaterialCommunityIcons name={name as any} size={size} color={color} />;
+      case 'Ionicons':
+        return <Ionicons name={name as any} size={size} color={color} />;
+      default:
+        return <FontAwesome5 name="question" size={size} color={color} />;
+    }
+  };
+
   const renderEmergencyTile = ({ item }: { item: EmergencyType }) => (
     <TouchableOpacity
-      style={[
-        styles.p4,
-        styles.bgWhite,
-        styles.roundedXl,
-        styles.mb3,
-        styles.shadowSm,
-        styles.border4,
-        { borderLeftColor: getPriorityColor(item.priority) }
-      ]}
-      onPress={() => handleEmergencySelect(item)}
-      activeOpacity={0.7}
-    >
-      <View style={[styles.flexRow, styles.alignCenter, styles.mb2]}>
-        <Text style={[styles.textXl, styles.mr3]}>{item.icon}</Text>
+      style={[styles.p4, styles.bgWhite, styles.roundedXl, styles.mb3, styles.shadowSm,
+        { backgroundColor: getPriorityColor(item.priority) }]}
+      onPress={() => handleEmergencySelect(item)} activeOpacity={0.7}>
+      <View style={[styles.flexRow, styles.alignCenter, styles.mb1]}>
+        <View style={[styles.mr3]}>
+          {renderIcon(item.icon, 28, colors.emergency[600])}
+        </View>
         <View style={[styles.flex1]}>
-          <Text style={[styles.textLg, styles.fontSemibold, styles.textGray800]}>
+          <Text style={[styles.textBase, styles.fontSemibold, styles.textGray800]}>
             {item.name}
           </Text>
-          <Text style={[styles.textSm, styles.textGray600, styles.mt1]}>
+          <Text style={[styles.textXs, styles.textGray600]}>
             {item.description}
           </Text>
         </View>
         <View style={[styles.alignCenter]}>
-          <View style={[
-            styles.px2,
-            styles.py1,
-            styles.roundedFull,
-            { backgroundColor: getPriorityColor(item.priority) + '20' }
-          ]}>
-            <Text style={[
-              styles.textXs,
-              styles.fontMedium,
-              { color: getPriorityColor(item.priority) }
-            ]}>
-              {item.priority.toUpperCase()}
-            </Text>
-          </View>
-          <Ionicons 
-            name="chevron-forward" 
-            size={16} 
-            color={colors.gray[400]} 
-            style={[styles.mt1]}
-          />
         </View>
       </View>
-      
-      <View style={[styles.flexRow, styles.flexWrap, styles.mt2]}>
+      <View style={[styles.flexRow, styles.justifyEnd]}>
         {item.requiredAmbulanceTypes.slice(0, 3).map((type, index) => (
-          <View 
-            key={index}
-            style={[
-              styles.px2,
-              styles.py1,
-              styles.roundedMd,
-              styles.mr1,
-              styles.mb1,
-              { backgroundColor: colors.primary[100] }
-            ]}
-          >
-            <Text style={[styles.textXs, { color: colors.primary[600] }]}>
+          <View  key={index} style={[styles.px2, styles.py1, styles.roundedMd, styles.mr1, styles.mb1, 
+          { backgroundColor: colors.primary[500] }]}>
+            <Text style={[styles.textXs, styles.textWhite]}>
               {type.toUpperCase()}
             </Text>
           </View>
@@ -114,48 +95,38 @@ export default function EmergencySelectionScreen() {
 
   const renderCategoryTile = ({ item }: { item: EmergencyCategory }) => (
     <TouchableOpacity
-      style={[
-        styles.p4,
-        styles.roundedXl,
-        styles.mr3,
-        styles.mb3,
-        styles.alignCenter,
-        styles.w32,
-        { backgroundColor: item.color + '15' }
-      ]}
-      onPress={() => setSelectedCategory(item.id)}
-      activeOpacity={0.7}
-    >
-      <Text style={[styles.text2xl, styles.mb2]}>{item.icon}</Text>
-      <Text style={[
-        styles.textSm,
-        styles.fontMedium,
-        styles.textCenter,
-        { color: item.color }
-      ]}>
+      style={[styles.p2, styles.rounded2xl, styles.mr2, styles.mb3, styles.alignCenter, styles.w30,
+        { backgroundColor: item.color + '15' }]} onPress={() => setSelectedCategory(item.id)} activeOpacity={0.7}>
+      <View style={{ width: '100%', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+        {renderIcon(item.icon, 32, item.color)}
+        <View style={[styles.absolute, styles.top0, styles.right0, styles.bgPrimary500, styles.roundedFull,
+          styles.px2, styles.h6, styles.alignCenter, styles.justifyCenter, { backgroundColor: item.color, minWidth: 22 }]}>
+          <Text style={[styles.textWhite, styles.textXs, styles.fontBold]}>
+            {item.emergencies.length}
+          </Text>
+        </View>
+      </View>
+      <Text style={[styles.textSm, styles.fontMedium, styles.textCenter, { color: item.color }]}> 
         {item.name}
-      </Text>
-      <Text style={[styles.textXs, styles.textGray500, styles.textCenter, styles.mt1]}>
-        {item.emergencies.length} types
       </Text>
     </TouchableOpacity>
   );
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'critical': return '#ef4444';
-      case 'high': return '#f59e0b';
-      case 'medium': return '#3b82f6';
-      case 'low': return '#10b981';
-      default: return '#6b7280';
+      case 'critical': return '#eab1b1ff';
+      case 'high': return '#ffd896ff';
+      case 'medium': return '#a5bfeaff';
+      case 'low': return '#72d7b6ff';
+      default: return '#b3c0daff';
     }
   };
 
   return (
     <SafeAreaView style={[styles.flex1, styles.mt8, styles.bgGray50]}>
       {/* Header */}
-      <View style={[styles.px5, styles.py4, styles.bgWhite]}>
-        <View style={[styles.flexRow, styles.alignCenter, styles.mb4]}>
+      <View style={[styles.px5, styles.py3]}>
+        <View style={[styles.flexRow, styles.alignCenter, styles.mb2]}>
           <TouchableOpacity
             onPress={() => router.back()}
             style={[styles.mr3]}
@@ -168,7 +139,7 @@ export default function EmergencySelectionScreen() {
         </View>
 
         {/* Search Bar */}
-        <View style={[styles.flexRow, styles.alignCenter, styles.bgGray100, styles.roundedXl, styles.px4, styles.py3]}>
+        <View style={[styles.flexRow, styles.alignCenter, styles.bgGray100, styles.shadowSm, styles.roundedXl, styles.px3, styles.py2]}>
           <Ionicons name="search" size={20} color={colors.gray[400]} />
           <TextInput
             style={[styles.flex1, styles.ml3, styles.textBase]}
@@ -185,62 +156,55 @@ export default function EmergencySelectionScreen() {
         </View>
       </View>
 
-      <ScrollView style={[styles.flex1]} showsVerticalScrollIndicator={false}>
-
-        {searchQuery.trim() === '' && selectedCategory === null && (
-          <>
-            {/* Category Selection */}
-            <View style={[styles.mt5]}>
-              <Text style={[styles.textLg, styles.fontSemibold, styles.textGray800, styles.px5, styles.mb3]}>
-                Browse by Category
-              </Text>
-              <FlatList
-                horizontal
-                data={EMERGENCY_CATEGORIES}
-                renderItem={renderCategoryTile}
-                keyExtractor={(item) => item.id}
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={[styles.px5]}
-                nestedScrollEnabled={true}
-              />
-            </View>
-
-            {/* Common Emergencies */}
-            <View style={[styles.mt5, styles.px5]}>
-              <Text style={[styles.textLg, styles.fontSemibold, styles.textGray800, styles.mb3]}>
-                Common Emergencies
-              </Text>
-              {EMERGENCY_TYPES.filter(e => ['heart_attack', 'stroke', 'breathing_difficulty', 'major_trauma', 'chest_pain'].includes(e.id)).map((emergency) => (                  <TouchableOpacity
+      {searchQuery.trim() === '' && selectedCategory === null && (
+        <FlatList
+          ListHeaderComponent={
+            <>
+              {/* Common Emergencies */}
+              <View style={[styles.px5]}>
+                <Text style={[styles.textLg, styles.fontSemibold, styles.textGray800, styles.mb3]}>
+                  Common Emergencies
+                </Text>
+                {EMERGENCY_TYPES.filter(e => ['heart_attack', 'stroke', 'breathing_difficulty', 'major_trauma', 'chest_pain'].includes(e.id)).map((emergency) => (
+                  <TouchableOpacity
                     key={emergency.id}
                     style={[
-                      styles.p4,
-                      styles.bgWhite,
-                      styles.roundedXl,
-                      styles.mb3,
-                      styles.shadowSm,
-                      styles.border4,
-                      { borderLeftColor: getPriorityColor(emergency.priority) }
-                    ]}
-                    onPress={() => handleEmergencySelect(emergency)}
-                    activeOpacity={0.7}
-                  >
-                  <View style={[styles.flexRow, styles.alignCenter]}>
-                    <Text style={[styles.textXl, styles.mr3]}>{emergency.icon}</Text>
-                    <View style={[styles.flex1]}>
-                      <Text style={[styles.textBase, styles.fontSemibold, styles.textGray800]}>
-                        {emergency.name}
-                      </Text>
-                      <Text style={[styles.textSm, styles.textGray600, styles.mt1]}>
-                        {emergency.description}
-                      </Text>
+                      styles.py2, styles.px5, styles.roundedXl, styles.mb3, styles.shadowSm,
+                      { backgroundColor: getPriorityColor(emergency.priority) }]}
+                    onPress={() => handleEmergencySelect(emergency)} activeOpacity={0.7}>
+                    <View style={[styles.flexRow, styles.alignCenter]}>
+                      <View style={[styles.mr4]}>
+                        {renderIcon(emergency.icon, 28, colors.emergency[600])}
+                      </View>
+                      <View style={[styles.flex1]}>
+                        <Text style={[styles.textBase, styles.fontSemibold, styles.textGray800]}>
+                          {emergency.name}
+                        </Text>
+                        <Text style={[styles.textSm, styles.textGray600]}>
+                          {emergency.description}
+                        </Text>
+                      </View>
                     </View>
-                    <Ionicons name="chevron-forward" size={16} color={colors.gray[400]} />
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </>
-        )}
+                  </TouchableOpacity>
+                ))}
+              </View>
+              {/* Category Title */}
+              <View style={[styles.mt5]}>
+                <Text style={[styles.textLg, styles.fontSemibold, styles.textGray800, styles.px5, styles.mb3]}>
+                  Browse by Category
+                </Text>
+              </View>
+            </>
+          }
+          data={EMERGENCY_CATEGORIES}
+          renderItem={renderCategoryTile}
+          keyExtractor={(item) => item.id}
+          numColumns={3}
+          columnWrapperStyle={{ justifyContent: 'space-between', paddingHorizontal: 20 }}
+          contentContainerStyle={{ paddingBottom: 32 }}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
 
         {/* Category-specific emergencies */}
         {selectedCategory !== null && searchQuery.trim() === '' && (
@@ -293,9 +257,7 @@ export default function EmergencySelectionScreen() {
             )}
           </View>
         )}
-
         <View style={[styles.h16]} />
-      </ScrollView>
     </SafeAreaView>
   );
 }

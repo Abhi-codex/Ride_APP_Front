@@ -1,4 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
+import { FontAwesome, FontAwesome5, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
@@ -7,14 +7,30 @@ import { AmbulanceTypeSelector, BookRideButton, HospitalList, PatientMap, Select
 import { colors, styles } from '../../constants/TailwindStyles';
 import { useHospitalSelection, useLocationAndHospitals, useRideBooking } from '../../hooks';
 import { AmbulanceType, Hospital } from '../../types/patient';
-import { filterHospitalsByEmergency, getAvailableAmbulanceTypes, getEmergencyById, getEmergencyPriorityColor, getSuggestedAmbulanceType } from '../../utils/emergencyUtils';
+import { filterHospitalsByEmergency, getAvailableAmbulanceTypes, getEmergencyById, getSuggestedAmbulanceType } from '../../utils/emergencyUtils';
 import { getServerUrl } from '../../utils/network';
+
+// Helper to render the correct icon component
+const renderIcon = (iconObj: { name: string; library: string }, size = 28, color = '#ef4444') => {
+  if (!iconObj) return null;
+  const { name, library } = iconObj;
+  switch (library) {
+    case 'FontAwesome5':
+      return <FontAwesome5 name={name as any} size={size} color={color} />;
+    case 'FontAwesome':
+      return <FontAwesome name={name as any} size={size} color={color} />;
+    case 'MaterialCommunityIcons':
+      return <MaterialCommunityIcons name={name as any} size={size} color={color} />;
+    case 'Ionicons':
+      return <Ionicons name={name as any} size={size} color={color} />;
+    default:
+      return <FontAwesome5 name="question" size={size} color={color} />;
+  }
+};
 
 export default function RideScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
-
-  // Profile check and sync profile_complete from backend
   useEffect(() => {
     const checkProfile = async () => {
       const token = await AsyncStorage.getItem('access_token');
@@ -40,7 +56,6 @@ export default function RideScreen() {
             await AsyncStorage.setItem('profile_complete', 'true');
           } else {
             await AsyncStorage.removeItem('profile_complete');
-            // Instead of showing booking, always go to emergency selection if profile incomplete
             router.replace('/patient');
           }
         }
@@ -206,34 +221,25 @@ export default function RideScreen() {
       {/* Emergency Header */}
       {emergency && (
         <View style={[ styles.px3, styles.py2, styles.bgGray100, styles.shadowSm, styles.borderB,
-          { borderBottomColor: colors.gray[200] }]}>
-          <View style={[styles.flexRow, styles.alignCenter, styles.justifyBetween]}>
-            <TouchableOpacity
-              onPress={() => router.back()}
-              style={[styles.flexRow, styles.alignCenter]}
-            >
-              <Ionicons name="arrow-back" size={20} color={colors.gray[600]} />
-              <Text style={[styles.ml2, styles.textSm, styles.textGray600]}>
-                Change Emergency
-              </Text>
-            </TouchableOpacity>
-            
-            <View style={[ styles.px2, styles.py1, styles.roundedFull, { backgroundColor: getEmergencyPriorityColor(priority) + '20' }]}>
-              <Text style={[styles.textXs, styles.fontMedium, { color: getEmergencyPriorityColor(priority) }]}>
-                {priority?.toUpperCase()}
-              </Text>
-            </View>
-          </View>
-          
+          { borderBottomColor: colors.gray[200] }]}>          
           <View style={[styles.flexRow, styles.alignCenter, styles.mt1]}>
-            <Text style={[styles.textLg, styles.mr2]}>
-              {emergency.icon}
-            </Text>
+            <View style={[styles.mr2]}>
+              {renderIcon(emergency.icon, 25, colors.emergency[600])}
+            </View>
             <View style={[styles.flex1]}>
-              <Text style={[styles.textLg, styles.fontSemibold, styles.textGray800]}>
-                {emergencyName}
-              </Text>
-              <Text style={[styles.textSm, styles.textGray600]}>
+              <View style={[styles.alignCenter, styles.justifyBetween, styles.flexRow]}>
+                <Text style={[styles.textLg, styles.fontSemibold, styles.textGray800]}>
+                  {emergencyName}
+                </Text>
+                <TouchableOpacity onPress={() => router.back()} 
+                  style={[styles.flexRow, styles.py1, styles.px2, styles.rounded2xl, styles.bgDanger200, styles.alignCenter]}>
+                  <Ionicons name="arrow-back" size={15} color={colors.gray[600]} />
+                  <Text style={[styles.ml2, styles.textXs, styles.textGray600]}>
+                    Change Emergency
+                  </Text>
+                </TouchableOpacity>
+              </View>
+              <Text style={[styles.textXs, styles.textGray600]}>
                 {emergency.description}
               </Text>
             </View>

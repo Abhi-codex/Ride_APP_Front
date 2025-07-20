@@ -1,6 +1,7 @@
-import React, { useState, useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from "react-native";
-import { styles, colors } from "../../constants/TailwindStyles";
+import { colors, styles } from "../../constants/TailwindStyles";
+import { EMERGENCY_TYPES } from '../../types/emergency';
 import { Hospital } from "../../types/patient";
 import HospitalCard from "./HospitalCard";
 
@@ -33,45 +34,58 @@ export default function HospitalList({
 }: HospitalListProps) {
   const [sortBy, setSortBy] = useState<SortOption>('capability');
 
+  // at least 2 out of 3 required services must match
+  const filteredHospitals = useMemo(() => {
+    if (!emergencyContext?.emergencyType) return hospitals;
+    const emergency = EMERGENCY_TYPES.find(e => e.id === emergencyContext.emergencyType);
+    if (!emergency) return hospitals;
+    let required = emergency.requiredHospitalServices;
+    if (!required || required.length === 0) return hospitals;
+
+    required = required.map(s => s.trim().toLowerCase());
+    return hospitals.filter(hospital => {
+      let services = hospital.emergencyServices || [];
+      services = services.map(s => s.trim().toLowerCase());
+      const matches = required.filter(service => services.includes(service));
+      if (required.length === 1) return matches.length === 1;
+      if (required.length === 2) return matches.length === 2;
+      if (required.length >= 3) return matches.length >= 2;
+      return false;
+    });
+  }, [hospitals, emergencyContext]);
+
   const sortedHospitals = useMemo(() => {
-    const openHospitals = hospitals.filter(hospital => hospital.isOpen !== false);
+    const openHospitals = filteredHospitals.filter(hospital => hospital.isOpen !== false);
     const hospitalsCopy = [...openHospitals];
-    
     switch (sortBy) {
       case 'capability':
         return hospitalsCopy.sort((a, b) => {
           const scoreA = a.emergencyCapabilityScore || 0;
           const scoreB = b.emergencyCapabilityScore || 0;
           if (scoreB !== scoreA) return scoreB - scoreA;
-          return a.distance - b.distance; // Secondary sort by distance
+          return a.distance - b.distance;
         });
-      
       case 'distance':
         return hospitalsCopy.sort((a, b) => a.distance - b.distance);
-      
       case 'rating':
         return hospitalsCopy.sort((a, b) => {
           const ratingA = a.rating || 0;
           const ratingB = b.rating || 0;
           if (ratingB !== ratingA) return ratingB - ratingA;
-          return a.distance - b.distance; // Secondary sort by distance
+          return a.distance - b.distance;
         });
-      
       case 'emergency_match':
         return hospitalsCopy.sort((a, b) => {
-          // Prioritize verified emergency hospitals
           if (a.isEmergencyVerified && !b.isEmergencyVerified) return -1;
           if (!a.isEmergencyVerified && b.isEmergencyVerified) return 1;
-          
           const scoreA = a.emergencyCapabilityScore || 0;
           const scoreB = b.emergencyCapabilityScore || 0;
           return scoreB - scoreA;
         });
-      
       default:
         return hospitalsCopy;
     }
-  }, [hospitals, sortBy]);
+  }, [filteredHospitals, sortBy]);
   const openHospitals = hospitals.filter(hospital => hospital.isOpen !== false);
   const verifiedCount = openHospitals.filter(h => h.isEmergencyVerified).length;
 

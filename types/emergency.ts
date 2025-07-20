@@ -17,7 +17,7 @@ export interface EmergencyType {
   category: EmergencyCategoryType;
   name: string;
   description: string;
-  icon: string;
+  icon: { name: string; library: string };
   requiredAmbulanceTypes: AmbulanceType[];
   requiredHospitalServices: string[];
   priority: 'low' | 'medium' | 'high' | 'critical';
@@ -27,7 +27,7 @@ export interface EmergencyType {
 export interface EmergencyCategory {
   id: EmergencyCategoryType;
   name: string;
-  icon: string;
+  icon: { name: string; library: string };
   color: string;
   emergencies: EmergencyType[];
 }
@@ -40,7 +40,7 @@ export const EMERGENCY_TYPES: EmergencyType[] = [
     category: 'cardiac',
     name: 'Heart Attack',
     description: 'Chest pain, shortness of breath, suspected myocardial infarction',
-    icon: '🫀',
+    icon: { name: 'heartbeat', library: 'FontAwesome5' },
     requiredAmbulanceTypes: ['als', 'ccs'],
     requiredHospitalServices: ['emergency_room', 'cardiology', 'cardiac_catheterization'],
     priority: 'critical',
@@ -51,7 +51,7 @@ export const EMERGENCY_TYPES: EmergencyType[] = [
     category: 'cardiac',
     name: 'Cardiac Arrest',
     description: 'Patient unconscious, no pulse, requires immediate CPR',
-    icon: '🫀',
+    icon: { name: 'heart-broken', library: 'MaterialCommunityIcons' },
     requiredAmbulanceTypes: ['als', 'ccs'],
     requiredHospitalServices: ['emergency_room', 'cardiology', 'intensive_care'],
     priority: 'critical',
@@ -62,7 +62,7 @@ export const EMERGENCY_TYPES: EmergencyType[] = [
     category: 'cardiac',
     name: 'Chest Pain',
     description: 'Non-specific chest pain, requires cardiac evaluation',
-    icon: '🫁',
+    icon: { name: 'lungs', library: 'FontAwesome5' },
     requiredAmbulanceTypes: ['bls', 'als'],
     requiredHospitalServices: ['emergency_room', 'cardiology'],
     priority: 'high',
@@ -75,7 +75,7 @@ export const EMERGENCY_TYPES: EmergencyType[] = [
     category: 'trauma',
     name: 'Major Trauma',
     description: 'Severe injuries from accidents, falls, or violence',
-    icon: '🩸',
+    icon: { name: 'user-injured', library: 'FontAwesome5' },
     requiredAmbulanceTypes: ['als', 'ccs'],
     requiredHospitalServices: ['emergency_room', 'trauma_center', 'surgery', 'blood_bank'],
     priority: 'critical',
@@ -86,7 +86,7 @@ export const EMERGENCY_TYPES: EmergencyType[] = [
     category: 'trauma',
     name: 'Motor Vehicle Accident',
     description: 'Road traffic accident with potential injuries',
-    icon: '🚗',
+    icon: { name: 'car-crash', library: 'FontAwesome5' },
     requiredAmbulanceTypes: ['als', 'ccs'],
     requiredHospitalServices: ['emergency_room', 'trauma_center', 'orthopedics', 'neurology'],
     priority: 'critical',
@@ -97,7 +97,7 @@ export const EMERGENCY_TYPES: EmergencyType[] = [
     category: 'burns',
     name: 'Burn Injuries',
     description: 'Thermal, chemical, or electrical burns',
-    icon: '🔥',
+    icon: { name: 'fire', library: 'FontAwesome5' },
     requiredAmbulanceTypes: ['als', 'ccs'],
     requiredHospitalServices: ['emergency_room', 'burn_unit', 'plastic_surgery'],
     priority: 'critical',
@@ -110,7 +110,7 @@ export const EMERGENCY_TYPES: EmergencyType[] = [
     category: 'respiratory',
     name: 'Breathing Difficulty',
     description: 'Shortness of breath, asthma attack, respiratory distress',
-    icon: '🫁',
+    icon: { name: 'lungs', library: 'FontAwesome5' },
     requiredAmbulanceTypes: ['bls', 'als'],
     requiredHospitalServices: ['emergency_room', 'pulmonology'],
     priority: 'high',
@@ -121,7 +121,7 @@ export const EMERGENCY_TYPES: EmergencyType[] = [
     category: 'respiratory',
     name: 'Choking',
     description: 'Airway obstruction, unable to breathe or speak',
-    icon: '🗣️',
+    icon: { name: 'user-slash', library: 'FontAwesome5' },
     requiredAmbulanceTypes: ['bls', 'als'],
     requiredHospitalServices: ['emergency_room'],
     priority: 'critical',
@@ -134,7 +134,7 @@ export const EMERGENCY_TYPES: EmergencyType[] = [
     category: 'neurological',
     name: 'Stroke',
     description: 'Sudden weakness, speech problems, facial drooping',
-    icon: '🧠',
+    icon: { name: 'brain', library: 'FontAwesome5' },
     requiredAmbulanceTypes: ['als', 'ccs'],
     requiredHospitalServices: ['emergency_room', 'neurology', 'stroke_center', 'ct_scan'],
     priority: 'critical',
@@ -145,7 +145,7 @@ export const EMERGENCY_TYPES: EmergencyType[] = [
     category: 'neurological',
     name: 'Seizure',
     description: 'Epileptic seizure or convulsions',
-    icon: '⚡',
+    icon: { name: 'bolt', library: 'FontAwesome5' },
     requiredAmbulanceTypes: ['bls', 'als'],
     requiredHospitalServices: ['emergency_room', 'neurology'],
     priority: 'high',
@@ -156,7 +156,7 @@ export const EMERGENCY_TYPES: EmergencyType[] = [
     category: 'neurological',
     name: 'Head Injury',
     description: 'Traumatic brain injury, concussion, head trauma',
-    icon: '🤕',
+    icon: { name: 'user-injured', library: 'FontAwesome5' },
     requiredAmbulanceTypes: ['als', 'ccs'],
     requiredHospitalServices: ['emergency_room', 'neurology', 'neurosurgery', 'ct_scan'],
     priority: 'critical',
@@ -169,7 +169,7 @@ export const EMERGENCY_TYPES: EmergencyType[] = [
     category: 'pediatric',
     name: 'Child Emergency',
     description: 'Medical emergency involving children under 18',
-    icon: '👶',
+    icon: { name: 'child', library: 'FontAwesome5' },
     requiredAmbulanceTypes: ['bls', 'als'],
     requiredHospitalServices: ['emergency_room', 'pediatrics'],
     priority: 'high',
@@ -180,7 +180,7 @@ export const EMERGENCY_TYPES: EmergencyType[] = [
     category: 'pediatric',
     name: 'Newborn Emergency',
     description: 'Emergency involving newborn or infant',
-    icon: '🍼',
+    icon: { name: 'baby', library: 'FontAwesome5' },
     requiredAmbulanceTypes: ['als', 'ccs'],
     requiredHospitalServices: ['emergency_room', 'pediatrics', 'nicu'],
     priority: 'critical',
@@ -193,7 +193,7 @@ export const EMERGENCY_TYPES: EmergencyType[] = [
     category: 'obstetric',
     name: 'Pregnancy Emergency',
     description: 'Complications during pregnancy',
-    icon: '🤰',
+    icon: { name: 'female', library: 'FontAwesome' },
     requiredAmbulanceTypes: ['bls', 'als'],
     requiredHospitalServices: ['emergency_room', 'obstetrics', 'gynecology'],
     priority: 'high',
@@ -204,7 +204,7 @@ export const EMERGENCY_TYPES: EmergencyType[] = [
     category: 'obstetric',
     name: 'Emergency Delivery',
     description: 'Imminent birth or delivery complications',
-    icon: '👶',
+    icon: { name: 'baby', library: 'FontAwesome5' },
     requiredAmbulanceTypes: ['als'],
     requiredHospitalServices: ['emergency_room', 'obstetrics', 'delivery_room'],
     priority: 'critical',
@@ -217,7 +217,7 @@ export const EMERGENCY_TYPES: EmergencyType[] = [
     category: 'psychiatric',
     name: 'Mental Health Crisis',
     description: 'Suicide risk, psychotic episode, severe depression',
-    icon: '🧠',
+    icon: { name: 'brain', library: 'FontAwesome5' },
     requiredAmbulanceTypes: ['bls', 'als'],
     requiredHospitalServices: ['emergency_room', 'psychiatry', 'mental_health'],
     priority: 'high',
@@ -230,7 +230,7 @@ export const EMERGENCY_TYPES: EmergencyType[] = [
     category: 'poisoning',
     name: 'Poisoning/Overdose',
     description: 'Drug overdose, chemical poisoning, toxic ingestion',
-    icon: '☠️',
+    icon: { name: 'skull-crossbones', library: 'FontAwesome5' },
     requiredAmbulanceTypes: ['als', 'ccs'],
     requiredHospitalServices: ['emergency_room', 'toxicology', 'intensive_care'],
     priority: 'critical',
@@ -243,7 +243,7 @@ export const EMERGENCY_TYPES: EmergencyType[] = [
     category: 'general',
     name: 'General Medical Emergency',
     description: 'Other serious medical conditions requiring immediate care',
-    icon: '🚨',
+    icon: { name: 'exclamation-triangle', library: 'FontAwesome5' },
     requiredAmbulanceTypes: ['bls', 'als'],
     requiredHospitalServices: ['emergency_room'],
     priority: 'medium',
@@ -254,7 +254,7 @@ export const EMERGENCY_TYPES: EmergencyType[] = [
     category: 'general',
     name: 'Diabetic Emergency',
     description: 'Diabetic coma, hypoglycemia, hyperglycemia',
-    icon: '💉',
+    icon: { name: 'syringe', library: 'FontAwesome5' },
     requiredAmbulanceTypes: ['bls', 'als'],
     requiredHospitalServices: ['emergency_room', 'endocrinology'],
     priority: 'high',
@@ -265,7 +265,7 @@ export const EMERGENCY_TYPES: EmergencyType[] = [
     category: 'general',
     name: 'Severe Allergic Reaction',
     description: 'Anaphylaxis, severe allergic reaction',
-    icon: '🤧',
+    icon: { name: 'allergies', library: 'FontAwesome5' },
     requiredAmbulanceTypes: ['bls', 'als'],
     requiredHospitalServices: ['emergency_room'],
     priority: 'critical',
@@ -277,70 +277,70 @@ export const EMERGENCY_CATEGORIES: EmergencyCategory[] = [
   {
     id: 'cardiac',
     name: 'Heart & Circulation',
-    icon: '💓',
+    icon: { name: 'heartbeat', library: 'FontAwesome5' },
     color: '#ef4444',
     emergencies: EMERGENCY_TYPES.filter(e => e.category === 'cardiac')
   },
   {
     id: 'trauma',
     name: 'Trauma & Injuries',
-    icon: '🩸',
+    icon: { name: 'user-injured', library: 'FontAwesome5' },
     color: '#dc2626',
     emergencies: EMERGENCY_TYPES.filter(e => e.category === 'trauma')
   },
   {
     id: 'respiratory',
     name: 'Breathing Problems',
-    icon: '🫁',
+    icon: { name: 'lungs', library: 'FontAwesome5' },
     color: '#2563eb',
     emergencies: EMERGENCY_TYPES.filter(e => e.category === 'respiratory')
   },
   {
     id: 'neurological',
     name: 'Brain & Nervous System',
-    icon: '🧠',
+    icon: { name: 'brain', library: 'FontAwesome5' },
     color: '#7c3aed',
     emergencies: EMERGENCY_TYPES.filter(e => e.category === 'neurological')
   },
   {
     id: 'pediatric',
     name: 'Child Emergencies',
-    icon: '👶',
+    icon: { name: 'child', library: 'FontAwesome5' },
     color: '#059669',
     emergencies: EMERGENCY_TYPES.filter(e => e.category === 'pediatric')
   },
   {
     id: 'obstetric',
     name: 'Pregnancy & Delivery',
-    icon: '🤰',
+    icon: { name: 'female', library: 'FontAwesome' },
     color: '#db2777',
     emergencies: EMERGENCY_TYPES.filter(e => e.category === 'obstetric')
   },
   {
     id: 'psychiatric',
     name: 'Mental Health',
-    icon: '🧠',
+    icon: { name: 'brain', library: 'FontAwesome5' },
     color: '#0891b2',
     emergencies: EMERGENCY_TYPES.filter(e => e.category === 'psychiatric')
   },
   {
     id: 'burns',
     name: 'Burns',
-    icon: '🔥',
+    icon: { name: 'fire', library: 'FontAwesome5' },
     color: '#ea580c',
     emergencies: EMERGENCY_TYPES.filter(e => e.category === 'burns')
   },
   {
     id: 'poisoning',
     name: 'Poisoning & Overdose',
-    icon: '☠️',
+    icon: { name: 'skull-crossbones', library: 'FontAwesome5' },
     color: '#374151',
     emergencies: EMERGENCY_TYPES.filter(e => e.category === 'poisoning')
   },
   {
     id: 'general',
     name: 'General Medical',
-    icon: '🚨',
+    icon: { name: 'exclamation-triangle', library: 'FontAwesome5' },
     color: '#6b7280',
     emergencies: EMERGENCY_TYPES.filter(e => e.category === 'general')
   }

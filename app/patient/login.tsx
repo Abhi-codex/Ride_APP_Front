@@ -59,6 +59,7 @@ export default function PatientLoginScreen() {
         await AsyncStorage.setItem("refresh_token", data.refresh_token);
         await AsyncStorage.setItem("role", "patient");
         await AsyncStorage.setItem("user_id", data.user._id);
+        await AsyncStorage.setItem("phone", formattedPhone);
         // Always go to patient home after login
         router.replace("/patient");
       } else {
