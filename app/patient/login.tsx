@@ -1,37 +1,31 @@
 import { FontAwesome5 } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
-import React, { useRef, useState } from "react";
+import React, { useState } from "react";
 import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { colors, styles } from "../../constants/TailwindStyles";
 import { getServerUrl } from "../../utils/network";
-
 
 export default function PatientLoginScreen() {
   const router = useRouter();
   const [phoneDigits, setPhoneDigits] = useState<string[]>(Array(10).fill(""));
   const [loading, setLoading] = useState(false);
-  const inputRefs = useRef<(TextInput | null)[]>(Array(10).fill(null));
+  const inputRefs = React.useRef<Array<TextInput | null>>([]);
 
-  // On mount, check if user is authenticated AND profile_complete is set. If so, skip login and go to /patient
   React.useEffect(() => {
-    const checkAuthAndProfile = async () => {
+    const checkSession = async () => {
       const accessToken = await AsyncStorage.getItem("access_token");
-      const profileComplete = await AsyncStorage.getItem("profile_complete");
-      if (accessToken && profileComplete === "true") {
-        router.replace("/patient");
-      }
+      if (!accessToken) return;
+      router.replace("/patient");
     };
-    checkAuthAndProfile();
+    checkSession();
   }, []);
 
   const handleDigitChange = (index: number, value: string) => {
     if (value && !/^\d$/.test(value)) return;
-
     const newDigits = [...phoneDigits];
     newDigits[index] = value;
     setPhoneDigits(newDigits);
-
     if (value && index < 9) {
       inputRefs.current[index + 1]?.focus();
     }
@@ -43,84 +37,30 @@ export default function PatientLoginScreen() {
     }
   };
 
-  const getPhoneNumber = () => {
-    const phoneNumber = phoneDigits.join("");
-    return phoneNumber.length === 10 ? "+91" + phoneNumber : "";
-  };
-
-  const validatePhone = () => {
-    const phoneNumber = phoneDigits.join("");
-    return phoneNumber.length === 10 && /^\d{10}$/.test(phoneNumber);
-  };
+  const getPhoneNumber = () => phoneDigits.join("");
+  const validatePhone = () => /^\d{10}$/.test(getPhoneNumber());
 
   const handlePatientLogin = async () => {
-    const phoneNumber = phoneDigits.join("");
-
-    if (!phoneNumber.trim()) {
-      Alert.alert("Error", "Please enter your phone number");
-      return;
-    }
-
     if (!validatePhone()) {
       Alert.alert("Error", "Please enter a valid 10-digit phone number");
       return;
     }
-
     setLoading(true);
-
     try {
-      const formattedPhone = getPhoneNumber();
-
+      const formattedPhone = "+91" + getPhoneNumber();
       const response = await fetch(`${getServerUrl()}/auth/signin`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          phone: formattedPhone,
-          role: "patient",
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: formattedPhone, role: "patient" }),
       });
-
       const data = await response.json();
-
       if (response.ok) {
         await AsyncStorage.setItem("access_token", data.access_token);
         await AsyncStorage.setItem("refresh_token", data.refresh_token);
         await AsyncStorage.setItem("role", "patient");
         await AsyncStorage.setItem("user_id", data.user._id);
-
-        // Check if patient profile is complete
-        const isProfileComplete = data.user.name && 
-                                 data.user.age && 
-                                 data.user.gender && 
-                                 data.user.bloodGroup && 
-                                 data.user.emergencyContact;
-
-        if (isProfileComplete) {
-          await AsyncStorage.setItem("profile_complete", "true");
-          Alert.alert("Success", "Login successful!", [
-            {
-              text: "Continue",
-              onPress: () => router.replace("/patient"),
-            },
-          ]);
-        } else {
-          await AsyncStorage.removeItem("profile_complete");
-          // Redirect to profile completion
-          Alert.alert(
-            'Welcome!',
-            data.message === 'User created successfully' 
-              ? 'Please complete your profile to help us provide better emergency care.'
-              : 'Please complete your profile information to continue.',
-            [
-              {
-                text: 'Complete Profile',
-                onPress: () => router.replace('/patient/profile'),
-              },
-            ]
-          );
-        }
+        // Always go to patient home after login
+        router.replace("/patient");
       } else {
         Alert.alert(
           "Login Failed",
@@ -162,19 +102,19 @@ export default function PatientLoginScreen() {
             <Text style={[styles.textXs, styles.textGray500, styles.mb3]}>
               Enter your mobile number
             </Text>
-
-            {/* Phone Number Boxes */}
             <View style={[styles.flexRow, styles.justifyCenter, { gap: 6 }]}> 
               {phoneDigits.map((digit, index) => (
                 <TextInput
                   key={index}
                   ref={(ref) => { inputRefs.current[index] = ref; }}
-                  style={[{width: 32, height: 40, borderWidth: 1, borderColor: digit ? colors.emergency[500] : colors.gray[300],
+                  style={[
+                    {width: 32, height: 40, borderWidth: 1, borderColor: digit ? colors.emergency[500] : colors.gray[300],
                       borderRadius: 8, textAlign: "center", fontSize: 16, fontWeight: "600", backgroundColor: colors.white,
                       color: colors.gray[900]}, digit && 
-                      { borderColor: colors.emergency[500], backgroundColor: colors.emergency[50] }]}
+                      { borderColor: colors.emergency[500], backgroundColor: colors.emergency[50] }]
+                  }
                   value={digit}
-                  onChangeText={(value) => handleDigitChange(index, value)}
+                  onChangeText={value => handleDigitChange(index, value)}
                   onKeyPress={({ nativeEvent }) => handleKeyPress(index, nativeEvent.key)}
                   keyboardType="numeric"
                   maxLength={1}

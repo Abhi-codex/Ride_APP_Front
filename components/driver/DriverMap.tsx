@@ -127,6 +127,7 @@ function DriverMap({
             coordinate={stableDriverLocation}
             title="Your Location"
             pinColor={colors.primary[600]}
+            type="driver"
           />
         )}
 
@@ -138,6 +139,7 @@ function DriverMap({
               coordinate={stableAcceptedRide.pickup}
               title="Patient Pickup"
               pinColor={colors.danger[600]}
+              type="patient"
             />
 
             {/* Drop location marker */}
@@ -145,6 +147,7 @@ function DriverMap({
               coordinate={stableAcceptedRide.drop}
               title="Hospital"
               pinColor={colors.medical[600]}
+              type="hospital"
             />
 
             {/* Route polyline */}
@@ -164,6 +167,7 @@ function DriverMap({
             coordinate={ride.pickup}
             title={`Emergency Request ${index + 1}`}
             pinColor={colors.danger[400]}
+            type="patient"
           />
         ))}
       </MapView>

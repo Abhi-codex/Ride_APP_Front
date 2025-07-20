@@ -1,40 +1,56 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import {
-  ActivityIndicator,
-  Dimensions,
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import { 
-  PatientMap, 
-  HospitalList, 
-  SelectedHospital,
-  AmbulanceTypeSelector,
-  BookRideButton
-} from '../../components/patient';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, Dimensions, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { AmbulanceTypeSelector, BookRideButton, HospitalList, PatientMap, SelectedHospital } from '../../components/patient';
 import { colors, styles } from '../../constants/TailwindStyles';
+import { useHospitalSelection, useLocationAndHospitals, useRideBooking } from '../../hooks';
 import { AmbulanceType, Hospital } from '../../types/patient';
-import { 
-  useHospitalSelection,
-  useLocationAndHospitals,
-  useRideBooking
-} from '../../hooks';
-import { 
-  getAvailableAmbulanceTypes, 
-  filterHospitalsByEmergency, 
-  getEmergencyById,
-  getSuggestedAmbulanceType,
-  getEmergencyPriorityColor
-} from '../../utils/emergencyUtils';
+import { filterHospitalsByEmergency, getAvailableAmbulanceTypes, getEmergencyById, getEmergencyPriorityColor, getSuggestedAmbulanceType } from '../../utils/emergencyUtils';
+import { getServerUrl } from '../../utils/network';
 
 export default function RideScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  
+
+  // Profile check and sync profile_complete from backend
+  useEffect(() => {
+    const checkProfile = async () => {
+      const token = await AsyncStorage.getItem('access_token');
+      if (!token) {
+        router.replace('/patient/login');
+        return;
+      }
+      try {
+        const response = await fetch(`${getServerUrl()}/auth/me`, {
+          method: 'GET',
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        if (response.ok) {
+          const user = await response.json();
+          console.log('[PATIENT LOGIN] User profile:', user);
+          if (user && user._id) {
+            console.log(`[PATIENT LOGIN] Patient ID: ${user._id}, Name: ${user.name}, Email: ${user.email}`);
+          } else {
+            console.log('[PATIENT LOGIN] No user found in /auth/me response');
+          }
+          const isProfileComplete = user.name && user.age && user.gender && user.bloodGroup && user.emergencyContact && user.address;
+          if (isProfileComplete) {
+            await AsyncStorage.setItem('profile_complete', 'true');
+          } else {
+            await AsyncStorage.removeItem('profile_complete');
+            // Instead of showing booking, always go to emergency selection if profile incomplete
+            router.replace('/patient');
+          }
+        }
+      } catch (e) {
+        // ignore
+      }
+    };
+    checkProfile();
+  }, []);
+
   // Emergency context from previous screen
   const emergencyId = params.emergencyType as string;
   const emergencyName = params.emergencyName as string;
@@ -189,14 +205,8 @@ export default function RideScreen() {
     <View style={[styles.flex1, styles.mt8]}>
       {/* Emergency Header */}
       {emergency && (
-        <View style={[
-          styles.px3,
-          styles.py2,
-          styles.bgGray100,
-          styles.shadowSm,
-          styles.borderB,
-          { borderBottomColor: colors.gray[200] }
-        ]}>
+        <View style={[ styles.px3, styles.py2, styles.bgGray100, styles.shadowSm, styles.borderB,
+          { borderBottomColor: colors.gray[200] }]}>
           <View style={[styles.flexRow, styles.alignCenter, styles.justifyBetween]}>
             <TouchableOpacity
               onPress={() => router.back()}
@@ -208,17 +218,8 @@ export default function RideScreen() {
               </Text>
             </TouchableOpacity>
             
-            <View style={[
-              styles.px2,
-              styles.py1,
-              styles.roundedFull,
-              { backgroundColor: getEmergencyPriorityColor(priority) + '20' }
-            ]}>
-              <Text style={[
-                styles.textXs,
-                styles.fontMedium,
-                { color: getEmergencyPriorityColor(priority) }
-              ]}>
+            <View style={[ styles.px2, styles.py1, styles.roundedFull, { backgroundColor: getEmergencyPriorityColor(priority) + '20' }]}>
+              <Text style={[styles.textXs, styles.fontMedium, { color: getEmergencyPriorityColor(priority) }]}>
                 {priority?.toUpperCase()}
               </Text>
             </View>

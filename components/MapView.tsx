@@ -1,6 +1,6 @@
 import React from 'react';
 import { Platform, Text, View } from 'react-native';
-import { colors, styles as styles } from '../constants/TailwindStyles';
+import { colors, styles } from '../constants/TailwindStyles';
 
 let MapView: any;
 let Marker: any;
@@ -31,6 +31,7 @@ interface MapViewWrapperProps {
   showsUserLocation?: boolean;
   children?: React.ReactNode;
   onPress?: () => void;
+  onRegionChangeComplete?: (region: any) => void;
 }
 
 interface MarkerProps {
@@ -42,6 +43,7 @@ interface MarkerProps {
   pinColor?: string;
   onPress?: () => void;
   onCalloutPress?: () => void;
+  type?: 'driver' | 'patient' | 'hospital'; 
 }
 
 interface PolylineProps {
@@ -101,7 +103,7 @@ export const MapViewWrapper: React.FC<MapViewWrapperProps> = (props) => {
     console.log('MapViewWrapper - Using fallback');
     return <WebMapFallback {...props} />;
   }
-  
+
   console.log('MapViewWrapper - Using native MapView');
   return (
     <MapView
@@ -120,6 +122,7 @@ export const MapViewWrapper: React.FC<MapViewWrapperProps> = (props) => {
       loadingIndicatorColor={colors.primary[600]}
       loadingBackgroundColor={colors.gray[100]}
       onPress={props.onPress}
+      onRegionChangeComplete={props.onRegionChangeComplete}
     >
       {props.children}
     </MapView>
@@ -130,7 +133,18 @@ export const MarkerWrapper: React.FC<MarkerProps> = (props) => {
   if (Platform.OS === 'web' || !Marker) {
     return <WebMarkerFallback {...props} />;
   }
-  
+
+  // Select icon based on type
+  let iconSource;
+  if (props.type === 'driver') {
+    iconSource = require('../assets/images/ambulance.png');
+  } else if (props.type === 'patient') {
+    iconSource = require('../assets/images/person.png');
+  } else if (props.type === 'hospital') {
+    iconSource = require('../assets/images/hospital.png');
+  }
+
+
   return (
     <Marker
       coordinate={props.coordinate}
@@ -138,6 +152,7 @@ export const MarkerWrapper: React.FC<MarkerProps> = (props) => {
       pinColor={props.pinColor || colors.primary[600]}
       onPress={props.onPress}
       onCalloutPress={props.onCalloutPress}
+      {...(iconSource ? { image: iconSource } : {})}
     />
   );
 };

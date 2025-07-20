@@ -48,6 +48,13 @@ export default function HomeScreen() {
         <Text style={styles.label}>AI Assistant</Text>
       </TouchableOpacity>
 
+      {/* Optional: Complete Profile Button */}
+      <TouchableOpacity style={[styles.card, { backgroundColor: '#e0e7ef', marginTop: 20 }]} onPress={() => router.push('/patient/profile')}>
+        <Text style={[styles.emoji, { fontSize: 36 }]}>📝</Text>
+        <Text style={[styles.label, { color: '#1e293b' }]}>Complete Your Profile</Text>
+        <Text style={styles.sublabel}>Optional, but helps us serve you better</Text>
+      </TouchableOpacity>
+
       <TouchableOpacity style={styles.logout} onPress={handleLogout}>
         <Text style={styles.logoutText}>Logout</Text>
       </TouchableOpacity>

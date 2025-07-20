@@ -58,63 +58,50 @@ export default function PatientProfileSetupScreen() {
     { label: 'Other', value: 'other' },
   ];
 
+
   const validateForm = (): boolean => {
     if (!formData.name.trim() || formData.name.trim().length < 2) {
       Alert.alert('Validation Error', 'Please enter a valid name (minimum 2 characters)');
       return false;
     }
-
-    if (formData.email && !validateEmail(formData.email)) {
+    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       Alert.alert('Validation Error', 'Please enter a valid email address');
       return false;
     }
-
     const age = parseInt(formData.age);
     if (!formData.age || isNaN(age) || age < 1 || age > 120) {
       Alert.alert('Validation Error', 'Please enter a valid age (1-120)');
       return false;
     }
-
     if (!formData.gender) {
       Alert.alert('Validation Error', 'Please select your gender');
       return false;
     }
-
     if (!formData.bloodGroup) {
       Alert.alert('Validation Error', 'Please select your blood group');
       return false;
     }
-
-    if (!validatePhone(formData.emergencyContact)) {
+    if (!/^\d{10,}$/.test(formData.emergencyContact)) {
       Alert.alert('Validation Error', 'Please enter a valid emergency contact number');
       return false;
     }
-
     if (!formData.address.trim()) {
       Alert.alert('Validation Error', 'Please enter your address');
       return false;
     }
-
     return true;
   };
 
-  const validateEmail = (email: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+  const updateFormData = (field: keyof PatientProfile, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value,
+    }));
   };
 
-  const validatePhone = (phone: string): boolean => {
-    const cleaned = phone.replace(/\D/g, '');
-    return cleaned.length >= 10;
-  };
-
-  const handleSubmit = async () => {
-    if (!validateForm()) {
-      return;
-    }
-
+  async function handleSubmit() {
+    if (!validateForm()) return;
     setLoading(true);
-
     try {
       const token = await AsyncStorage.getItem('access_token');
       if (!token) {
@@ -122,7 +109,6 @@ export default function PatientProfileSetupScreen() {
         router.replace('/patient/login');
         return;
       }
-
       const profileData = {
         name: formData.name.trim(),
         email: formData.email.trim() || undefined,
@@ -134,9 +120,6 @@ export default function PatientProfileSetupScreen() {
         allergies: formData.allergies.trim() || undefined,
         address: formData.address.trim(),
       };
-
-      console.log('Submitting patient profile data:', profileData);
-
       const response = await fetch(`${getServerUrl()}/auth/profile`, {
         method: 'PUT',
         headers: {
@@ -145,39 +128,18 @@ export default function PatientProfileSetupScreen() {
         },
         body: JSON.stringify(profileData),
       });
-
       const data = await response.json();
-      console.log('Profile update response:', data);
-
       if (response.ok) {
-        await AsyncStorage.setItem("profile_complete", "true");
-        Alert.alert(
-          'Success!',
-          'Your profile has been updated successfully.',
-          [
-            {
-              text: 'Continue',
-              onPress: () => router.replace('/patient'),
-            },
-          ]
-        );
+        Alert.alert('Success!', 'Your profile has been updated successfully.');
       } else {
         Alert.alert('Error', data.message || 'Failed to update profile. Please try again.');
       }
     } catch (error) {
-      console.error('Profile update error:', error);
       Alert.alert('Error', 'Network error. Please check your connection and try again.');
     } finally {
       setLoading(false);
     }
-  };
-
-  const updateFormData = (field: keyof PatientProfile, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
+  }
 
   return (
     <KeyboardAvoidingView style={[styles.flex1]} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
@@ -195,12 +157,6 @@ export default function PatientProfileSetupScreen() {
             <Text style={[styles.textSm, styles.textGray600, styles.textCenter, styles.mt2]}>
               Help us provide better emergency care by completing your profile
             </Text>
-            {/* Skip Button */}
-          <TouchableOpacity style={[styles.alignCenter, styles.py2]} onPress={() => router.replace('/patient')} disabled={loading}>
-            <Text style={[styles.textSm, styles.py2, styles.px3, styles.bgBlack, styles.textWhite, styles.rounded2xl]}>
-              Skip for now
-            </Text>
-          </TouchableOpacity>
           </View>
 
           {/* Personal Information */}

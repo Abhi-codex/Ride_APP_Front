@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { View } from "react-native";
-import { MapViewWrapper as Map, MarkerWrapper as Marker, PolylineWrapper as Polyline } from "../MapView";
-import { styles, colors } from "../../constants/TailwindStyles";
+import { colors, styles } from "../../constants/TailwindStyles";
 import { Hospital } from "../../types/patient";
+import { MapViewWrapper as Map, MarkerWrapper as Marker, PolylineWrapper as Polyline } from "../MapView";
 
 interface PatientMapProps {
   currentLocation: any;
@@ -73,6 +73,7 @@ export default function PatientMap({
             pinColor={clickedHospital?.id === hospital.id ? colors.primary[600] : colors.danger[500]}
             onPress={() => handleMarkerPress(hospital)}
             onCalloutPress={() => handleCalloutPress(hospital)}
+            type="hospital"
           />
         ))}
         
@@ -84,6 +85,7 @@ export default function PatientMap({
             }}
             title={`Selected: ${selectedHospital.name}`}
             pinColor={colors.primary[600]}
+            type="hospital"
           />
         )}
         
