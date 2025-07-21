@@ -72,7 +72,6 @@ export default function HomeScreen() {
 
   if (!tokenLoaded) return null;
 
-  // Profile completion check (basic: name, address, emergencyContact)
   const isProfileComplete = profile && profile.name && profile.address && profile.emergencyContact;
 
   return (

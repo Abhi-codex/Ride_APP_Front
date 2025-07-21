@@ -10,12 +10,20 @@ interface Message {
 }
 
 export default function AIChatScreen() {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: 'ai_welcome',
+      text: 'Hi! How can I assist you today?',
+      sender: 'ai',
+    },
+  ]);
   const [inputText, setInputText] = useState('');
   const [loading, setLoading] = useState(false);
 
   // For Gemini API: maintain a history of user/ai messages for context
-  const [history, setHistory] = useState<{role: string, parts: {text: string}[]}[]>([]);
+  const [history, setHistory] = useState<{role: string, parts: {text: string}[]}[]>([
+    { role: 'model', parts: [{ text: 'Hi! How can I assist you today?' }] }
+  ]);
 
   const sendMessage = async () => {
     if (!inputText.trim() || loading) return;

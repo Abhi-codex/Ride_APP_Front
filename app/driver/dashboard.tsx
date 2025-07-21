@@ -1,9 +1,10 @@
-import { ActionCard, FloatingActionButton, QuickStats, StatsCard, WelcomeHeader } from '../../components/dashboard';
-import { colors, styles } from '../../constants/TailwindStyles';
+import Drive from '@/components/dashboard/Drive';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, RefreshControl, ScrollView, StatusBar, Text, TouchableOpacity, View } from 'react-native';
+import { QuickStats, StatsCard, WelcomeHeader } from '../../components/dashboard';
+import { colors, styles } from '../../constants/TailwindStyles';
 import { getServerUrl } from '../../utils/network';
 
 export default function DriverDashboard() {
@@ -21,6 +22,7 @@ export default function DriverDashboard() {
     todayRides: 0,
     weeklyRides: 0,
     monthlyEarnings: 0,
+    availableRidesCount: 0,
   });
   const [driverProfile, setDriverProfile] = useState({
     name: 'Driver',
@@ -59,19 +61,24 @@ export default function DriverDashboard() {
 
       if (statsResponse.ok) {
         const statsData = await statsResponse.json();
-        console.log('Driver stats:', statsData);
-        setDriverStats({
-          totalRides: statsData.data.totalRides || 0,
-          todayEarnings: statsData.data.todayEarnings || 0,
-          weeklyEarnings: statsData.data.weeklyEarnings || 0,
-          rating: statsData.data.rating || 0,
-          todayRides: statsData.data.todayRides || 0,
-          weeklyRides: statsData.data.weeklyRides || 0,
-          monthlyEarnings: statsData.data.monthlyEarnings || 0,
-        });
+          console.log('Driver stats:', statsData);
+          // Debug: log the entire statsData.data object for inspection
+          console.log('All driver stats data:', statsData.data);
+          const availableRidesCount = Array.isArray(statsData.data.availableRides)
+            ? statsData.data.availableRides.length
+            : 0;
+          setDriverStats({
+            totalRides: statsData.data.totalRides || 0,
+            todayEarnings: statsData.data.todayEarnings || 0,
+            weeklyEarnings: statsData.data.weeklyEarnings || 0,
+            rating: statsData.data.rating || 0,
+            todayRides: statsData.data.todayRides || 0,
+            weeklyRides: statsData.data.weeklyRides || 0,
+            monthlyEarnings: statsData.data.monthlyEarnings || 0,
+            availableRidesCount,
+          });
       } else {
         console.error('Failed to fetch driver stats:', statsResponse.status);
-        // Don't show error alert on first load, just log it
         if (!dataLoaded) {
           console.log('Using default stats values for first load');
         }
@@ -124,7 +131,6 @@ export default function DriverDashboard() {
     try {
       const token = await AsyncStorage.getItem('access_token');
       const newStatus = !isOnline;
-      
       // Update backend first
       const response = await fetch(`${getServerUrl()}/driver/online-status`, {
         method: 'PUT',
@@ -196,9 +202,6 @@ export default function DriverDashboard() {
     }
   };
 
-  const navigateToEarnings = () => {
-    Alert.alert('Coming Soon', 'Earnings feature is coming soon!');
-  };
 
   const handleProfilePress = () => {
     router.push('/driver/profile');
@@ -240,7 +243,7 @@ export default function DriverDashboard() {
       <View style={[styles.flex1, { backgroundColor: colors.gray[50] }]}>
         <ScrollView
           style={[styles.flex1]}
-          contentContainerStyle={{ paddingBottom: 120, paddingTop: 60 }}
+          contentContainerStyle={{ paddingBottom: 60, paddingTop: 50 }}
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl
@@ -251,13 +254,14 @@ export default function DriverDashboard() {
             />
           }
         >
-          <View style={{ padding: 20 }}>
-            {/* Welcome Header */}
+          <View style={{padding: 20}}>
             <WelcomeHeader
               driverName={driverProfile.name}
               onProfilePress={handleProfilePress}
               isOnline={isOnline}
+              toggleOnlineStatus={toggleOnlineStatus}
             />
+            <Drive isOnline={isOnline} availableRidesCount={driverStats.availableRidesCount} onPress={navigateToDriverMap} />
 
             {/* Quick Stats */}
             <QuickStats
@@ -265,7 +269,6 @@ export default function DriverDashboard() {
               totalRides={driverStats.totalRides}
               rating={driverStats.rating}
               todayEarnings={driverStats.todayEarnings}
-              onStatsPress={navigateToEarnings}
             />
 
             {/* Stats Grid */}
@@ -299,44 +302,10 @@ export default function DriverDashboard() {
               />
             </View>
 
-            {/* Action Cards */}
-            <View style={[styles.mb6]}>
-              <Text style={[styles.textXl, styles.fontBold, styles.textGray900, styles.mb4]}>
-                Quick Actions
-              </Text>
-
-              <ActionCard
-                title={isOnline ? "Start Driving" : "Go Online First"}
-                subtitle={isOnline 
-                  ? "Go to map view and start accepting ride requests" 
-                  : "You must be online to accept emergency calls"
-                }
-                onPress={navigateToDriverMap}
-              />
-
-              <ActionCard
-                title="View Earnings"
-                subtitle="Track your earnings and payment details"
-                onPress={navigateToEarnings}
-              />
-            </View>
-
             {/* Logout Button */}
-            <View style={[styles.alignCenter, { marginTop: 20 }]}>
+            <View style={[styles.alignCenter]}>
               <TouchableOpacity
-                style={{
-                  backgroundColor: colors.white,
-                  paddingVertical: 16,
-                  paddingHorizontal: 32,
-                  borderRadius: 12,
-                  borderWidth: 1,
-                  borderColor: colors.gray[300],
-                  shadowColor: colors.black,
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.1,
-                  shadowRadius: 4,
-                  elevation: 2,
-                }}
+                style={[styles.bgGray100, styles.rounded2xl, styles.px4, styles.py3, styles.shadowSm, styles.alignCenter]}
                 onPress={handleLogout}
               >
                 <Text
@@ -352,13 +321,9 @@ export default function DriverDashboard() {
             </View>
           </View>
         </ScrollView>
-
-        {/* Floating Action Button */}
-        <FloatingActionButton
-          onPress={toggleOnlineStatus}
-          isOnline={isOnline}
-        />
       </View>
     </>
   );
 }
+
+

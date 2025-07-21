@@ -1,4 +1,4 @@
-import { colors, styles } from '@/constants/TailwindStyles';
+import { styles } from '@/constants/TailwindStyles';
 import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 
@@ -16,24 +16,23 @@ export const QuickStats: React.FC<QuickStatsProps> = ({
   onStatsPress,
 }) => {
   return (
-    <TouchableOpacity onPress={onStatsPress} activeOpacity={0.9} style={[{ backgroundColor: colors.white, borderRadius: 16, padding: 24, marginBottom: 16, shadowColor: colors.black, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 4, borderWidth: 1, borderColor: colors.gray[200] }]}>
-      <View style={[styles.flexRow, styles.justifyBetween, styles.alignCenter, styles.mb4]}>
-        <Text style={[styles.textLg, styles.fontSemibold, styles.textGray800]}>Today's Overview</Text>
-        <View style={[{ backgroundColor: colors.gray[100], paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12 }]}>
-          <Text style={[styles.textXs, styles.fontMedium, styles.textGray700]}>Live</Text>
-        </View>
+    <TouchableOpacity
+      onPress={onStatsPress}
+      activeOpacity={0.92}
+      style={[styles.bgEmergency100, styles.rounded2xl, styles.p4, styles.shadow, styles.mb3, styles.alignCenter]}
+    >
+      <View style={{ position: 'absolute', top: 12, left: 16 }}>
+        <Text style={[styles.textXs, styles.p2, styles.bgEmergency200, styles.rounded3xl, styles.fontExtraBold, styles.textEmergency600, styles.textCenter, styles.mb2]}>
+          TODAY
+        </Text>
       </View>
-
-      <View style={[styles.flexRow]}>
-        <View style={[styles.flex1, styles.alignCenter, styles.mr3]}>
-          <Text style={[styles.text2xl, styles.fontBold, styles.textGray900]}>{todayRides}</Text>
+      <View style={[styles.flexRow, styles.justifyBetween, { gap: 64 }, styles.mb2]}>
+        <View style={[styles.alignCenter]}> 
+          <Text style={[styles.text4xl, styles.fontBold, styles.textEmergency600]}>{todayRides}</Text>
           <Text style={[styles.textSm, styles.textGray600, styles.mt1, styles.textCenter]}>Rides</Text>
         </View>
-        
-        <View style={[{ width: 1, backgroundColor: colors.gray[200], marginHorizontal: 16 }]} />
-        
-        <View style={[styles.flex1, styles.alignCenter, styles.ml3]}>
-          <Text style={[styles.text2xl, styles.fontBold, styles.textGray900]}>₹{todayEarnings}</Text>
+        <View style={[styles.alignCenter]}> 
+          <Text style={[styles.text4xl, styles.fontBold, styles.textEmergency600]}>₹ {todayEarnings}</Text>
           <Text style={[styles.textSm, styles.textGray600, styles.mt1, styles.textCenter]}>Earnings</Text>
         </View>
       </View>

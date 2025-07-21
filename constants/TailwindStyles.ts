@@ -499,6 +499,8 @@ export const styles = StyleSheet.create({
   
   // Emergency Backgrounds
   bgEmergency50: { backgroundColor: colors.emergency[50] },
+  bgEmergency100: { backgroundColor: colors.emergency[100] },
+  bgEmergency200: { backgroundColor: colors.emergency[200] },
   bgEmergency500: { backgroundColor: colors.emergency[500] },
   bgEmergency600: { backgroundColor: colors.emergency[600] },
   

@@ -11,7 +11,8 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_GOOGLE_MAPS_API_KEY": "your_api_key_here"
+        "EXPO_PUBLIC_GOOGLE_MAPS_API_KEY": "your_api_key_here",
+        "EXPO_PUBLIC_GEMINI_API_KEY": "your_api_key_here"
       }
     },
     "preview": {
@@ -20,7 +21,8 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_GOOGLE_MAPS_API_KEY": "your_api_key_here"
+        "EXPO_PUBLIC_GOOGLE_MAPS_API_KEY": "your_api_key_here",
+        "EXPO_PUBLIC_GEMINI_API_KEY": "your_api_key_here"
       }
     },
     "production": {
@@ -28,7 +30,8 @@
         "buildType": "app-bundle"
       },
       "env": {
-        "EXPO_PUBLIC_GOOGLE_MAPS_API_KEY": "your_api_key_here"
+        "EXPO_PUBLIC_GOOGLE_MAPS_API_KEY": "your_api_key_here",
+        "EXPO_PUBLIC_GEMINI_API_KEY": "your_api_key_here"
       }
     }
   },
