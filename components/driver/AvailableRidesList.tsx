@@ -1,4 +1,4 @@
-import { MaterialCommunityIcons, MaterialIcons, Octicons } from "@expo/vector-icons";
+import { FontAwesome, FontAwesome5, Ionicons, MaterialCommunityIcons, MaterialIcons, Octicons } from "@expo/vector-icons";
 import React, { memo, useEffect, useState } from "react";
 import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { colors, styles } from "../../constants/TailwindStyles";
@@ -46,6 +46,28 @@ const getPriorityColor = (priority: string) => {
     case 'medium': return colors.primary[500];
     case 'low': return colors.medical[500];
     default: return colors.gray[500];
+  }
+};
+
+// Helper to render the correct icon component (replicated from booking.tsx)
+const renderIcon = (iconObj: { name: string; library: string } | undefined, size = 24, color = colors.emergency[600]) => {
+  if (!iconObj) return null;
+  const { name, library } = iconObj;
+  switch (library) {
+    case 'FontAwesome5':
+      return <FontAwesome5 name={name as any} size={size} color={color} />;
+    case 'FontAwesome':
+      return <FontAwesome name={name as any} size={size} color={color} />;
+    case 'MaterialCommunityIcons':
+      return <MaterialCommunityIcons name={name as any} size={size} color={color} />;
+    case 'Ionicons':
+      return <Ionicons name={name as any} size={size} color={color} />;
+    case 'MaterialIcons':
+      return <MaterialIcons name={name as any} size={size} color={color} />;
+    case 'Octicons':
+      return <Octicons name={name as any} size={size} color={color} />;
+    default:
+      return <FontAwesome5 name="question" size={size} color={color} />;
   }
 };
 
@@ -129,29 +151,39 @@ function AvailableRidesList({
     };
 
     let emergencyId = (ride as any).emergencyType || (ride as any).emergency?.type || (ride as any).emergency_id || (ride as any).emergencyId;
-    // Fallback: try ride.emergency?.id
     if (!emergencyId && (ride as any).emergency && (ride as any).emergency.id) emergencyId = (ride as any).emergency.id;
-    const emergencyDetails = emergencyId ? EMERGENCY_TYPES.find(e => e.id === emergencyId) : undefined;
-    const priority = emergencyDetails?.priority || (ride as any).priority || 'unknown';
-    const category = emergencyDetails?.category || (ride as any).category || 'unknown';
+
+    // Normalize for matching
+    const norm = (str: string) => String(str).replace(/_/g, ' ').trim().toLowerCase();
+    let emergencyDetails = undefined;
+    if (emergencyId) {
+      // Match by id (case-insensitive)
+      emergencyDetails = EMERGENCY_TYPES.find(e => norm(e.id) === norm(emergencyId));
+      // Match by name (case-insensitive)
+      if (!emergencyDetails) emergencyDetails = EMERGENCY_TYPES.find(e => norm(e.name) === norm(emergencyId));
+      // Match by partial searchKeywords (case-insensitive)
+      if (!emergencyDetails) emergencyDetails = EMERGENCY_TYPES.find(e => e.searchKeywords.some(k => norm(emergencyId).includes(norm(k)) || norm(k).includes(norm(emergencyId))));
+      // Debug log if not found
+      if (!emergencyDetails) {
+        console.log('[AvailableRidesList] Emergency not matched:', emergencyId);
+      }
+    }
+    // Fallbacks
+    const priority = emergencyDetails?.priority || (ride as any).priority || 'low';
+    const category = emergencyDetails?.category || (ride as any).category || 'general';
     const priorityColor = getPriorityColor(priority);
     const ambulanceDetails = getAmbulanceTypeDetails(ride.vehicle);
 
     return (
-      <View style={[styles.bgGray100, styles.py2, styles.roundedLg, styles.px3, styles.shadowSm, 
-        styles.mb3, { backgroundColor: colors.emergency[50], borderColor: colors.emergency[200] },
-        styles.border]}>
+      <View style={[styles.py2, styles.rounded3xl, styles.px4, styles.mb3,  
+      { backgroundColor: priorityColor + '20' }]}>
         {/* Header Row with Emergency Type and Priority */}
         <View style={[styles.flexRow, styles.alignStart, styles.justifyBetween, styles.mb2]}>
-          <View style={[styles.flex1, styles.mr2]}>
-            <View style={[styles.flexRow, styles.alignCenter, styles.mb1]}>
-              <MaterialCommunityIcons name="ambulance" size={16} color={colors.emergency[600]} style={[styles.mr2]} />
-              <Text style={[styles.textBase, styles.fontBold, styles.textGray800]}>
-                Emergency Request: {index + 1}
-              </Text>
+          <View style={[styles.flexRow,  styles.alignCenter, styles.gap2, styles.mr2]}>
+            <View style={[styles.flexRow, styles.alignCenter]}>
             </View>
-            <Text style={[styles.textXs, styles.textPrimary600, styles.fontMedium, styles.mt1]}>
-              {ambulanceDetails.name} • {ambulanceDetails.desc}
+            <Text style={[styles.textXs, styles.textPrimary600, styles.fontMedium]}>
+              {ambulanceDetails.name} 
             </Text>
           </View>
           
@@ -159,7 +191,7 @@ function AvailableRidesList({
           <View style={[styles.flexRow, styles.alignCenter, styles.py1, styles.gap2]}>
             <View style={[styles.px2, styles.py1, styles.roundedFull, { backgroundColor: priorityColor + '20' }]}> 
               <Text style={[styles.textXs, styles.fontBold, { color: priorityColor }]}> 
-                {priority.toUpperCase()} PRIORITY
+                {priority.toUpperCase()}
               </Text>
             </View>
             <View style={[styles.px2, styles.py1, styles.roundedFull, { backgroundColor: colors.primary[100] }]}> 
@@ -172,15 +204,38 @@ function AvailableRidesList({
 
         {/* Patient Details Row */}
         <View style={[styles.flexRow, styles.alignCenter, styles.justifyBetween, styles.mb3]}>
-          <View style={[styles.w12, styles.h12, styles.roundedLg, styles.mr3, styles.alignCenter, styles.justifyCenter, { backgroundColor: colors.emergency[100] }]}>
-            <MaterialCommunityIcons
-              name={ambulanceDetails.icon as any} 
-              size={24} 
-              color={colors.emergency[600]} 
-            />
+          <View style={[styles.w12, styles.h12, styles.roundedLg, styles.mr3, styles.alignCenter, styles.justifyCenter, { backgroundColor: colors.emergency[100] }]}> 
+            {renderIcon(emergencyDetails?.icon, 24, colors.emergency[600])}
           </View>
-          
           <View style={[styles.flex1]}>
+            {/* Hospital Name */}
+            {ride.hospitalDetails?.name && (
+              <View style={[styles.flexRow, styles.alignCenter, styles.mb1]}>
+                <MaterialCommunityIcons name="hospital-building" size={14} color={colors.medical[600]} style={[styles.mr2]} />
+                <Text style={[styles.textSm, styles.fontBold, styles.textMedical700]}>
+                  {ride.hospitalDetails.name}
+                </Text>
+              </View>
+            )}
+            {/* Emergency Name */}
+            {emergencyDetails?.name && (
+              <View style={[styles.flexRow, styles.alignCenter, styles.mb1]}>
+                <MaterialCommunityIcons name="alert" size={14} color={colors.emergency[600]} style={[styles.mr2]} />
+                <Text style={[styles.textSm, styles.fontMedium, styles.textEmergency600]}>
+                  {emergencyDetails.name}
+                </Text>
+              </View>
+            )}
+            {/* Emergency Capability Score */}
+            {ride.hospitalDetails?.emergencyCapabilityScore !== undefined && (
+              <View style={[styles.flexRow, styles.alignCenter, styles.mb1]}>
+                <MaterialCommunityIcons name="star" size={14} color={colors.warning[500]} style={[styles.mr2]} />
+                <Text style={[styles.textXs, styles.textWarning600]}>
+                  Capability Score: {ride.hospitalDetails.emergencyCapabilityScore}
+                </Text>
+              </View>
+            )}
+            {/* Relative Time */}
             <View style={[styles.flexRow, styles.py1, styles.px2, styles.rounded3xl, styles.border,
               styles.alignCenter, styles.borderGray200, styles.mb1]}>
               <Octicons name="clock" size={12} color={colors.gray[600]} style={[styles.mr2]} />
@@ -188,7 +243,7 @@ function AvailableRidesList({
                 {relativeTime}
               </Text>
             </View>
-            
+            {/* Fare */}
             <View style={[styles.flexRow, styles.py1, styles.px2, styles.rounded3xl, styles.border,
               styles.alignCenter, styles.borderGray200]}>
               <MaterialIcons name="attach-money" size={12} color={colors.warning[600]} style={[styles.mr2]} />

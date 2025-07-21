@@ -1,5 +1,5 @@
-import { Hospital, AmbulanceType } from '../types/patient';
-import { EmergencyType, EMERGENCY_TYPES } from '../types/emergency';
+import { EMERGENCY_TYPES, EmergencyType } from '../types/emergency';
+import { AmbulanceType, Hospital } from '../types/patient';
 
 /**
  * Filter ambulance types based on emergency requirements
@@ -29,63 +29,30 @@ export function filterHospitalsByEmergency(hospitals: Hospital[], emergencyId: s
       return true;
     }
 
-    // Check if hospital has required services with fallback alternatives
-    return emergency.requiredHospitalServices.every(requiredService => {
-      // Direct match
-      if (hospital.emergencyServices?.includes(requiredService)) {
-        return true;
-      }
-      
-      // Fallback alternatives for common services
-      if (requiredService === 'pulmonology' && 
-          hospital.emergencyServices?.includes('intensive_care')) {
-        console.log(`Hospital ${hospital.name}: Accepting intensive_care as alternative to pulmonology`);
-        return true;
-      }
-      
-      if (requiredService === 'cardiology' && 
-          hospital.emergencyServices?.includes('intensive_care')) {
-        console.log(`Hospital ${hospital.name}: Accepting intensive_care as alternative to cardiology`);
-        return true;
-      }
-      
-      if (requiredService === 'cardiac_catheterization' && 
-          (hospital.emergencyServices?.includes('cardiology') || 
-           hospital.emergencyServices?.includes('intensive_care'))) {
-        console.log(`Hospital ${hospital.name}: Accepting cardiology/intensive_care as alternative to cardiac_catheterization`);
-        return true;
-      }
-      
-      if (requiredService === 'neurology' && 
-          hospital.emergencyServices?.includes('intensive_care')) {
-        console.log(`Hospital ${hospital.name}: Accepting intensive_care as alternative to neurology`);
-        return true;
-      }
-      
-      // Additional cardiac service alternatives
-      if (requiredService === 'cardiac_surgery' && 
-          (hospital.emergencyServices?.includes('surgery') || 
-           hospital.emergencyServices?.includes('cardiology'))) {
-        console.log(`Hospital ${hospital.name}: Accepting surgery/cardiology as alternative to cardiac_surgery`);
-        return true;
-      }
-      
-      // Trauma alternatives
-      if (requiredService === 'trauma_surgery' && 
-          hospital.emergencyServices?.includes('surgery')) {
-        console.log(`Hospital ${hospital.name}: Accepting surgery as alternative to trauma_surgery`);
-        return true;
-      }
-      
-      // Blood bank alternatives
-      if (requiredService === 'blood_bank' && 
-          hospital.emergencyServices?.includes('surgery')) {
-        console.log(`Hospital ${hospital.name}: Accepting surgery as alternative to blood_bank`);
-        return true;
-      }
-      
+    // Normalize required and hospital services
+    const required = emergency.requiredHospitalServices.map(s => s.trim().toLowerCase());
+    const services = hospital.emergencyServices.map(s => s.trim().toLowerCase());
+
+    // Fallback alternatives logic
+    function matchesService(requiredService: string): boolean {
+      if (services.includes(requiredService)) return true;
+      if (requiredService === 'pulmonology' && services.includes('intensive_care')) return true;
+      if (requiredService === 'cardiology' && services.includes('intensive_care')) return true;
+      if (requiredService === 'cardiac_catheterization' && (services.includes('cardiology') || services.includes('intensive_care'))) return true;
+      if (requiredService === 'neurology' && services.includes('intensive_care')) return true;
+      if (requiredService === 'cardiac_surgery' && (services.includes('surgery') || services.includes('cardiology'))) return true;
+      if (requiredService === 'trauma_surgery' && services.includes('surgery')) return true;
+      if (requiredService === 'blood_bank' && services.includes('surgery')) return true;
       return false;
-    });
+    }
+
+    // Count matches (including fallbacks)
+    const matchCount = required.filter(matchesService).length;
+
+    if (required.length === 1) return matchCount === 1;
+    if (required.length === 2) return matchCount === 2;
+    if (required.length >= 3) return matchCount >= 2;
+    return false;
   });
 }
 
@@ -96,13 +63,23 @@ export function isHospitalSuitableForEmergency(hospital: Hospital, emergencyId: 
   const emergency = EMERGENCY_TYPES.find(e => e.id === emergencyId);
   if (!emergency) return true;
 
-  if (!hospital.emergencyServices || hospital.emergencyServices.length === 0) {
-    return true; // Backward compatibility
+  const required = emergency.requiredHospitalServices.map(s => s.trim().toLowerCase());
+  const services = (hospital.emergencyServices || []).map(s => s.trim().toLowerCase());
+
+  function matchesService(requiredService: string): boolean {
+    if (services.includes(requiredService)) return true;
+    if (requiredService === 'pulmonology' && services.includes('intensive_care')) return true;
+    if (requiredService === 'cardiology' && services.includes('intensive_care')) return true;
+    if (requiredService === 'cardiac_catheterization' && (services.includes('cardiology') || services.includes('intensive_care'))) return true;
+    if (requiredService === 'neurology' && services.includes('intensive_care')) return true;
+    if (requiredService === 'cardiac_surgery' && (services.includes('surgery') || services.includes('cardiology'))) return true;
+    if (requiredService === 'trauma_surgery' && services.includes('surgery')) return true;
+    if (requiredService === 'blood_bank' && services.includes('surgery')) return true;
+    return false;
   }
 
-  return emergency.requiredHospitalServices.every(requiredService => 
-    hospital.emergencyServices?.includes(requiredService)
-  );
+  // For suitability, require all required services to be matched (including fallbacks)
+  return required.every(matchesService);
 }
 
 /**
@@ -149,7 +126,7 @@ export function getSuggestedAmbulanceType(emergencyId: string): AmbulanceType {
 export async function searchHospitalsWithEmergencyServices(
   location: { latitude: number; longitude: number },
   emergencyId: string,
-  radius: number = 10000
+    radius: number = 5000
 ): Promise<Hospital[]> {
   const emergency = EMERGENCY_TYPES.find(e => e.id === emergencyId);
   if (!emergency) return [];
@@ -158,124 +135,82 @@ export async function searchHospitalsWithEmergencyServices(
   let searchQuery = 'hospital emergency';
   
   // Add specific search terms based on emergency type
-  if (emergency.category === 'cardiac') {
-    searchQuery += ' cardiology heart';
-  } else if (emergency.category === 'trauma') {
-    searchQuery += ' trauma center';
-  } else if (emergency.category === 'neurological') {
-    searchQuery += ' neurology stroke center';
-  } else if (emergency.category === 'pediatric') {
-    searchQuery += ' pediatric children';
-  } else if (emergency.category === 'obstetric') {
-    searchQuery += ' maternity obstetrics';
-  } else if (emergency.category === 'burns') {
-    searchQuery += ' burn unit';
-  } else if (emergency.category === 'psychiatric') {
-    searchQuery += ' psychiatric mental health';
+  switch (emergency.category) {
+    case 'cardiac':
+      searchQuery += ' cardiology heart cardiac catheterization';
+      break;
+    case 'trauma':
+      searchQuery += ' trauma center orthopedics surgery blood bank';
+      break;
+    case 'neurological':
+      searchQuery += ' neurology stroke center ct scan neurosurgery brain';
+      break;
+    case 'pediatric':
+      searchQuery += ' pediatric children nicu baby infant';
+      break;
+    case 'obstetric':
+      searchQuery += ' maternity obstetrics gynecology delivery room pregnancy birth labor';
+      break;
+    case 'burns':
+      searchQuery += ' burn unit plastic surgery';
+      break;
+    case 'psychiatric':
+      searchQuery += ' psychiatric mental health suicide depression';
+      break;
+    case 'poisoning':
+      searchQuery += ' toxicology poisoning overdose intensive care';
+      break;
+    case 'general':
+      searchQuery += ' general medicine urgent care endocrinology';
+      break;
+    default:
+      searchQuery += ' emergency urgent care hospital';
+      break;
   }
-
-  try {
-    // Note: In a real implementation, you would use Google Places API here
-    // For now, this is a placeholder that demonstrates the concept
-    
-    const response = await fetch(
-      `https://maps.googleapis.com/maps/api/place/nearbysearch/json?` +
-      `location=${location.latitude},${location.longitude}&` +
-      `radius=${radius}&` +
-      `type=hospital&` +
-      `keyword=${encodeURIComponent(searchQuery)}&` +
-      `key=YOUR_GOOGLE_PLACES_API_KEY`
-    );
-
-    const data = await response.json();
-    
-    if (data.results) {
-      return data.results.map((place: any, index: number) => ({
-        id: place.place_id || `hospital_${index}`,
-        name: place.name,
-        latitude: place.geometry.location.lat,
-        longitude: place.geometry.location.lng,
-        distance: calculateDistance(
-          location.latitude,
-          location.longitude,
-          place.geometry.location.lat,
-          place.geometry.location.lng
-        ),
-        rating: place.rating,
-        photoUrl: place.photos?.[0]?.photo_reference ? 
-          `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${place.photos[0].photo_reference}&key=YOUR_GOOGLE_PLACES_API_KEY` : 
-          undefined,
-        placeId: place.place_id,
-        emergencyServices: inferServicesFromPlace(place, emergency),
-        specialties: extractSpecialties(place.types, emergency.category)
-      }));
-    }
-  } catch (error) {
-    console.error('Error searching hospitals with Google Places:', error);
-  }
-
   return [];
-}
-
-/**
- * Calculate distance between two coordinates
- */
-function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const R = 6371; // Radius of the Earth in kilometers
-  const dLat = deg2rad(lat2 - lat1);
-  const dLon = deg2rad(lon2 - lon1);
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
-    Math.sin(dLon / 2) * Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  const d = R * c; // Distance in kilometers
-  return d;
-}
-
-function deg2rad(deg: number): number {
-  return deg * (Math.PI / 180);
 }
 
 /**
  * Infer available services from Google Places result
  */
 function inferServicesFromPlace(place: any, emergency: EmergencyType): string[] {
-  const services: string[] = ['emergency_room']; // All hospitals have ER
-  
+  let services: string[] = ['emergency_room']; // All hospitals have ER
+
   // Infer services based on place name and types
   const name = place.name.toLowerCase();
   const types = place.types || [];
-  
+
   if (name.includes('cardiac') || name.includes('heart')) {
     services.push('cardiology', 'cardiac_catheterization');
   }
-  
+
   if (name.includes('trauma') || name.includes('medical center')) {
     services.push('trauma_center', 'surgery', 'blood_bank');
   }
-  
+
   if (name.includes('children') || name.includes('pediatric')) {
     services.push('pediatrics', 'nicu');
   }
-  
+
   if (name.includes('maternity') || name.includes('women')) {
     services.push('obstetrics', 'gynecology', 'delivery_room');
   }
-  
+
   if (name.includes('neuro') || name.includes('brain')) {
     services.push('neurology', 'neurosurgery', 'stroke_center');
   }
-  
+
   if (name.includes('burn')) {
     services.push('burn_unit', 'plastic_surgery');
   }
-  
+
   // Add general services for larger hospitals
   if (name.includes('medical center') || name.includes('general hospital')) {
     services.push('intensive_care', 'ct_scan', 'surgery', 'blood_bank');
   }
-  
+
+  // Normalize all inferred services
+  services = services.map(s => s.trim().toLowerCase());
   return services;
 }
 

@@ -116,7 +116,7 @@ export default function EmergencySelectionScreen() {
     switch (priority) {
       case 'critical': return '#eab1b1ff';
       case 'high': return '#ffd896ff';
-      case 'medium': return '#a5bfeaff';
+      case 'medium': return '#c1b5f1ff';
       case 'low': return '#72d7b6ff';
       default: return '#b3c0daff';
     }

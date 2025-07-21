@@ -1,7 +1,7 @@
+import { FontAwesome5, MaterialCommunityIcons, MaterialIcons, Octicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import { ActivityIndicator, Image, Text, TouchableOpacity, View } from "react-native";
-import { MaterialCommunityIcons, MaterialIcons, Octicons } from "@expo/vector-icons";
-import { styles, colors } from "../../constants/TailwindStyles";
+import { colors, styles } from "../../constants/TailwindStyles";
 import { Hospital } from "../../types/patient";
 import { getServerUrl } from "../../utils/network";
 
@@ -164,7 +164,7 @@ export default function SelectedHospital({
               <View>
                 <View style={[styles.flexRow, styles.py1, styles.mt1, styles.px2, styles.roundedXl, styles.border,
                   styles.alignCenter, styles.borderGray200]}>
-                  <Octicons name="home" size={14} color={colors.gray[600]} style={[styles.mr2]} />
+                  <FontAwesome5 name="hospital" size={15} color={colors.gray[600]} style={[styles.mr1]} />
                   <Text style={[styles.textXs, styles.textGray600, styles.flex1]} numberOfLines={2}>
                     {hospital.address}
                   </Text>

@@ -1,7 +1,7 @@
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import React, { useMemo } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
-import { MaterialCommunityIcons, MaterialIcons, Octicons } from "@expo/vector-icons";
-import { styles, colors } from "../../constants/TailwindStyles";
+import { colors, styles } from "../../constants/TailwindStyles";
 import { AmbulanceOption, AmbulanceType } from "../../types/patient";
 
 interface AmbulanceTypeSelectorProps {

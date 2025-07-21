@@ -235,7 +235,7 @@ export default function RideScreen() {
                   style={[styles.flexRow, styles.py1, styles.px2, styles.rounded2xl, styles.bgDanger200, styles.alignCenter]}>
                   <Ionicons name="arrow-back" size={15} color={colors.gray[600]} />
                   <Text style={[styles.ml2, styles.textXs, styles.textGray600]}>
-                    Change Emergency
+                    Change
                   </Text>
                 </TouchableOpacity>
               </View>

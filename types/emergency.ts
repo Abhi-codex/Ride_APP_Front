@@ -42,7 +42,7 @@ export const EMERGENCY_TYPES: EmergencyType[] = [
     description: 'Chest pain, shortness of breath, suspected myocardial infarction',
     icon: { name: 'heartbeat', library: 'FontAwesome5' },
     requiredAmbulanceTypes: ['als', 'ccs'],
-    requiredHospitalServices: ['emergency_room', 'cardiology', 'cardiac_catheterization'],
+    requiredHospitalServices: ['cardiology', 'intensive_care', 'surgery'],
     priority: 'critical',
     searchKeywords: ['heart attack', 'chest pain', 'myocardial infarction', 'cardiac arrest']
   },
@@ -53,7 +53,7 @@ export const EMERGENCY_TYPES: EmergencyType[] = [
     description: 'Patient unconscious, no pulse, requires immediate CPR',
     icon: { name: 'heart-broken', library: 'MaterialCommunityIcons' },
     requiredAmbulanceTypes: ['als', 'ccs'],
-    requiredHospitalServices: ['emergency_room', 'cardiology', 'intensive_care'],
+    requiredHospitalServices: ['cardiology', 'intensive_care', 'surgery'],
     priority: 'critical',
     searchKeywords: ['cardiac arrest', 'no pulse', 'unconscious', 'cpr']
   },
@@ -64,7 +64,7 @@ export const EMERGENCY_TYPES: EmergencyType[] = [
     description: 'Non-specific chest pain, requires cardiac evaluation',
     icon: { name: 'lungs', library: 'FontAwesome5' },
     requiredAmbulanceTypes: ['bls', 'als'],
-    requiredHospitalServices: ['emergency_room', 'cardiology'],
+    requiredHospitalServices: ['cardiology', 'intensive_care', 'surgery'],
     priority: 'high',
     searchKeywords: ['chest pain', 'heart pain', 'cardiac evaluation']
   },
@@ -77,7 +77,7 @@ export const EMERGENCY_TYPES: EmergencyType[] = [
     description: 'Severe injuries from accidents, falls, or violence',
     icon: { name: 'user-injured', library: 'FontAwesome5' },
     requiredAmbulanceTypes: ['als', 'ccs'],
-    requiredHospitalServices: ['emergency_room', 'trauma_center', 'surgery', 'blood_bank'],
+    requiredHospitalServices: ['trauma_center', 'surgery', 'intensive_care', 'blood_bank'],
     priority: 'critical',
     searchKeywords: ['accident', 'trauma', 'severe injury', 'fracture', 'bleeding']
   },
@@ -88,7 +88,7 @@ export const EMERGENCY_TYPES: EmergencyType[] = [
     description: 'Road traffic accident with potential injuries',
     icon: { name: 'car-crash', library: 'FontAwesome5' },
     requiredAmbulanceTypes: ['als', 'ccs'],
-    requiredHospitalServices: ['emergency_room', 'trauma_center', 'orthopedics', 'neurology'],
+    requiredHospitalServices: ['trauma_center', 'surgery', 'intensive_care', 'blood_bank'],
     priority: 'critical',
     searchKeywords: ['car accident', 'road accident', 'vehicle crash', 'rta']
   },
@@ -99,7 +99,7 @@ export const EMERGENCY_TYPES: EmergencyType[] = [
     description: 'Thermal, chemical, or electrical burns',
     icon: { name: 'fire', library: 'FontAwesome5' },
     requiredAmbulanceTypes: ['als', 'ccs'],
-    requiredHospitalServices: ['emergency_room', 'burn_unit', 'plastic_surgery'],
+    requiredHospitalServices: ['burn_unit', 'intensive_care', 'surgery'],
     priority: 'critical',
     searchKeywords: ['burn', 'fire injury', 'thermal burn', 'chemical burn']
   },
@@ -112,7 +112,7 @@ export const EMERGENCY_TYPES: EmergencyType[] = [
     description: 'Shortness of breath, asthma attack, respiratory distress',
     icon: { name: 'lungs', library: 'FontAwesome5' },
     requiredAmbulanceTypes: ['bls', 'als'],
-    requiredHospitalServices: ['emergency_room', 'pulmonology'],
+    requiredHospitalServices: ['intensive_care', 'emergency_room'],
     priority: 'high',
     searchKeywords: ['breathing problem', 'shortness of breath', 'asthma', 'respiratory']
   },
@@ -123,7 +123,7 @@ export const EMERGENCY_TYPES: EmergencyType[] = [
     description: 'Airway obstruction, unable to breathe or speak',
     icon: { name: 'user-slash', library: 'FontAwesome5' },
     requiredAmbulanceTypes: ['bls', 'als'],
-    requiredHospitalServices: ['emergency_room'],
+    requiredHospitalServices: ['intensive_care', 'emergency_room'],
     priority: 'critical',
     searchKeywords: ['choking', 'airway obstruction', 'cannot breathe']
   },
@@ -136,7 +136,7 @@ export const EMERGENCY_TYPES: EmergencyType[] = [
     description: 'Sudden weakness, speech problems, facial drooping',
     icon: { name: 'brain', library: 'FontAwesome5' },
     requiredAmbulanceTypes: ['als', 'ccs'],
-    requiredHospitalServices: ['emergency_room', 'neurology', 'stroke_center', 'ct_scan'],
+    requiredHospitalServices: ['neurology', 'intensive_care', 'surgery'],
     priority: 'critical',
     searchKeywords: ['stroke', 'brain attack', 'paralysis', 'speech problem']
   },
@@ -147,7 +147,7 @@ export const EMERGENCY_TYPES: EmergencyType[] = [
     description: 'Epileptic seizure or convulsions',
     icon: { name: 'bolt', library: 'FontAwesome5' },
     requiredAmbulanceTypes: ['bls', 'als'],
-    requiredHospitalServices: ['emergency_room', 'neurology'],
+    requiredHospitalServices: ['neurology', 'intensive_care', 'surgery'],
     priority: 'high',
     searchKeywords: ['seizure', 'epilepsy', 'convulsions', 'fits']
   },
@@ -158,7 +158,7 @@ export const EMERGENCY_TYPES: EmergencyType[] = [
     description: 'Traumatic brain injury, concussion, head trauma',
     icon: { name: 'user-injured', library: 'FontAwesome5' },
     requiredAmbulanceTypes: ['als', 'ccs'],
-    requiredHospitalServices: ['emergency_room', 'neurology', 'neurosurgery', 'ct_scan'],
+    requiredHospitalServices: ['neurology', 'intensive_care', 'surgery'],
     priority: 'critical',
     searchKeywords: ['head injury', 'brain injury', 'concussion', 'head trauma']
   },
@@ -171,7 +171,7 @@ export const EMERGENCY_TYPES: EmergencyType[] = [
     description: 'Medical emergency involving children under 18',
     icon: { name: 'child', library: 'FontAwesome5' },
     requiredAmbulanceTypes: ['bls', 'als'],
-    requiredHospitalServices: ['emergency_room', 'pediatrics'],
+    requiredHospitalServices: ['pediatrics', 'emergency_room'],
     priority: 'high',
     searchKeywords: ['child emergency', 'pediatric', 'baby', 'infant']
   },
@@ -182,7 +182,7 @@ export const EMERGENCY_TYPES: EmergencyType[] = [
     description: 'Emergency involving newborn or infant',
     icon: { name: 'baby', library: 'FontAwesome5' },
     requiredAmbulanceTypes: ['als', 'ccs'],
-    requiredHospitalServices: ['emergency_room', 'pediatrics', 'nicu'],
+    requiredHospitalServices: ['pediatrics', 'emergency_room'],
     priority: 'critical',
     searchKeywords: ['newborn', 'infant emergency', 'baby emergency']
   },
@@ -195,7 +195,7 @@ export const EMERGENCY_TYPES: EmergencyType[] = [
     description: 'Complications during pregnancy',
     icon: { name: 'female', library: 'FontAwesome' },
     requiredAmbulanceTypes: ['bls', 'als'],
-    requiredHospitalServices: ['emergency_room', 'obstetrics', 'gynecology'],
+    requiredHospitalServices: ['obstetrics', 'emergency_room'],
     priority: 'high',
     searchKeywords: ['pregnancy emergency', 'obstetric', 'maternal']
   },
@@ -206,7 +206,7 @@ export const EMERGENCY_TYPES: EmergencyType[] = [
     description: 'Imminent birth or delivery complications',
     icon: { name: 'baby', library: 'FontAwesome5' },
     requiredAmbulanceTypes: ['als'],
-    requiredHospitalServices: ['emergency_room', 'obstetrics', 'delivery_room'],
+    requiredHospitalServices: ['obstetrics', 'emergency_room'],
     priority: 'critical',
     searchKeywords: ['delivery', 'labor', 'birth', 'obstetric emergency']
   },
@@ -219,7 +219,7 @@ export const EMERGENCY_TYPES: EmergencyType[] = [
     description: 'Suicide risk, psychotic episode, severe depression',
     icon: { name: 'brain', library: 'FontAwesome5' },
     requiredAmbulanceTypes: ['bls', 'als'],
-    requiredHospitalServices: ['emergency_room', 'psychiatry', 'mental_health'],
+    requiredHospitalServices: ['psychiatry', 'emergency_room'],
     priority: 'high',
     searchKeywords: ['mental health', 'suicide', 'depression', 'psychiatric emergency']
   },
@@ -232,7 +232,7 @@ export const EMERGENCY_TYPES: EmergencyType[] = [
     description: 'Drug overdose, chemical poisoning, toxic ingestion',
     icon: { name: 'skull-crossbones', library: 'FontAwesome5' },
     requiredAmbulanceTypes: ['als', 'ccs'],
-    requiredHospitalServices: ['emergency_room', 'toxicology', 'intensive_care'],
+    requiredHospitalServices: ['emergency_room', 'intensive_care'],
     priority: 'critical',
     searchKeywords: ['poisoning', 'overdose', 'toxic', 'drug overdose']
   },
@@ -256,7 +256,7 @@ export const EMERGENCY_TYPES: EmergencyType[] = [
     description: 'Diabetic coma, hypoglycemia, hyperglycemia',
     icon: { name: 'syringe', library: 'FontAwesome5' },
     requiredAmbulanceTypes: ['bls', 'als'],
-    requiredHospitalServices: ['emergency_room', 'endocrinology'],
+    requiredHospitalServices: ['emergency_room'],
     priority: 'high',
     searchKeywords: ['diabetes', 'diabetic coma', 'blood sugar', 'hypoglycemia']
   },

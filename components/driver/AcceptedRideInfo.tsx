@@ -1,9 +1,8 @@
 import { MaterialCommunityIcons, MaterialIcons, Octicons } from "@expo/vector-icons";
-import React, { useEffect, useState, memo } from "react";
-import { Text, View, ScrollView, TouchableOpacity, TextInput, Alert } from "react-native";
-import { styles, colors } from "../../constants/TailwindStyles";
+import React, { memo, useEffect, useState } from "react";
+import { Alert, Linking, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { colors, styles } from "../../constants/TailwindStyles";
 import { Ride } from "../../types/rider";
-import { Linking } from "react-native";
 import { storage } from "../../utils/storage";
 
 interface AcceptedRideInfoProps {
@@ -141,9 +140,15 @@ function AcceptedRideInfo({
   };
 
   const handlePhoneCall = () => {
-    if (!acceptedRide?.customer?.phone) return;
-    
-    const phoneUrl = `tel:${acceptedRide.customer.phone}`;
+    let phone = '';
+    if (typeof acceptedRide?.customer === 'object' && acceptedRide.customer?.phone) {
+      phone = acceptedRide.customer.phone;
+    } else if (typeof acceptedRide?.customer === 'string') {
+      phone = acceptedRide.customer;
+    }
+    if (!phone) return;
+
+    const phoneUrl = `tel:${phone}`;
     Linking.canOpenURL(phoneUrl)
       .then((supported) => {
         if (supported) {
@@ -187,7 +192,7 @@ function AcceptedRideInfo({
     <ScrollView style={[styles.flex1]} showsVerticalScrollIndicator={false} bounces={false}>
       {/* Professional Header with Status */}
       <View style={[styles.mb4, styles.p4, styles.roundedLg, styles.border,
-        { backgroundColor: colors.emergency[50], borderColor: colors.emergency[200] }]}>
+        { backgroundColor: colors.emergency[50], borderColor: colors.emergency[200] }]}> 
         <View style={[styles.flexRow, styles.alignCenter, styles.justifyBetween, styles.mb3]}>
           <View style={[styles.flexRow, styles.alignCenter]}>
             <MaterialCommunityIcons name={statusInfo.icon as any} size={20} color={statusInfo.color} style={[styles.mr2]} />
@@ -205,7 +210,7 @@ function AcceptedRideInfo({
         {/* Ambulance Type Info */}
         <View style={[styles.flexRow, styles.alignCenter, styles.mb2]}>
           <View style={[styles.w10, styles.h10, styles.roundedLg, styles.mr3, styles.alignCenter, 
-            styles.justifyCenter, { backgroundColor: colors.medical[100] }]}>
+            styles.justifyCenter, { backgroundColor: colors.medical[100] }]}> 
             <MaterialCommunityIcons name={ambulanceDetails.icon as any} size={20} color={ambulanceDetails.color} />
           </View>
           <View style={[styles.flex1]}>
@@ -215,13 +220,40 @@ function AcceptedRideInfo({
             <Text style={[styles.textSm, styles.textGray600]}>
               Request ID: #{acceptedRide._id.slice(-6).toUpperCase()}
             </Text>
+            {/* Hospital Name */}
+            {acceptedRide.hospitalDetails?.name && (
+              <View style={[styles.flexRow, styles.alignCenter, styles.mt1]}>
+                <MaterialCommunityIcons name="hospital-building" size={16} color={colors.medical[600]} style={[styles.mr2]} />
+                <Text style={[styles.textSm, styles.fontBold, styles.textMedical700]}>
+                  {acceptedRide.hospitalDetails.name}
+                </Text>
+              </View>
+            )}
+            {/* Emergency Name */}
+            {acceptedRide.emergency?.name && (
+              <View style={[styles.flexRow, styles.alignCenter, styles.mt1]}>
+                <MaterialCommunityIcons name="alert" size={16} color={colors.emergency[600]} style={[styles.mr2]} />
+                <Text style={[styles.textSm, styles.fontMedium, styles.textEmergency600]}>
+                  {acceptedRide.emergency.name}
+                </Text>
+              </View>
+            )}
+            {/* Emergency Capability Score */}
+            {acceptedRide.hospitalDetails?.emergencyCapabilityScore !== undefined && (
+              <View style={[styles.flexRow, styles.alignCenter, styles.mt1]}>
+                <MaterialCommunityIcons name="star" size={16} color={colors.warning[500]} style={[styles.mr2]} />
+                <Text style={[styles.textXs, styles.textWarning600]}>
+                  Capability Score: {acceptedRide.hospitalDetails.emergencyCapabilityScore}
+                </Text>
+              </View>
+            )}
           </View>
         </View>
 
         {/* Time and Fare Info Pills */}
         <View style={[styles.flexRow, styles.gap2, styles.flexWrap]}>
           <View style={[styles.flexRow, styles.py1, styles.px3, styles.roundedFull, styles.border,
-            styles.alignCenter, styles.borderGray200, { backgroundColor: colors.gray[50] }]}>
+            styles.alignCenter, styles.borderGray200, { backgroundColor: colors.gray[50] }]}> 
             <Octicons name="clock" size={12} color={colors.gray[600]} style={[styles.mr2]} />
             <Text style={[styles.textXs, styles.textGray700, styles.fontMedium]}>
               {relativeTime}
@@ -229,7 +261,7 @@ function AcceptedRideInfo({
           </View>
           
           <View style={[styles.flexRow, styles.py1, styles.px3, styles.roundedFull, styles.border,
-            styles.alignCenter, styles.borderGray200, { backgroundColor: colors.gray[50] }]}>
+            styles.alignCenter, styles.borderGray200, { backgroundColor: colors.gray[50] }]}> 
             <MaterialIcons name="attach-money" size={12} color={colors.warning[600]} style={[styles.mr2]} />
             <Text style={[styles.textXs, styles.textGray700, styles.fontMedium]}>
               ₹{formatFare(acceptedRide.fare)}
@@ -376,20 +408,22 @@ function AcceptedRideInfo({
       </View>
 
       {/* Emergency Contact Info */}
-      {acceptedRide.customer?.phone && (
-        <View style={[styles.p3, styles.roundedLg, styles.border,
-          { backgroundColor: colors.emergency[50], borderColor: colors.emergency[200] }]}>
-          <View style={[styles.flexRow, styles.alignCenter, styles.mb1]}>
-            <MaterialCommunityIcons name="phone-alert" size={16} color={colors.emergency[600]} style={[styles.mr2]} />
-            <Text style={[styles.textSm, styles.fontBold, styles.textEmergency600]}>
-              EMERGENCY CONTACT
-            </Text>
-          </View>
-          <Text style={[styles.textBase, styles.textGray800]}>
-            {acceptedRide.customer.phone}
+      <View style={[styles.p3, styles.roundedLg, styles.border,
+        { backgroundColor: colors.emergency[50], borderColor: colors.emergency[200] }]}> 
+        <View style={[styles.flexRow, styles.alignCenter, styles.mb1]}>
+          <MaterialCommunityIcons name="phone-alert" size={16} color={colors.emergency[600]} style={[styles.mr2]} />
+          <Text style={[styles.textSm, styles.fontBold, styles.textEmergency600]}>
+            EMERGENCY CONTACT
           </Text>
         </View>
-      )}
+        <Text style={[styles.textBase, styles.textGray800]}>
+          {typeof acceptedRide.customer === 'object' && acceptedRide.customer?.phone
+            ? acceptedRide.customer.phone
+            : typeof acceptedRide.customer === 'string'
+              ? acceptedRide.customer
+              : 'N/A'}
+        </Text>
+      </View>
     </ScrollView>
   );
 }

@@ -60,13 +60,31 @@ export type Ride = {
   fare: number;
   pickup: Location;
   drop: Location;
-  customer: Patient;
+  customer: Patient | string;
   rider: Driver | null;
   status: RideStatus;
   otp: string;
   rating: number | null;
   createdAt: string;
   updatedAt?: string;
+  emergency?: any;
+  hospital?: string;
+  hospitalDetails?: {
+    placeId: string;
+    name: string;
+    latitude: number;
+    longitude: number;
+    rating: number;
+    address: string;
+    emergencyServices: string[];
+    distance: number;
+    isOpen: boolean;
+    priceLevel: number | null;
+    photos: any[];
+    emergencyCapabilityScore: number;
+    emergencyFeatures: string[];
+    isEmergencyVerified: boolean;
+  };
 };
 
 export type DriverStats = {

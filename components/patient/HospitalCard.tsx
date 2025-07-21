@@ -1,7 +1,7 @@
+import { MaterialCommunityIcons, MaterialIcons, Octicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import { Image, Text, TouchableOpacity, View } from "react-native";
-import { MaterialCommunityIcons, MaterialIcons, Octicons } from "@expo/vector-icons";
-import { styles, colors } from "../../constants/TailwindStyles";
+import { colors, styles } from "../../constants/TailwindStyles";
 import { Hospital } from "../../types/patient";
 import { getServerUrl } from "../../utils/network";
 
