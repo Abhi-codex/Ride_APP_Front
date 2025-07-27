@@ -193,7 +193,7 @@ export default function DriverProfileSetupScreen() {
 
       console.log('Submitting profile data:', profileData);
 
-      const response = await fetch(`${getServerUrl()}/auth/profile`, {
+      const response = await fetch(`${getServerUrl()}/driver/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

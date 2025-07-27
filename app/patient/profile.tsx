@@ -120,7 +120,7 @@ export default function PatientProfileSetupScreen() {
         allergies: formData.allergies.trim() || undefined,
         address: formData.address.trim(),
       };
-      const response = await fetch(`${getServerUrl()}/auth/profile`, {
+      const response = await fetch(`${getServerUrl()}/patient/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

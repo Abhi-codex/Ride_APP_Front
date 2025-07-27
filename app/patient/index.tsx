@@ -37,7 +37,7 @@ export default function HomeScreen() {
       let phoneFromStorage = '';
       try {
         phoneFromStorage = (await AsyncStorage.getItem('phone')) || '';
-        const res = await fetch(`${getServerUrl()}/auth/profile`, {
+        const res = await fetch(`${getServerUrl()}/patient/profile`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();
