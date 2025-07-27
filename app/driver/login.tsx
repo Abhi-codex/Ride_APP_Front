@@ -135,12 +135,10 @@ export default function DriverLoginScreen() {
           <View style={[styles.alignCenter, styles.mb6]}>
             <View style={{ alignItems: "center", justifyContent: "center", marginBottom: 20,}}>
                 <FontAwesome5 name="user-md" size={64} color={styles.textGray900.color || "#111"} />
-           
             </View>
             <Text style={[styles.text3xl, styles.fontBold, styles.textGray900, styles.textCenter]}>
               Driver Portal
             </Text>
-
             <Text style={[styles.textBase, styles.textGray600, styles.textCenter, styles.mt2]}>
               Login to start accepting emergency calls
             </Text>
@@ -153,7 +151,7 @@ export default function DriverLoginScreen() {
             </Text>
 
             {/* Phone Number Boxes */}
-            <View style={[styles.flexRow, styles.justifyCenter, { gap: 6 }]}>
+            <View style={[styles.flexRow, styles.justifyCenter, { gap: 6 }]}> 
               {phoneDigits.map((digit, index) => (
                 <TextInput key={index} ref={(ref) => { inputRefs.current[index] = ref; }}
                   style={[ {width: 32, height: 40, borderWidth: 1, 
@@ -192,7 +190,7 @@ export default function DriverLoginScreen() {
             )}
           </TouchableOpacity>
 
-          <View style={[styles.mt6, styles.p4, styles.rounded3xl, styles.bgGray100, styles.borderGray200, { borderWidth: 1 }]}>
+          <View style={[styles.mt6, styles.p4, styles.rounded3xl, styles.bgGray100, styles.borderGray200, { borderWidth: 1 }]}> 
             <Text style={[styles.textSm, styles.fontMedium, styles.textGray800, styles.mb2]}>
               Driver Requirements:
             </Text>

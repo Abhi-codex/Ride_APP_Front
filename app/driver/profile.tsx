@@ -202,7 +202,15 @@ export default function DriverProfileSetupScreen() {
         body: JSON.stringify(profileData),
       });
 
-      const data = await response.json();
+      let data;
+      let isJson = false;
+      try {
+        data = await response.json();
+        isJson = true;
+      } catch (e) {
+        data = null;
+        isJson = false;
+      }
       console.log('Profile update response:', data);
 
       if (response.ok) {
@@ -218,7 +226,7 @@ export default function DriverProfileSetupScreen() {
           ]
         );
       } else {
-        Alert.alert('Error', data.message || 'Failed to update profile. Please try again.');
+        Alert.alert('Error', isJson && data && data.message ? data.message : 'Failed to update profile. Please try again.');
       }
     } catch (error) {
       console.error('Profile update error:', error);
