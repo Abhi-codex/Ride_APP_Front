@@ -2,6 +2,12 @@ export const getServerUrl = () => {
   return 'https://ambulancebackend.onrender.com';
 };
 
+// export const getServerUrl = () => {
+//   // Use local IP and port for backend
+//   return 'http://192.168.34.247:3000';
+// };
+
+
 export const makeRequest = async (url: string, options: RequestInit) => {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 15000);

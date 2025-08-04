@@ -11,6 +11,7 @@ export default function PatientLayout() {
       <Stack.Screen name="tracking" options={{ headerShown: false, title: "Track Ride" }} />
       <Stack.Screen name="medicine" options={{ headerShown: false, title: "Medicine" }} />
       <Stack.Screen name="ai" options={{ headerShown: false, title: "AI Assistant" }} />
+      <Stack.Screen name="consultation" options={{ headerShown: false, title: "Free Consultation" }} />
     </Stack>
   );
 }

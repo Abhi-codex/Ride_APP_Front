@@ -5,7 +5,7 @@ import { ApiResponse, Driver, DriverStats, Ride, RideResponse, RideStatus } from
 import { getServerUrl } from '../utils/network';
 
 export const useRiderLogic = (driverLocation?: { latitude: number; longitude: number }) => {
-  const [routeCoords, setRouteCoords] = useState([]);
+  const [routeCoords, setRouteCoords] = useState<Array<{ latitude: number; longitude: number }>>([]);
   const [destination, setDestination] = useState<{ latitude: number; longitude: number } | null>(null);
   const [tripStarted, setTripStarted] = useState(false);
   const [online, setOnline] = useState(false);
@@ -249,23 +249,115 @@ export const useRiderLogic = (driverLocation?: { latitude: number; longitude: nu
     }
   }, [makeAuthenticatedRequest, handleApiError, driverLocation]);
 
+  const decodePolyline = (t: string) => {
+    let points = [], index = 0, lat = 0, lng = 0;
+    while (index < t.length) {
+      let b, shift = 0, result = 0;
+      do { b = t.charCodeAt(index++) - 63; result |= (b & 0x1f) << shift; shift += 5; }
+      while (b >= 0x20);
+      const dlat = ((result & 1) ? ~(result >> 1) : (result >> 1));
+      lat += dlat;
+      shift = result = 0;
+      do { b = t.charCodeAt(index++) - 63; result |= (b & 0x1f) << shift; shift += 5; }
+      while (b >= 0x20);
+      const dlng = ((result & 1) ? ~(result >> 1) : (result >> 1));
+      lng += dlng;
+      points.push({ latitude: lat / 1e5, longitude: lng / 1e5 });
+    }
+    return points;
+  };
+
   const fetchRoute = async (
     origin: { latitude: number; longitude: number },
     destination: { latitude: number; longitude: number }
   ) => {
     try {
-      const url = `https://router.project-osrm.org/route/v1/driving/${origin.longitude},${origin.latitude};${destination.longitude},${destination.latitude}?overview=full&geometries=geojson`;
-      const res = await fetch(url);
-      const json = await res.json();
-      if (json.routes?.[0]?.geometry?.coordinates) {
-        const coords = json.routes[0].geometry.coordinates.map(([lng, lat]: [number, number]) => ({
-          latitude: lat,
-          longitude: lng
-        }));
+      const apiKey = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY;
+      
+      if (!apiKey) {
+        console.warn('Google Maps API key not configured, using straight line route');
+        const coords = [
+          { latitude: origin.latitude, longitude: origin.longitude },
+          { latitude: destination.latitude, longitude: destination.longitude },
+        ];
+        setRouteCoords(coords);
+        return;
+      }
+      
+      const directionsUrl = 'https://routes.googleapis.com/directions/v2:computeRoutes';
+      
+      const requestBody = {
+        origin: {
+          location: {
+            latLng: {
+              latitude: origin.latitude,
+              longitude: origin.longitude
+            }
+          }
+        },
+        destination: {
+          location: {
+            latLng: {
+              latitude: destination.latitude,
+              longitude: destination.longitude
+            }
+          }
+        },
+        travelMode: 'DRIVE',
+        routingPreference: 'TRAFFIC_AWARE',
+        polylineQuality: 'HIGH_QUALITY',
+        polylineEncoding: 'ENCODED_POLYLINE'
+      };
+      
+      console.log('Fetching driver route from new Routes API:', directionsUrl);
+      
+      const response = await fetch(directionsUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Goog-Api-Key': apiKey,
+          'X-Goog-FieldMask': 'routes.duration,routes.distanceMeters,routes.polyline.encodedPolyline'
+        },
+        body: JSON.stringify(requestBody)
+      });
+      
+      const data = await response.json();
+      
+      console.log('Driver Routes API response:', data);
+      
+      if (data.routes && data.routes.length > 0) {
+        const route = data.routes[0];
+        if (route.polyline && route.polyline.encodedPolyline) {
+          console.log('Decoding driver route polyline with', route.polyline.encodedPolyline.length, 'characters');
+          const points = decodePolyline(route.polyline.encodedPolyline);
+          console.log('Decoded', points.length, 'driver route points');
+          setRouteCoords(points);
+        } else {
+          console.warn('No polyline in driver route, using fallback');
+          const coords = [
+            { latitude: origin.latitude, longitude: origin.longitude },
+            { latitude: destination.latitude, longitude: destination.longitude },
+          ];
+          setRouteCoords(coords);
+        }
+      } else {
+        console.error('Driver Routes API error:', data.error || 'No routes found');
+        // Fallback to simple straight line route
+        const coords = [
+          { latitude: origin.latitude, longitude: origin.longitude },
+          { latitude: destination.latitude, longitude: destination.longitude },
+        ];
         setRouteCoords(coords);
       }
     } catch (error) {
+      console.error('Error fetching driver route:', error);
       Alert.alert('Navigation Error', 'Could not fetch route. Using direct path.');
+      // Fallback to simple straight line route
+      const coords = [
+        { latitude: origin.latitude, longitude: origin.longitude },
+        { latitude: destination.latitude, longitude: destination.longitude },
+      ];
+      setRouteCoords(coords);
     }
   };
 

@@ -28,16 +28,19 @@ export default function HospitalCard({
     if (hospital.photos && hospital.photos.length > 0 && hospital.photos[0].photoReference) {
       const photoReference = hospital.photos[0].photoReference;
       const baseUrl = getServerUrl();
-      const url = `${baseUrl}/hospitals/photo/${photoReference}?maxwidth=400&maxheight=400`;
+      // Updated to match new Places API format
+      const url = `${baseUrl}/hospitals/photo/${encodeURIComponent(photoReference)}?maxwidth=400&maxheight=400`;
+      console.log('Using hospital photo URL:', url);
       return url;
     }
     
     // Fallback to photoUrl if it's not a placeholder
     if (hospital.photoUrl && !hospital.photoUrl.includes('placeholder')) {
+      console.log('Using fallback photoUrl:', hospital.photoUrl);
       return hospital.photoUrl;
     }
     
-    console.log('No valid photo found - will show icon');
+    console.log('No valid photo found for hospital:', hospital.name);
     return null;
   };
   

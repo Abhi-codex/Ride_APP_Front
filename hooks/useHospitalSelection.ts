@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Alert } from 'react-native';
 import { Hospital } from '../types/patient';
 
 interface LocationRegion {
@@ -49,21 +48,75 @@ export function useHospitalSelection(): HospitalSelectionState {
       const apiKey = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY;
       
       if (!apiKey) {
-        Alert.alert('Error', 'Google Maps API key not configured');
+        console.warn('Google Maps API key not configured, using straight line route');
+        const route = [
+          { latitude: originalLocation.latitude, longitude: originalLocation.longitude },
+          { latitude: hospital.latitude, longitude: hospital.longitude },
+        ];
+        setRouteCoords(route);
         setRouteLoading(false);
         return;
       }
       
-      const directionsUrl = `https://maps.googleapis.com/maps/api/directions/json?origin=${originalLocation.latitude},${originalLocation.longitude}&destination=${hospital.latitude},${hospital.longitude}&key=${apiKey}`;
+      const directionsUrl = 'https://routes.googleapis.com/directions/v2:computeRoutes';
+      
+      const requestBody = {
+        origin: {
+          location: {
+            latLng: {
+              latitude: originalLocation.latitude,
+              longitude: originalLocation.longitude
+            }
+          }
+        },
+        destination: {
+          location: {
+            latLng: {
+              latitude: hospital.latitude,
+              longitude: hospital.longitude
+            }
+          }
+        },
+        travelMode: 'DRIVE',
+        routingPreference: 'TRAFFIC_AWARE',
+        polylineQuality: 'HIGH_QUALITY',
+        polylineEncoding: 'ENCODED_POLYLINE'
+      };
+      
+      console.log('Fetching route from new Routes API:', directionsUrl);
       
       try {
-        const response = await fetch(directionsUrl);
+        const response = await fetch(directionsUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Goog-Api-Key': apiKey,
+            'X-Goog-FieldMask': 'routes.duration,routes.distanceMeters,routes.polyline.encodedPolyline'
+          },
+          body: JSON.stringify(requestBody)
+        });
+        
         const data = await response.json();
         
-        if (data.routes.length > 0) {
-          const points = decodePolyline(data.routes[0].overview_polyline.points);
-          setRouteCoords(points);
+        console.log('Routes API response:', data);
+        
+        if (data.routes && data.routes.length > 0) {
+          const route = data.routes[0];
+          if (route.polyline && route.polyline.encodedPolyline) {
+            console.log('Decoding polyline with', route.polyline.encodedPolyline.length, 'characters');
+            const points = decodePolyline(route.polyline.encodedPolyline);
+            console.log('Decoded', points.length, 'route points');
+            setRouteCoords(points);
+          } else {
+            console.warn('No polyline in route, using fallback');
+            const route = [
+              { latitude: originalLocation.latitude, longitude: originalLocation.longitude },
+              { latitude: hospital.latitude, longitude: hospital.longitude },
+            ];
+            setRouteCoords(route);
+          }
         } else {
+          console.error('Routes API error:', data.error || 'No routes found');
           // Fallback to simple straight line route
           const route = [
             { latitude: originalLocation.latitude, longitude: originalLocation.longitude },

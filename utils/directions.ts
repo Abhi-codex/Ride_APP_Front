@@ -74,10 +74,38 @@ export async function getDirectionData(
   }
   
   try {
-    const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${from.latitude},${from.longitude}` +
-      `&destination=${to.latitude},${to.longitude}&key=${apiKey}&mode=driving`;
+    const url = 'https://routes.googleapis.com/directions/v2:computeRoutes';
     
-    const res = await fetch(url);
+    const requestBody = {
+      origin: {
+        location: {
+          latLng: {
+            latitude: from.latitude,
+            longitude: from.longitude
+          }
+        }
+      },
+      destination: {
+        location: {
+          latLng: {
+            latitude: to.latitude,
+            longitude: to.longitude
+          }
+        }
+      },
+      travelMode: 'DRIVE',
+      routingPreference: 'TRAFFIC_AWARE'
+    };
+    
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Goog-Api-Key': apiKey,
+        'X-Goog-FieldMask': 'routes.duration,routes.distanceMeters'
+      },
+      body: JSON.stringify(requestBody)
+    });
     
     if (!res.ok) {
       throw new Error(`HTTP ${res.status}: ${res.statusText}`);
@@ -85,13 +113,13 @@ export async function getDirectionData(
     
     const json = await res.json();
     
-    if (json.status !== 'OK') {
-      throw new Error(`Google Maps API error: ${json.status} - ${json.error_message || 'Unknown error'}`);
+    if (!json.routes || json.routes.length === 0) {
+      throw new Error(`Routes API error: No routes found`);
     }
     
-    const leg = json.routes?.[0]?.legs?.[0];
-    const durationSeconds = leg?.duration?.value;
-    const distanceMeters = leg?.distance?.value;
+    const route = json.routes[0];
+    const durationSeconds = route.duration ? parseInt(route.duration.replace('s', '')) : null;
+    const distanceMeters = route.distanceMeters;
     
     return {
       duration: durationSeconds ? Math.ceil(durationSeconds / 60) : getFallbackDuration(from, to),

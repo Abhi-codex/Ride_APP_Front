@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
 import * as Location from 'expo-location';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert } from 'react-native';
 import { Hospital } from '../types/patient';
-import { getServerUrl } from '../utils/network';
 import { getEmergencyById } from '../utils/emergencyUtils';
+import { getServerUrl } from '../utils/network';
 
 interface LocationRegion {
   latitude: number;
@@ -141,9 +141,9 @@ export function useLocationAndHospitals(): LocationState {
           }
           
           const fetchedHospitals = data.hospitals.map((hospital: any) => {
-            // Handle both backend format and Google Places format
-            const hospitalLat = hospital.location?.latitude || hospital.latitude;
-            const hospitalLng = hospital.location?.longitude || hospital.longitude;
+            // Handle the new API response format
+            const hospitalLat = hospital.latitude;
+            const hospitalLng = hospital.longitude;
             
             if (!hospitalLat || !hospitalLng) {
               console.warn('Hospital missing coordinates:', hospital);
@@ -158,7 +158,7 @@ export function useLocationAndHospitals(): LocationState {
               distance: hospital.distance || getDistance(lat, lon, hospitalLat, hospitalLng),
               rating: hospital.rating,
               emergencyServices: hospital.emergencyServices || [],
-              // Enhanced emergency capability fields
+              // Enhanced emergency capability fields from new API
               emergencyCapabilityScore: hospital.emergencyCapabilityScore,
               emergencyFeatures: hospital.emergencyFeatures || [],
               isEmergencyVerified: hospital.isEmergencyVerified || false,

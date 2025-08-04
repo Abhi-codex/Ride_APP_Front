@@ -141,7 +141,7 @@ export default function HomeScreen() {
         >
           <FontAwesome5 name="ambulance" size={48} color={colors.white} />
           <Text style={[styles.text2xl, styles.fontBold, styles.textWhite, styles.mt3]}>Book Ambulance</Text>
-          <Text style={[styles.textBase, styles.textWhite, styles.mt2, styles.textCenter]}>Quickly book a nearby ambulance in emergency</Text>
+          <Text style={[styles.textBase, styles.textWhite, styles.textCenter]}>Quickly book a nearby ambulance in emergency</Text>
         </TouchableOpacity>
 
         {/* Tabs for Medicine and AI */}
@@ -161,6 +161,16 @@ export default function HomeScreen() {
             <Text style={[styles.textLg, styles.fontBold, styles.textPrimary600, styles.mt2]}>AI Assistant</Text>
           </TouchableOpacity>
         </View>
+
+        {/* Free Doctor Consultation Section */}
+        <TouchableOpacity
+          style={[styles.bgPrimary500, styles.rounded2xl, styles.p6, styles.shadow, styles.mt6, styles.alignCenter]}
+          onPress={() => router.push('/patient/consultation')}
+        >
+          <FontAwesome5 name="user-md" size={50} color={colors.white} />
+          <Text style={[styles.text2xl, styles.fontBold, styles.textWhite, styles.mt3]}>Free Consultation</Text>
+          <Text style={[styles.textBase, styles.textWhite, styles.textCenter]}>Book an appointment with a doctor instantly for free health advice</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );

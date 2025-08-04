@@ -1,10 +1,10 @@
+import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { useLocalSearchParams } from 'expo-router';
-import React, { useEffect, useState, useMemo } from 'react';
-import { ActivityIndicator, Alert, Text, View, TouchableOpacity } from 'react-native';
-import { colors, styles } from '../../constants/TailwindStyles';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, Alert, Text, TouchableOpacity, View } from 'react-native';
 import { PatientRideMap, TripSummary } from '../../components/patient';
-import { Ionicons } from '@expo/vector-icons';
+import { colors, styles } from '../../constants/TailwindStyles';
 import { useRideTracking } from '../../hooks';
 import { RideStatus } from '../../types/rider';
 
@@ -12,6 +12,24 @@ function getFirstParam(param: string | string[] | undefined): string {
   if (!param) return '';
   return Array.isArray(param) ? param[0] : param;
 }
+
+const decodePolyline = (t: string) => {
+  let points = [], index = 0, lat = 0, lng = 0;
+  while (index < t.length) {
+    let b, shift = 0, result = 0;
+    do { b = t.charCodeAt(index++) - 63; result |= (b & 0x1f) << shift; shift += 5; }
+    while (b >= 0x20);
+    const dlat = ((result & 1) ? ~(result >> 1) : (result >> 1));
+    lat += dlat;
+    shift = result = 0;
+    do { b = t.charCodeAt(index++) - 63; result |= (b & 0x1f) << shift; shift += 5; }
+    while (b >= 0x20);
+    const dlng = ((result & 1) ? ~(result >> 1) : (result >> 1));
+    lng += dlng;
+    points.push({ latitude: lat / 1e5, longitude: lng / 1e5 });
+  }
+  return points;
+};
 
 export default function TrackingScreen() {
   const params = useLocalSearchParams();
@@ -134,18 +152,84 @@ export default function TrackingScreen() {
           longitude: ride.drop.longitude
         };
         
-        const url = `https://router.project-osrm.org/route/v1/driving/${origin.longitude},${origin.latitude};${destination.longitude},${destination.latitude}?overview=full&geometries=geojson`;
-        const res = await fetch(url);
-        const json = await res.json();
-
-        if (json.routes?.length > 0) {
-          const coords = json.routes[0].geometry.coordinates.map(
-            ([lng, lat]: [number, number]) => ({ latitude: lat, longitude: lng })
-          );
+        const apiKey = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY;
+        
+        if (!apiKey) {
+          console.warn('Google Maps API key not configured, using straight line route');
+          const coords = [origin, destination];
+          setRouteCoords(coords);
+          return;
+        }
+        
+        const directionsUrl = 'https://routes.googleapis.com/directions/v2:computeRoutes';
+        
+        const requestBody = {
+          origin: {
+            location: {
+              latLng: {
+                latitude: origin.latitude,
+                longitude: origin.longitude
+              }
+            }
+          },
+          destination: {
+            location: {
+              latLng: {
+                latitude: destination.latitude,
+                longitude: destination.longitude
+              }
+            }
+          },
+          travelMode: 'DRIVE',
+          routingPreference: 'TRAFFIC_AWARE',
+          polylineQuality: 'HIGH_QUALITY',
+          polylineEncoding: 'ENCODED_POLYLINE'
+        };
+        
+        console.log('Fetching patient tracking route from new Routes API:', directionsUrl);
+        
+        const response = await fetch(directionsUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Goog-Api-Key': apiKey,
+            'X-Goog-FieldMask': 'routes.duration,routes.distanceMeters,routes.polyline.encodedPolyline'
+          },
+          body: JSON.stringify(requestBody)
+        });
+        
+        const data = await response.json();
+        
+        console.log('Patient tracking Routes API response:', data);
+        
+        if (data.routes && data.routes.length > 0) {
+          const route = data.routes[0];
+          if (route.polyline && route.polyline.encodedPolyline) {
+            console.log('Decoding patient tracking polyline with', route.polyline.encodedPolyline.length, 'characters');
+            const points = decodePolyline(route.polyline.encodedPolyline);
+            console.log('Decoded', points.length, 'patient tracking route points');
+            setRouteCoords(points);
+          } else {
+            console.warn('No polyline in patient tracking route, using fallback');
+            const coords = [origin, destination];
+            setRouteCoords(coords);
+          }
+        } else {
+          console.error('Patient tracking Routes API error:', data.error || 'No routes found');
+          // Fallback to simple straight line route
+          const coords = [origin, destination];
           setRouteCoords(coords);
         }
       } catch (err) {
         console.error('Route error:', err);
+        // Fallback to simple straight line route
+        if (ride?.drop && userLocation) {
+          const coords = [
+            { latitude: userLocation.latitude, longitude: userLocation.longitude },
+            { latitude: ride.drop.latitude, longitude: ride.drop.longitude }
+          ];
+          setRouteCoords(coords);
+        }
       }
     };
 
