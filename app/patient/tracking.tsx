@@ -59,28 +59,57 @@ export default function TrackingScreen() {
   const availableDrivers = useMemo(() => {
     const drivers = [];
     
-    if (ride?.rider) {
-      const driverLoc = driverLocation || {
-        latitude: ride.pickup.latitude,
-        longitude: ride.pickup.longitude
-      };
-      
-      drivers.push({
-        id: ride.rider._id,
-        location: driverLoc,
-        isAccepted: true
-      });
+    // Only add driver if ride exists and has been accepted (has a rider)
+    if (ride?.rider && ride.rider._id) {
+      try {
+        // Safely determine driver location with fallbacks
+        let driverLoc = null;
+        
+        if (driverLocation) {
+          // Use real-time driver location if available
+          driverLoc = driverLocation;
+        } else if (ride.pickup) {
+          // Fallback to pickup location when no real-time location
+          driverLoc = {
+            latitude: ride.pickup.latitude,
+            longitude: ride.pickup.longitude
+          };
+        }
+        
+        if (driverLoc && typeof driverLoc.latitude === 'number' && typeof driverLoc.longitude === 'number') {
+          drivers.push({
+            id: ride.rider._id,
+            location: driverLoc,
+            isAccepted: true
+          });
+        }
+      } catch (error) {
+        console.error('Error processing driver location:', error);
+        // Don't add driver if there's an error to prevent crashes
+      }
     }
     
     return drivers;
-  }, [ride?.rider?._id, driverLocation, ride?.pickup]);
+  }, [ride?._id, ride?.rider?._id, driverLocation, ride?.pickup]); // More specific dependencies
 
   const destinationLocation = useMemo(() => {
-    return ride?.drop ? {
-      latitude: ride.drop.latitude,
-      longitude: ride.drop.longitude
-    } : null;
-  }, [ride?.drop?.latitude, ride?.drop?.longitude]);
+    try {
+      if (ride?.drop && 
+          typeof ride.drop.latitude === 'number' && 
+          typeof ride.drop.longitude === 'number' && 
+          !isNaN(ride.drop.latitude) && 
+          !isNaN(ride.drop.longitude)) {
+        return {
+          latitude: ride.drop.latitude,
+          longitude: ride.drop.longitude
+        };
+      }
+      return null;
+    } catch (error) {
+      console.error('Error processing destination location:', error);
+      return null;
+    }
+  }, [ride?._id, ride?.drop?.latitude, ride?.drop?.longitude]); // More specific dependencies
 
   // Get user-friendly status message
   const getStatusMessage = (status: RideStatus) => {
@@ -139,7 +168,34 @@ export default function TrackingScreen() {
   // Separate effect to update route when ride data is available
   useEffect(() => {
     const updateRoute = async () => {
-      if (!ride || !ride.drop || !userLocation) return;
+      // Validate all required data before proceeding
+      if (!ride || !ride.drop || !userLocation || locationLoading) {
+        console.log('Route update skipped: missing required data', {
+          hasRide: !!ride,
+          hasDropLocation: !!ride?.drop,
+          hasUserLocation: !!userLocation,
+          locationLoading
+        });
+        return;
+      }
+
+      // Validate coordinates
+      if (typeof ride.drop.latitude !== 'number' || 
+          typeof ride.drop.longitude !== 'number' ||
+          typeof userLocation.latitude !== 'number' || 
+          typeof userLocation.longitude !== 'number' ||
+          isNaN(ride.drop.latitude) || 
+          isNaN(ride.drop.longitude) ||
+          isNaN(userLocation.latitude) || 
+          isNaN(userLocation.longitude)) {
+        console.error('Invalid coordinate data for route calculation');
+        return;
+      }
+
+      console.log('Starting route calculation with valid data', {
+        origin: { lat: userLocation.latitude, lng: userLocation.longitude },
+        destination: { lat: ride.drop.latitude, lng: ride.drop.longitude }
+      });
 
       try {
         const origin = {
@@ -198,6 +254,10 @@ export default function TrackingScreen() {
           body: JSON.stringify(requestBody)
         });
         
+        if (!response.ok) {
+          throw new Error(`Routes API HTTP error: ${response.status} ${response.statusText}`);
+        }
+        
         const data = await response.json();
         
         console.log('Patient tracking Routes API response:', data);
@@ -224,17 +284,27 @@ export default function TrackingScreen() {
         console.error('Route error:', err);
         // Fallback to simple straight line route
         if (ride?.drop && userLocation) {
-          const coords = [
-            { latitude: userLocation.latitude, longitude: userLocation.longitude },
-            { latitude: ride.drop.latitude, longitude: ride.drop.longitude }
-          ];
-          setRouteCoords(coords);
+          try {
+            const coords = [
+              { latitude: userLocation.latitude, longitude: userLocation.longitude },
+              { latitude: ride.drop.latitude, longitude: ride.drop.longitude }
+            ];
+            setRouteCoords(coords);
+          } catch (fallbackError) {
+            console.error('Fallback route error:', fallbackError);
+            setRouteCoords([]); // Clear route coords on complete failure
+          }
         }
       }
     };
 
-    updateRoute();
-  }, [ride?.drop?.latitude, ride?.drop?.longitude, userLocation?.latitude, userLocation?.longitude]); // Only when specific location data changes
+    // Add a small delay to prevent rapid successive calls during location loading
+    const timeoutId = setTimeout(() => {
+      updateRoute();
+    }, 100); // 100ms delay
+
+    return () => clearTimeout(timeoutId);
+  }, [ride?._id, ride?.drop?.latitude, ride?.drop?.longitude, userLocation?.latitude, userLocation?.longitude, locationLoading]); // Include locationLoading in dependencies
 
   // Show loading state if we're loading location or ride data
   if (locationLoading || rideLoading) {
@@ -339,12 +409,12 @@ export default function TrackingScreen() {
 
       <TripSummary 
         status={rideStatus}
-        distance={ride.distance || 0}
+        distance={typeof ride.distance === 'number' && !isNaN(ride.distance) ? ride.distance : 0}
         // Calculate duration based on distance if not available
-        duration={ride.distance ? Math.round(ride.distance / 0.6) : 0} // ~36km/h average ambulance speed in traffic
+        duration={typeof ride.distance === 'number' && !isNaN(ride.distance) ? Math.round(ride.distance / 0.6) : 0} // ~36km/h average ambulance speed in traffic
         ambulanceType={ride.vehicle || 'bls'} 
         otp={ride.otp || ''}
-        vehicleDetails={ride.rider ? `${ride.rider.vehicle.model} (${ride.rider.vehicle.plateNumber})` : undefined}
+        vehicleDetails={ride.rider && ride.rider.vehicle ? `${ride.rider.vehicle.model || 'Unknown Model'} (${ride.rider.vehicle.plateNumber || 'Unknown Plate'})` : undefined}
         driverName={ride.rider?.name || undefined}
         emergencyType={getFirstParam(params.emergencyType)}
         emergencyName={getFirstParam(params.emergencyName)}

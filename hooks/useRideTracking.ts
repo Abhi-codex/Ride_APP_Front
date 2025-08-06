@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getServerUrl } from '../utils/network';
+import { useEffect, useState } from 'react';
 import { Ride, RideStatus } from '../types/rider';
+import { getServerUrl } from '../utils/network';
 
 interface TrackingState {
   ride: Ride | null;
@@ -55,31 +55,49 @@ export function useRideTracking(rideId: string): TrackingState {
       
       if (data && data.rides && data.rides.length > 0) {
         const currentRide = data.rides[0];
-        setRide(currentRide);
-        setRideStatus(currentRide.status);
         
-        // If ride has been accepted, get driver's current location
-        if (currentRide.rider && 
-            (currentRide.status === RideStatus.START || 
-             currentRide.status === RideStatus.ARRIVED)) {
-          try {
-            // This would be an API endpoint that returns the driver's current location
-            // For now, we'll use the pickup location as a fallback
-            setDriverLocation({
-              latitude: currentRide.rider.location?.latitude || currentRide.pickup.latitude,
-              longitude: currentRide.rider.location?.longitude || currentRide.pickup.longitude,
-            });
-          } catch (locationError) {
-            console.warn('Error getting driver location:', locationError);
-            // Fallback to pickup location if driver location not available
-            setDriverLocation({
-              latitude: currentRide.pickup.latitude,
-              longitude: currentRide.pickup.longitude,
-            });
+        // Validate ride data structure before setting state
+        if (currentRide && currentRide._id) {
+          setRide(currentRide);
+          
+          // Safely set ride status with validation
+          if (Object.values(RideStatus).includes(currentRide.status)) {
+            setRideStatus(currentRide.status);
+          } else {
+            console.warn('Invalid ride status received:', currentRide.status);
+            setRideStatus(RideStatus.SEARCHING); // Default fallback
           }
+          
+          // If ride has been accepted, get driver's current location
+          if (currentRide.rider && 
+              currentRide.rider._id &&
+              (currentRide.status === RideStatus.START || 
+               currentRide.status === RideStatus.ARRIVED)) {
+            try {
+              // For now, we'll use the pickup location as driver location
+              // In a real implementation, this would be a separate API call to get real-time driver location
+              if (currentRide.pickup && 
+                  typeof currentRide.pickup.latitude === 'number' && 
+                  typeof currentRide.pickup.longitude === 'number') {
+                setDriverLocation({
+                  latitude: currentRide.pickup.latitude,
+                  longitude: currentRide.pickup.longitude,
+                });
+              }
+            } catch (locationError) {
+              console.warn('Error processing driver location:', locationError);
+              setDriverLocation(null);
+            }
+          } else {
+            // Clear driver location if no driver or ride not started
+            setDriverLocation(null);
+          }
+        } else {
+          console.error('Invalid ride data structure received');
+          setError('Invalid ride data received from server');
         }
       } else {
-        setError('Ride not found');
+        setError('Ride not found or no rides returned from server');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred');
@@ -93,20 +111,44 @@ export function useRideTracking(rideId: string): TrackingState {
   useEffect(() => {
     if (!rideId) return;
     
-    fetchRideDetails();
+    let intervalId: number | null = null;
+    let isMounted = true;
+    
+    const performFetch = async () => {
+      if (!isMounted) return;
+      await fetchRideDetails();
+    };
+    
+    // Initial fetch
+    performFetch();
     
     // Set up polling for ride status updates only if ride is active
-    const intervalId = setInterval(() => {
-      // Only poll if ride is in an active state
-      if (rideStatus === RideStatus.SEARCHING || 
-          rideStatus === RideStatus.START || 
-          rideStatus === RideStatus.ARRIVED) {
-        fetchRideDetails();
+    const setupPolling = () => {
+      if (intervalId) {
+        clearInterval(intervalId);
       }
-    }, 15000); // Reduced frequency to every 15 seconds
+      
+      intervalId = setInterval(async () => {
+        if (!isMounted) return;
+        
+        // Only poll if ride is in an active state
+        if (rideStatus === RideStatus.SEARCHING || 
+            rideStatus === RideStatus.START || 
+            rideStatus === RideStatus.ARRIVED) {
+          await performFetch();
+        }
+      }, 15000); // Poll every 15 seconds
+    };
     
-    return () => clearInterval(intervalId);
-  }, [rideId]); // Only depend on rideId, not the changing ride object
+    setupPolling();
+    
+    return () => {
+      isMounted = false;
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [rideId, rideStatus]); // Depend on both rideId and rideStatus
 
   // Separate effect to stop polling when ride is completed
   useEffect(() => {
